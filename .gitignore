@@ -1,5 +1,8 @@
 # Ignore compiled code
 dist
+.homebridge/accessories
+.homebridge/persist
+.homebridge/.*.tokens.json
 
 # ------------- Defaults ------------- #
 
@@ -118,3 +121,6 @@ dist
 .yarn/unplugged
 .yarn/build-state.yml
 .pnp.*
+package-info.json
+/.DS_Store
+.DS_Store
