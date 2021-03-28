@@ -1,4 +1,4 @@
-![Homebridge-Smartglass](images/header.png)
+![Homebridge-HiSense](images/header.png)
 
 # Homebridge-Hisense-TV
 
