@@ -6,4 +6,4 @@ export const PLATFORM_NAME = 'HiSenseTV';
 /**
  * This must match the name of your plugin as defined the package.json
  */
-export const PLUGIN_NAME = 'homebridge-hisense-tv';
+export const PLUGIN_NAME = 'homebridge-hisense-tv-remotenow';
