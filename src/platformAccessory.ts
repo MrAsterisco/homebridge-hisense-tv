@@ -29,21 +29,26 @@ export class HiSenseTVAccessory {
     private readonly platform: HiSenseTVPlatform,
     private readonly accessory: PlatformAccessory,
   ) {
+    // Start the asynchronous check of the TV status.
     this.checkTVStatus();
 
+    // Configure the TV details.
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'HiSense')
       .setCharacteristic(this.platform.Characteristic.Model, 'TV')
       .setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.context.device.id)
       .setCharacteristic(this.platform.Characteristic.SoftwareRevision, packageInfo.version);
 
+    // Create the service.
     this.service = this.accessory.getService(this.platform.Service.Television)||this.accessory.addService(this.platform.Service.Television);
-
     accessory.category = this.platform.api.hap.Categories.TELEVISION;
 
-    this.service.setCharacteristic(this.platform.Characteristic.ConfiguredName, accessory.context.device.name);
-    this.service.setCharacteristic(this.platform.Characteristic.SleepDiscoveryMode, this.platform.Characteristic.SleepDiscoveryMode.NOT_DISCOVERABLE);
+    // Configure the service.
+    this.service
+      .setCharacteristic(this.platform.Characteristic.ConfiguredName, accessory.context.device.name)
+      .setCharacteristic(this.platform.Characteristic.SleepDiscoveryMode, this.platform.Characteristic.SleepDiscoveryMode.NOT_DISCOVERABLE);
 
+    // Bind to events.
     this.service.getCharacteristic(this.platform.Characteristic.Active)
       .on('set', this.setOn.bind(this))
       .on('get', this.getOn.bind(this));
@@ -57,148 +62,42 @@ export class HiSenseTVAccessory {
       .on('set', this.setCurrentApplication.bind(this))
       .on('get', this.getCurrentApplication.bind(this));
 
+    // Create the TV speaker service.
     this.speakerService = this.accessory.getService(this.platform.Service.TelevisionSpeaker) || this.accessory.addService(this.platform.Service.TelevisionSpeaker);
 
+    // Configure the TV speaker service.
     this.speakerService
       .setCharacteristic(this.platform.Characteristic.Active, 1)
       .setCharacteristic(this.platform.Characteristic.VolumeControlType, this.platform.Characteristic.VolumeControlType.RELATIVE);
 
+    // Bind to TV speaker events.
     this.speakerService
       .getCharacteristic(this.platform.Characteristic.VolumeSelector)
       .on('set', this.setVolume.bind(this));
 
+    // Add the TV speaker to the TV.
     this.service.addLinkedService(this.speakerService);
 
+    // Create "Unknown" source.
     this.createHomeSource();
-    this.getSources();
 
+    // Setup an interval to periodically check the TV status.
     setInterval(() => {
       this.checkTVStatus();
     }, 10000);
     
   }
-
-  getSources() {
-    this.platform.log.debug('Fetching input sources...');
-    if (!this.deviceState.isConnected) {
-      this.platform.log.info('Unable to fetch input sources because the TV is off. Will retry as soon as the device comes back online.');
-      return;
-    }
-
-    this.sendCommand(['--get', 'sources'], (err, output) => {
-      try {
-        const response: InputSource[] = JSON.parse((output as any[]).join(''));
-        this.inputSources = response;
-
-        this.inputSources.forEach((inputSource, index) => {
-          this.platform.log.debug('Adding input: ' + JSON.stringify(inputSource));
-
-          const inputService = this.accessory.getService('input'+inputSource.sourceid) 
-        || this.accessory.addService(this.platform.Service.InputSource, 'input'+inputSource.sourceid, 'input'+inputSource.sourceid);
-        
-          inputService.setCharacteristic(this.platform.Characteristic.IsConfigured, this.platform.Characteristic.IsConfigured.CONFIGURED);
-          inputService.setCharacteristic(this.platform.Characteristic.ConfiguredName, inputSource.displayname);
-
-          let inputType = this.platform.Characteristic.InputSourceType.OTHER;
-          if (inputSource.sourcename === 'TV') {
-            inputType = this.platform.Characteristic.InputSourceType.TUNER;
-          } else if (inputSource.sourcename === 'AV') {
-            inputType = this.platform.Characteristic.InputSourceType.COMPOSITE_VIDEO;
-          } else if (inputSource.sourcename.startsWith('HDMI')) {
-            inputType = this.platform.Characteristic.InputSourceType.HDMI;
-          }
-          
-          inputService.setCharacteristic(this.platform.Characteristic.InputSourceType, inputType);
-          inputService.setCharacteristic(this.platform.Characteristic.Identifier, (index+1));
-
-          this.service.addLinkedService(inputService);
-        });
-
-        this.deviceState.hasFetchedInputs = true;
-        this.getCurrentInput();
-      } catch (error) {
-        this.platform.log.error('An error occurred while fetching inputs: ' + error);
-      }
-    });
-  }
-
-  createHomeSource() {
-    this.platform.log.debug('Adding unknown source...');
-
-    const inputService = this.accessory.getService('inputhome') 
-        || this.accessory.addService(this.platform.Service.InputSource, 'inputhome', 'inputhome');
-        
-    inputService
-      .setCharacteristic(this.platform.Characteristic.IsConfigured, this.platform.Characteristic.IsConfigured.CONFIGURED)
-      .setCharacteristic(this.platform.Characteristic.ConfiguredName, 'Unknown')
-      .setCharacteristic(this.platform.Characteristic.InputSourceType, this.platform.Characteristic.InputSourceType.OTHER)
-      .setCharacteristic(this.platform.Characteristic.Identifier, 0);
-
-    this.service.addLinkedService(inputService);
-  }
-
-  checkTVStatus() {
-    this.platform.log.debug('Checking state for TV at IP: ' + this.accessory.context.device.ipaddress);
-
-    const socket = net.createConnection({host: this.accessory.context.device.ipaddress, port: 36669, timeout: 1500});
-    socket.on('connect', () => {
-      this.platform.log.debug('Connected to TV!');
-      this.deviceState.isConnected = true;
-      this.service.updateCharacteristic(this.platform.Characteristic.Active, this.deviceState.isConnected);
-
-      socket.destroy();
-      if (!this.deviceState.hasFetchedInputs) {
-        this.getSources();
-      } else {
-        this.getCurrentInput();
-      }
-    });
-
-    socket.on('timeout', () => {
-      this.platform.log.debug('Connection to TV timed out.');
-      this.deviceState.isConnected = false;
-      this.service.updateCharacteristic(this.platform.Characteristic.Active, this.deviceState.isConnected);
-      socket.destroy();
-    });
-
-    socket.on('error', (err) => {
-      this.platform.log.debug('An error occurred while connecting to TV: ' + err);
-      this.deviceState.isConnected = false;
-      this.service.updateCharacteristic(this.platform.Characteristic.Active, this.deviceState.isConnected);
-      socket.destroy();
-    });
-  }
-
-  getCurrentInput() {
-    this.platform.log.debug('Checking current input...');
-
-    this.sendCommand(['--get', 'state'], (err, output) => {
-      try {
-        const response: TVState = JSON.parse((output as any[]).join(''));
-        if (response.statetype === 'sourceswitch') {
-          this.deviceState.currentSourceName = response.sourcename;
-          this.platform.log.debug('Current input is: ' + this.deviceState.currentSourceName);
-        } else if (response.statetype === 'livetv') {
-          this.deviceState.currentSourceName = 'TV';
-          this.platform.log.debug('Current input is: ' + this.deviceState.currentSourceName);
-        } else {
-          this.deviceState.currentSourceName = '';
-          this.platform.log.debug('Current input is unsupported. Defaulting to home.');
-        }
-
-        this.service.updateCharacteristic(this.platform.Characteristic.ActiveIdentifier, this.getCurrentInputIndex());
-      } catch (error) {
-        this.platform.log.error('An error occurred while fetching the current input: ' + error);
-      }
-    });
-  }
   
+  getOn(callback: CharacteristicGetCallback) {
+    callback(null, this.deviceState.isConnected);
+  }
+
   setOn(value: CharacteristicValue, callback: CharacteristicSetCallback) {
     this.platform.log.debug('Set Characteristic On ->', value);
 
     if (value === 1) {
       wol.wake(this.accessory.context.device.macaddress, (err, res) => {
-        this.platform.log.debug('WOL res: ' + res);
+        this.platform.log.debug('Sent magic packet, response: ' + res + 'error: ' + err);
         callback(err);
       });
     } else {
@@ -207,10 +106,6 @@ export class HiSenseTVAccessory {
         callback(err);
       });
     }
-  }
-
-  getOn(callback: CharacteristicGetCallback) {
-    callback(null, this.deviceState.isConnected);
   }
 
   setRemoteKey(newValue: CharacteristicValue, callback: CharacteristicSetCallback) {
@@ -300,6 +195,10 @@ export class HiSenseTVAccessory {
     }
   }
 
+  getCurrentApplication(callback: CharacteristicSetCallback) {
+    callback(null, this.getCurrentInputIndex());
+  }
+
   setCurrentApplication(value: CharacteristicValue, callback: CharacteristicSetCallback) {
     this.platform.log.debug('setCurrentApplication() invoked to ->', value);
 
@@ -316,18 +215,174 @@ export class HiSenseTVAccessory {
     }
   }
 
-  getCurrentApplication(callback: CharacteristicSetCallback) {
-    callback(null, this.getCurrentInputIndex());
+  // #region Support
+
+  /**
+   * Fetch the available inputs from the TV.
+   * 
+   * This function calls `hisensetv --get sources` and registers new inputs
+   * with HomeKit. It will automatically get the display name from each input and
+   * use that as name in HomeKit.
+   * 
+   * This function will be executed only once when registering a new device or
+   * starting up. It will be executed again if the TV is off the first time.
+   */
+  getSources() {
+    this.platform.log.debug('Fetching input sources...');
+    if (!this.deviceState.isConnected) {
+      this.platform.log.info('Unable to fetch input sources because the TV is off. Will retry as soon as the device comes back online.');
+      return;
+    }
+
+    this.sendCommand(['--get', 'sources'], (err, output) => {
+      try {
+        const response: InputSource[] = JSON.parse((output as any[]).join(''));
+        this.inputSources = response;
+
+        this.inputSources.forEach((inputSource, index) => {
+          this.platform.log.debug('Adding input: ' + JSON.stringify(inputSource));
+
+          const inputService = this.accessory.getService('input'+inputSource.sourceid) 
+        || this.accessory.addService(this.platform.Service.InputSource, 'input'+inputSource.sourceid, 'input'+inputSource.sourceid);
+        
+          inputService.setCharacteristic(this.platform.Characteristic.IsConfigured, this.platform.Characteristic.IsConfigured.CONFIGURED);
+          inputService.setCharacteristic(this.platform.Characteristic.ConfiguredName, inputSource.displayname);
+
+          let inputType = this.platform.Characteristic.InputSourceType.OTHER;
+          if (inputSource.sourcename === 'TV') {
+            inputType = this.platform.Characteristic.InputSourceType.TUNER;
+          } else if (inputSource.sourcename === 'AV') {
+            inputType = this.platform.Characteristic.InputSourceType.COMPOSITE_VIDEO;
+          } else if (inputSource.sourcename.startsWith('HDMI')) {
+            inputType = this.platform.Characteristic.InputSourceType.HDMI;
+          }
+          
+          inputService.setCharacteristic(this.platform.Characteristic.InputSourceType, inputType);
+          inputService.setCharacteristic(this.platform.Characteristic.Identifier, (index+1));
+
+          this.service.addLinkedService(inputService);
+        });
+
+        this.deviceState.hasFetchedInputs = true;
+        this.getCurrentInput();
+      } catch (error) {
+        this.platform.log.error('An error occurred while fetching inputs: ' + error);
+      }
+    });
   }
 
-  getCurrentInputIndex() {
-    this.platform.log.debug('Get current application called. Current input name is: ' + this.deviceState.currentSourceName);
+  /**
+   * Create the 'Other' source to support unknown sources being displayed on the TV.
+   * 
+   * There are multiple cases where it is not possible to fetch the current source on the TV,
+   * for example when running apps like Netflix. In this case, the plugin will select this input
+   * and show that in HomeKit.
+   * 
+   * Switching to this input is unsupported.
+   */
+  createHomeSource() {
+    this.platform.log.debug('Adding unknown source...');
 
+    const inputService = this.accessory.getService('inputhome') 
+        || this.accessory.addService(this.platform.Service.InputSource, 'inputhome', 'inputhome');
+        
+    inputService
+      .setCharacteristic(this.platform.Characteristic.IsConfigured, this.platform.Characteristic.IsConfigured.CONFIGURED)
+      .setCharacteristic(this.platform.Characteristic.ConfiguredName, 'Unknown')
+      .setCharacteristic(this.platform.Characteristic.InputSourceType, this.platform.Characteristic.InputSourceType.OTHER)
+      .setCharacteristic(this.platform.Characteristic.Identifier, 0);
+
+    this.service.addLinkedService(inputService);
+  }
+
+  /**
+   * Check the current TV status by attempting to telnet the MQTT service directly.
+   * 
+   * Instead of trying to send a command to the TV, it is way faster and lighter to just
+   * try to connect to the MQTT service via telnet and then disconnect immediately.
+   * If the telnet connection succeds, the TV will be displayed as Active, otherwise it will appear as turned off.
+   * 
+   * After checking the status, if the inputs have not already been fetched, this function will invoke `getSources`.
+   * Otherwise, it'll just check for the current visible input, by calling `getCurrentInput`.
+   */
+  checkTVStatus() {
+    this.platform.log.debug('Checking state for TV at IP: ' + this.accessory.context.device.ipaddress);
+
+    const socket = net.createConnection({host: this.accessory.context.device.ipaddress, port: 36669, timeout: 500});
+    socket.on('connect', () => {
+      this.platform.log.debug('Connected to TV!');
+      this.deviceState.isConnected = true;
+      this.service.updateCharacteristic(this.platform.Characteristic.Active, this.deviceState.isConnected);
+
+      socket.destroy();
+      if (!this.deviceState.hasFetchedInputs) {
+        this.getSources();
+      } else {
+        this.getCurrentInput();
+      }
+    });
+
+    socket.on('timeout', () => {
+      this.platform.log.debug('Connection to TV timed out.');
+      this.deviceState.isConnected = false;
+      this.service.updateCharacteristic(this.platform.Characteristic.Active, this.deviceState.isConnected);
+      socket.destroy();
+    });
+
+    socket.on('error', (err) => {
+      this.platform.log.debug('An error occurred while connecting to TV: ' + err);
+      this.deviceState.isConnected = false;
+      this.service.updateCharacteristic(this.platform.Characteristic.Active, this.deviceState.isConnected);
+      socket.destroy();
+    });
+  }
+
+  /**
+   * Get the currently visible input and updates HomeKit.
+   * 
+   * This function will call `hisensetv --get state` and will try to match
+   * the reported state to an input. At the moment, only the following states are supported:
+   * - `sourceswitch`: any external input (i.e. HDMIs, AV).
+   * - `livetv`: the tuner.
+   * 
+   * Any other state will be matched as the "Other" input.
+   */
+  getCurrentInput() {
+    this.platform.log.debug('Checking current input...');
+
+    this.sendCommand(['--get', 'state'], (err, output) => {
+      try {
+        const response: TVState = JSON.parse((output as any[]).join(''));
+        if (response.statetype === 'sourceswitch') {
+          this.deviceState.currentSourceName = response.sourcename;
+          this.platform.log.debug('Current input is: ' + this.deviceState.currentSourceName);
+        } else if (response.statetype === 'livetv') {
+          this.deviceState.currentSourceName = 'TV';
+          this.platform.log.debug('Current input is: ' + this.deviceState.currentSourceName);
+        } else {
+          this.deviceState.currentSourceName = '';
+          this.platform.log.debug('Current input is unsupported.');
+        }
+
+        this.service.updateCharacteristic(this.platform.Characteristic.ActiveIdentifier, this.getCurrentInputIndex());
+      } catch (error) {
+        this.platform.log.error('An error occurred while fetching the current input: ' + error);
+      }
+    });
+  }
+
+  /**
+   * Get the index of the current input by matching the current input name to the
+   * list of HomeKit inputs.
+   * 
+   * If the current input cannot be found, this function will return `0`.
+   * 
+   * @returns The index of the current input in HomeKit.
+   */
+  getCurrentInputIndex() {
     for (let index = 0; index < this.inputSources.length; index++) {
       const inputSource = this.inputSources[index];
-      this.platform.log.debug('Checking current input against: ' + JSON.stringify(inputSource));
       if (inputSource.sourcename === this.deviceState.currentSourceName) {
-        this.platform.log.debug('Found current input at index: ' + (index+1));
         return index+1;
       }
     }
@@ -335,9 +390,17 @@ export class HiSenseTVAccessory {
     return 0;
   }
 
+  /**
+   * Invoke a function on the Hisense script.
+   * 
+   * @param args the arguments to pass to the Hisense script.
+   * @param callback A callback to call with an error and the output of the script.
+   */
   sendCommand(args: string[], callback: (err?: Error, output?: any) => void) {
     PythonShell.run(path.resolve(__dirname, '../bin/hisensetv.py'), {args: args.concat([this.accessory.context.device.ipaddress, '--ifname', this.platform.config.ifname])}, callback);
   }
+
+  // #endregion
 
 }
 
