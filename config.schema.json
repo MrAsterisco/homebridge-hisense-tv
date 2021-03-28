@@ -6,57 +6,47 @@
   "schema": {
     "type": "object",
     "properties": {
+      "ifname": {
+        "title": "Network interface name",
+        "description": "This plugin must be able to authenticate with a valid MAC address to communicate with your TVs. Input a network interface name of your Homebridge machine.",
+        "type": "string",
+        "required": true
+      },
       "devices": {
-        "title": "HiSense TVs",
-        "description": "Configure one or more TVs.",
+        "title": "TVs",
+        "description": "Configure one or more TVs. Each TV will be displayed as a separate accessory. You will need to manually add them to your Home, using 'Add Accessory' and then 'I don't have a code'. Before adding a TV here, make sure to authenticate your Homebridge host with it: see the README for more info.",
         "type": "array",
         "items": {
           "title": "TV",
-          "description": "Fill in your details of the HiSense TV.",
+          "description": "Fill in the details of your TV.",
           "type": "object",
           "properties": {
             "id": {
               "title": "ID",
               "type": "string",
-              "required": true
+              "required": true,
+              "description": "A unique identifier of this device. You can use the device model, the S/N or any other random string. This will be displayed as Serial Number in Home."
             },
             "name": {
               "title": "Name",
               "type": "string",
-              "required": true
+              "required": true,
+              "description": "The name of your TV. This will be used as default name in Home."
             },
             "ipaddress": {
               "title": "IP Address",
               "type": "string",
               "required": true,
               "format": "ipv4",
-              "placeholder": "192.168.1.0"
+              "placeholder": "192.168.1.0",
+              "description": "This plugin cannot discover TVs automatically on the local network. Make sure to set your TV with a static DHCP to the IP address you input here."
             },
             "macaddress": {
               "title": "MAC Address",
               "type": "string",
               "required": true,
-              "placeholder": "00:XX:00:XX:00"
-            },
-            "inputs": {
-              "title": "Source inputs",
-              "type": "array",
-              "items": {
-                "title": "Input",
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "title": "Name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "title_id": {
-                    "title": "ID",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
+              "placeholder": "00:XX:00:XX:00:XX",
+              "description": "In order to be able to turn on the TV when it's off, insert your TV's MAC Address. Make sure to use the MAC Address of the network interface (WiFi or Ethernet) you're using and also turn on 'Wake on LAN' and 'Wake on WiFi' in your TV settings."
             }
           }
         }

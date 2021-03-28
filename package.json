@@ -31,6 +31,8 @@
     "homebridge": ">=1.3.0"
   },
   "dependencies": {
+    "python-shell": "^2.0.3",
+    "telnet-stream": "^1.0.5",
     "wol": "^1.0.7"
   },
   "devDependencies": {
