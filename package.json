@@ -5,7 +5,7 @@
   "description": "Control RemoteNow-enabled HiSense TVs.",
   "main": "dist/index.js",
   "license": "MIT",
-  "homepage": "http://github.com/MrAsterisco/homebridge-hisense",
+  "homepage": "https://github.com/MrAsterisco/homebridge-hisense-tv",
   "keywords": [
     "homebridge",
     "homebridge-plugin",
@@ -14,10 +14,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com:MrAsterisco/homebridge-hisense.git"
+    "url": "git://github.com:MrAsterisco/homebridge-hisense-tv.git"
   },
   "bugs": {
-    "url": "http://github.com/MrAsterisco/homebridge-hisense/issues"
+    "url": "http://github.com/MrAsterisco/homebridge-hisense-tv/issues"
   },
   "scripts": {
     "lint": "npm run version && eslint src/**.ts --max-warnings=5 --fix",

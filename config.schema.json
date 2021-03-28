@@ -2,7 +2,7 @@
   "pluginAlias": "HiSenseTV",
   "pluginType": "platform",
   "singular": true,
-  "footerDisplay": "For documentation please see [GitHub repository](https://github.com/unknownskl/homebridge-smartglass)",
+  "footerDisplay": "For documentation please see the [GitHub repository](https://github.com/MrAsterisco/homebridge-hisense-tv)",
   "schema": {
     "type": "object",
     "properties": {
