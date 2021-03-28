@@ -27,7 +27,7 @@ This is a plugin for Homebridge that allows you to control your RemoteNow-enable
 Search for the plugin in Homebridge:
 
 ```
-homebridge-hisense-tv
+homebridge-hisense-tv-remotenow
 ```
 
 ## Setting up the TV
