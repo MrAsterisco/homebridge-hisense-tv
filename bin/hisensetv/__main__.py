@@ -25,7 +25,7 @@ def main():
         "--get",
         action="append",
         default=[],
-        choices=["sources", "volume", "state"],
+        choices=["sources", "volume"],
         help="Gets a value from the TV.",
     )
     parser.add_argument(
@@ -89,25 +89,24 @@ def main():
 
     args = parser.parse_args()
 
-    if args.verbose:
-        level = logging.DEBUG
-    else:
-        level = logging.INFO
-
+    level = logging.INFO
+    	
     root_logger = logging.getLogger()
     stream_handler = logging.StreamHandler()
     formatter = logging.Formatter(
-        fmt="[{asctime}] [{levelname:<8}] {message}", style="{"
-    )
+            fmt="[{asctime}] [{levelname:<8}] {message}", style="{"
+        )
     stream_handler.setFormatter(formatter)
     root_logger.addHandler(stream_handler)
     root_logger.setLevel(level)
     logger = logging.getLogger(__name__)
 
     if args.no_ssl:
-        ssl_context = None
+     ssl_context = None
     else:
-        ssl_context = ssl._create_unverified_context()
+       ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+       ssl_context.load_cert_chain(certfile='/PathTo/node_modules/homebridge-hisense-tv-remotenow/Hisensecerts/rcm_certchain_pem.cer',
+                                keyfile='/PathTo/node_modules/homebridge-hisense-tv-remotenow/Hisensecerts/rcm_pem_privkey.pkcs8')
 
     tv = HisenseTv(
         args.hostname, enable_client_logger=args.verbose >= 2, ssl_context=ssl_context, network_interface=args.ifname
@@ -128,7 +127,7 @@ def main():
             output = func()
             if isinstance(output, dict) or isinstance(output, list):
                 output = json.dumps(output, indent=4)
-            print(output)
+            logger.info(f"{getter}: {output}")
 
 
 if __name__ == "__main__":
