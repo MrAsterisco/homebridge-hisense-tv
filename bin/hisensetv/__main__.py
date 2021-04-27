@@ -27,7 +27,7 @@ def main():
         "--get",
         action="append",
         default=[],
-        choices=["sources", "volume"],
+        choices=["sources", "volume", "state"],
         help="Gets a value from the TV.",
     )
     parser.add_argument(
