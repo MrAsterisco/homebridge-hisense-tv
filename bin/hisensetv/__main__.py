@@ -105,8 +105,8 @@ def main():
      ssl_context = None
     else:
        ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-       ssl_context.load_cert_chain(certfile='/PathTo/node_modules/homebridge-hisense-tv-remotenow/Hisensecerts/rcm_certchain_pem.cer',
-                                keyfile='/PathTo/node_modules/homebridge-hisense-tv-remotenow/Hisensecerts/rcm_pem_privkey.pkcs8')
+       ssl_context.load_cert_chain(certfile='/homebridge/node_modules/homebridge-hisense-tv-remotenow/Hisensecerts/rcm_certchain_pem.cer',
+                                keyfile='/homebridge/node_modules/homebridge-hisense-tv-remotenow/Hisensecerts/rcm_pem_privkey.pkcs8')
 
     tv = HisenseTv(
         args.hostname, enable_client_logger=args.verbose >= 2, ssl_context=ssl_context, network_interface=args.ifname
