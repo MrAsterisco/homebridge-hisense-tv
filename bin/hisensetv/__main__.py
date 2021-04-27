@@ -1,6 +1,8 @@
 #!/usr/bin/env python3.8
 
 import argparse
+import os
+from pathlib import Path
 import json
 import logging
 import ssl
@@ -88,7 +90,11 @@ def main():
     )
 
     args = parser.parse_args()
-
+    
+    startingpoint1 = '/usr/local/lib/node_modules/homebridge-hisense-tv-remotenow/bin/Hisensecerts/rcm_certchain_pem.cer'
+    startingpoint2 = '/usr/local/lib/node_modules/homebridge-hisense-tv-remotenow/bin/Hisensecerts/rcm_pem_privkey.pkcs8'
+    
+    
     level = logging.INFO
     	
     root_logger = logging.getLogger()
@@ -105,8 +111,7 @@ def main():
      ssl_context = None
     else:
        ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-       ssl_context.load_cert_chain(certfile='/homebridge/node_modules/homebridge-hisense-tv-remotenow/Hisensecerts/rcm_certchain_pem.cer',
-                                keyfile='/homebridge/node_modules/homebridge-hisense-tv-remotenow/Hisensecerts/rcm_pem_privkey.pkcs8')
+       ssl_context.load_cert_chain(certfile=startingpoint1, keyfile=startingpoint2)
 
     tv = HisenseTv(
         args.hostname, enable_client_logger=args.verbose >= 2, ssl_context=ssl_context, network_interface=args.ifname
