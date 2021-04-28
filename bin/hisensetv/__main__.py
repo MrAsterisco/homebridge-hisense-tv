@@ -23,9 +23,6 @@ def getKeyFile():
     keyFilePath= str(certDir + '/rcm_pem_privkey.pkcs8')
 	
     return keyFilePath
-    
-    sslparam3 = getCertsKey()
-    sslparam4 = getKeyFile()
 
 def main():
     parser = argparse.ArgumentParser(description="Hisense TV control.")
