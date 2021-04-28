@@ -8,6 +8,24 @@ import logging
 import ssl
 from . import HisenseTv
 
+def getCertsKey():
+	
+    baseDir = os.getcwd()
+    certDir = os.path.join(baseDir, "Hisensecerts")
+    certFilePath = str(certDir + '/rcm_certchain_pem.cer')
+	
+    return certFilePath
+	
+def getKeyFile():
+
+    baseDir = os.getcwd()
+    certDir = os.path.join(baseDir, "Hisensecerts")
+    keyFilePath= str(certDir + '/rcm_pem_privkey.pkcs8')
+	
+    return keyFilePath
+    
+    sslparam3 = getCertsKey()
+    sslparam4 = getKeyFile()
 
 def main():
     parser = argparse.ArgumentParser(description="Hisense TV control.")
@@ -27,7 +45,7 @@ def main():
         "--get",
         action="append",
         default=[],
-        choices=["sources", "volume", "state"],
+        choices=["sources", "volume","state"],
         help="Gets a value from the TV.",
     )
     parser.add_argument(
@@ -88,14 +106,16 @@ def main():
     parser.add_argument(
         "-v", "--verbose", action="count", default=0, help="Logging verbosity."
     )
+    parser.add_argument("--certfile", help="load certfile", action='store_true')
+    parser.add_argument("--keyfile", help="load keyfile", action='store_true')
 
     args = parser.parse_args()
     
-    startingpoint1 = '/usr/local/lib/node_modules/homebridge-hisense-tv-remotenow/bin/Hisensecerts/rcm_certchain_pem.cer'
-    startingpoint2 = '/usr/local/lib/node_modules/homebridge-hisense-tv-remotenow/bin/Hisensecerts/rcm_pem_privkey.pkcs8'
+    sslparam1 = getCertsKey()
+    sslparam2 = getKeyFile()
     
-    
-    level = logging.INFO
+   
+    level = logging.DEBUG
     	
     root_logger = logging.getLogger()
     stream_handler = logging.StreamHandler()
@@ -109,9 +129,11 @@ def main():
 
     if args.no_ssl:
      ssl_context = None
-    else:
+    if args.certfile is True & args.keyfile is True:
        ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-       ssl_context.load_cert_chain(certfile=startingpoint1, keyfile=startingpoint2)
+       ssl_context.load_cert_chain(certfile=sslparam1, keyfile=sslparam2)
+    else:
+        ssl_context = ssl._create_unverified_context()
 
     tv = HisenseTv(
         args.hostname, enable_client_logger=args.verbose >= 2, ssl_context=ssl_context, network_interface=args.ifname
