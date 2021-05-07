@@ -96,11 +96,21 @@ export class HiSenseTVAccessory {
     this.platform.log.debug('Set Characteristic On ->', value);
 
     if (value === 1) {
+      if (this.deviceState.isConnected) {
+        // The device is already turned on.
+        callback(null);
+        return; 
+      }
       wol.wake(this.accessory.context.device.macaddress, (err, res) => {
         this.platform.log.debug('Sent magic packet, response: ' + res + 'error: ' + err);
         callback(err);
       });
     } else {
+      if (!this.deviceState.isConnected) {
+        // The device is already turned off.
+        callback(null);
+        return; 
+      }
       this.sendCommand(['--key', 'power'], (err) => {
         this.platform.log.debug('Sent power off, error: ' + err);
         callback(err);
@@ -397,7 +407,21 @@ export class HiSenseTVAccessory {
    * @param callback A callback to call with an error and the output of the script.
    */
   sendCommand(args: string[], callback: (err?: Error, output?: any) => void) {
-    PythonShell.run(path.resolve(__dirname, '../bin/hisensetv.py'), {args: args.concat([this.accessory.context.device.ipaddress, '--ifname', this.platform.config.ifname])}, callback);
+    let sslParameter = '';
+    switch (this.accessory.context.device.sslmode) {
+      case 'disabled':
+        sslParameter = '--no-ssl';
+        break;
+      case 'custom':
+        sslParameter = ['--certfile ', this.accessory.context.device.sslcertificate, '--keyfile', this.accessory.context.device.sslprivatekey].join(' ');
+        break;
+    }
+
+    const pythonScript = path.resolve(__dirname, '../bin/hisensetv.py');
+    const pythonArgs = args.concat([this.accessory.context.device.ipaddress, '--ifname', this.platform.config.ifname, sslParameter]);
+    this.platform.log.debug('Run Python command: ' + pythonScript + ' ' + pythonArgs.join(' '));
+
+    PythonShell.run(pythonScript, {args: pythonArgs}, callback);
   }
 
   // #endregion

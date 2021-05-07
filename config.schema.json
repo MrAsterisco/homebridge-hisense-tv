@@ -49,6 +49,32 @@
               "required": true,
               "placeholder": "00:XX:00:XX:00:XX",
               "description": "In order to be able to turn on the TV when it's off, insert your TV's MAC Address. Make sure to use the MAC Address of the network interface (WiFi or Ethernet) you're using and also turn on 'Wake on LAN' and 'Wake on WiFi' in your TV settings."
+            },
+            "sslmode": {
+              "title": "SSL mode",
+              "type": "string",
+              "default": "default",
+              "oneOf": [
+                { "title": "Default", "enum": ["default"] },
+                { "title": "Disabled", "enum": ["disabled"] },
+                { "title": "Custom", "enum": ["custom"] }
+              ],
+              "required": true,
+              "description": "Depending on your TV model, you might need to change the SSL mode. The Default mode uses a normal SSL context and works with TVs that have a valid certificate onboard; if your TV does not have a valid certificate, you can try to disable it. Certain models need specific certificates and private keys: in this case, select Custom and specify the URL to them, making sure they are reachable from the machine that is running Homebridge."
+            },
+            "sslcertificate": {
+              "title": "SSL Certificate path",
+              "type": "string",
+              "required": false,
+              "placeholder": "/absolute/path/to/rcm_certchain_pem.cer",
+              "description": "The absolute path to the Certificate (.cer) file. This value is only read when the SSL mode is set to Custom."
+            },
+            "sslprivatekey": {
+              "title": "SSL Private key path",
+              "type": "string",
+              "required": false,
+              "placeholder": "/absolute/path/to/rcm_pem_privkey.pkcs8",
+              "description": "The absolute path to the Private key (.pkcs8) file. This value is only read when the SSL mode is set to Custom."
             }
           }
         }
