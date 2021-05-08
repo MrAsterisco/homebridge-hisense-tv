@@ -407,21 +407,55 @@ export class HiSenseTVAccessory {
    * @param callback A callback to call with an error and the output of the script.
    */
   sendCommand(args: string[], callback: (err?: Error, output?: any) => void) {
-    let sslParameter = '';
+    const sslParameter = this.getSslArgument();
+
+    const pythonScript = path.resolve(__dirname, '../bin/hisensetv.py');
+    
+    let pythonArgs = args.concat([
+      this.accessory.context.device.ipaddress, 
+      '--ifname', 
+      this.platform.config.ifname,
+    ]);
+    if (sslParameter !== null) {
+      pythonArgs = pythonArgs.concat(sslParameter);
+    }
+
+    this.platform.log.debug('Run Python command: ' + pythonScript + ' ' + pythonArgs.join(' '));
+
+    PythonShell.run(pythonScript, {args: pythonArgs}, (err, output) => {
+      if (err === null) {
+        this.platform.log.debug('Received Python command response: ' + output);
+      } else {
+        this.platform.log.debug('Received Python command error: ' + err);
+      }
+      
+      callback(err, output);
+    });
+  }
+
+  /**
+   * Compute the SSL argument to pass to the underlying script,
+   * based on the current device configuration.
+   * 
+   * @returns The SSL parameter to pass or null.
+   */
+  getSslArgument(): string[] {
+    let sslParameter: string[] = [];
     switch (this.accessory.context.device.sslmode) {
       case 'disabled':
-        sslParameter = '--no-ssl';
+        sslParameter = ['--no-ssl'];
         break;
       case 'custom':
-        sslParameter = ['--certfile ', this.accessory.context.device.sslcertificate, '--keyfile', this.accessory.context.device.sslprivatekey].join(' ');
+        sslParameter = [
+          '--certfile', 
+          this.accessory.context.device.sslcertificate.trim(), 
+          '--keyfile', 
+          this.accessory.context.device.sslprivatekey.trim(),
+        ];
         break;
     }
 
-    const pythonScript = path.resolve(__dirname, '../bin/hisensetv.py');
-    const pythonArgs = args.concat([this.accessory.context.device.ipaddress, '--ifname', this.platform.config.ifname, sslParameter]);
-    this.platform.log.debug('Run Python command: ' + pythonScript + ' ' + pythonArgs.join(' '));
-
-    PythonShell.run(pythonScript, {args: pythonArgs}, callback);
+    return sslParameter;
   }
 
   // #endregion
