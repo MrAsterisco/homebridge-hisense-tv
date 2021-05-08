@@ -96,11 +96,21 @@ export class HiSenseTVAccessory {
     this.platform.log.debug('Set Characteristic On ->', value);
 
     if (value === 1) {
+      if (this.deviceState.isConnected) {
+        // The device is already turned on.
+        callback(null);
+        return; 
+      }
       wol.wake(this.accessory.context.device.macaddress, (err, res) => {
         this.platform.log.debug('Sent magic packet, response: ' + res + 'error: ' + err);
         callback(err);
       });
     } else {
+      if (!this.deviceState.isConnected) {
+        // The device is already turned off.
+        callback(null);
+        return; 
+      }
       this.sendCommand(['--key', 'power'], (err) => {
         this.platform.log.debug('Sent power off, error: ' + err);
         callback(err);
@@ -397,7 +407,55 @@ export class HiSenseTVAccessory {
    * @param callback A callback to call with an error and the output of the script.
    */
   sendCommand(args: string[], callback: (err?: Error, output?: any) => void) {
-    PythonShell.run(path.resolve(__dirname, '../bin/hisensetv.py'), {args: args.concat([this.accessory.context.device.ipaddress, '--ifname', this.platform.config.ifname])}, callback);
+    const sslParameter = this.getSslArgument();
+
+    const pythonScript = path.resolve(__dirname, '../bin/hisensetv.py');
+    
+    let pythonArgs = args.concat([
+      this.accessory.context.device.ipaddress, 
+      '--ifname', 
+      this.platform.config.ifname,
+    ]);
+    if (sslParameter !== null) {
+      pythonArgs = pythonArgs.concat(sslParameter);
+    }
+
+    this.platform.log.debug('Run Python command: ' + pythonScript + ' ' + pythonArgs.join(' '));
+
+    PythonShell.run(pythonScript, {args: pythonArgs}, (err, output) => {
+      if (err === null) {
+        this.platform.log.debug('Received Python command response: ' + output);
+      } else {
+        this.platform.log.debug('Received Python command error: ' + err);
+      }
+      
+      callback(err, output);
+    });
+  }
+
+  /**
+   * Compute the SSL argument to pass to the underlying script,
+   * based on the current device configuration.
+   * 
+   * @returns The SSL parameter to pass or null.
+   */
+  getSslArgument(): string[] {
+    let sslParameter: string[] = [];
+    switch (this.accessory.context.device.sslmode) {
+      case 'disabled':
+        sslParameter = ['--no-ssl'];
+        break;
+      case 'custom':
+        sslParameter = [
+          '--certfile', 
+          this.accessory.context.device.sslcertificate.trim(), 
+          '--keyfile', 
+          this.accessory.context.device.sslprivatekey.trim(),
+        ];
+        break;
+    }
+
+    return sslParameter;
   }
 
   // #endregion

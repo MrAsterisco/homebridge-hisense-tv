@@ -63,6 +63,34 @@ You can use the Homebridge UI to make changes to the plugin configuration. You m
 
 Repeat the configuration for each TV you want to use, then restart Homebridge.
 
+### SSL mode
+
+Since version 1.1.0, this plugin also supports connecting to HiSense TVs that require different SSL modes than the default one. For example, some models have an unrecognized certificate and some other models need a specific encryption to be used.
+
+To change how the plugin connects to your TV, use the `sslmode` config key. See below in the config example for more info.
+
+*If your TV needs a specific encryption key and certificate, you can find the most common ones [here](https://github.com/MrAsterisco/hisensetv/tree/master/cert). Choose the appropriate one and download it onto the machine that executes Homebridge.*
+
+### Config example
+
+```json
+{
+  "platform": "HiSenseTV",
+  "ifname": "ens33",
+  "devices": [
+    {
+      "id": "A unique identifier (such as your TV S/N)",
+      "name": "A name to display in the Home app",
+      "ipaddress": "Your TV IP address",
+      "macaddress": "Your TV MAC Address",
+      "sslmode": "default (most common)|disabled (no SSL)|custom (use cert and key below)",
+      "sslcertificate": "/absolute/path/to/the/ssl/certificate.cer",
+      "sslprivatekey": "/absolute/path/to/the/ssl/privateKey.pkcs8"
+    }
+  ]
+}
+```
+
 ## Add the TV to Home
 
 Once Homebridge is ready, look for a log line in the Homebridge log that looks like this one:
@@ -89,7 +117,7 @@ This plugin is **under active development**, but most of the features are ready 
 - The input list might not be fetched correctly if the TV is turned off while adding the accessory or after restarting Homebridge. To fix this, force close your Home app and open it again.
 - Switching input to "TV" might not work properly. Home will not display any error, but the next TV state refresh will bring the input back to the previous one (which is also the one displayed on the TV).
 - Making changes to the TV state (turning on/off, changing input) while the Home app is opened will not trigger a live update. *This is theoretically supported by the plugin, but it seems to not work properly.*. Just switching to another app and then going back to Home will trigger a refresh.
-- Some HiSense TVs have a self-signed certificate which will make any connection fail. Support for this is **planned** and it will be released in a future update, as it is already supported by the base script. If you have some free time and you'd like to contribute, please look at the Contribution section below.
+- ~~Some HiSense TVs have a self-signed certificate which will make any connection fail. Support for this is **planned** and it will be released in a future update, as it is already supported by the base script. If you have some free time and you'd like to contribute, please look at the Contribution section below.~~ This is now supported starting from version 1.1.0.
 
 # Contributions
 All contributions to expand the library are welcome. Fork the repo, make the changes you want, and open a Pull Request.
@@ -100,6 +128,8 @@ If you make changes to the codebase, I am not enforcing a coding style, but I ma
 This plugin makes use of a modified version of the [hisensetv](https://github.com/newAM/hisensetv) Python script, originally written by [Alex](https://github.com/newAM) and distributed as open-source software [here](https://github.com/MrAsterisco/hisensetv).
 
 The code structure and style is heavily inspired by the [homebridge-smartglass plugin](https://github.com/unknownskl/homebridge-smartglass), written by [UnknownSKL](https://github.com/unknownskl).
+
+SSL Support has been implemented with a lot of help from [chinedu40](https://github.com/chinedu40) and [ryanshand](https://github.com/ryanshand).
 
 # License
 This plugin is distributed under the MIT license. See LICENSE for details.
