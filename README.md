@@ -124,6 +124,7 @@ This plugin is **under active development**, but most of the features are ready 
 - The input list might not be fetched correctly if the TV is turned off while adding the accessory or after restarting Homebridge. To fix this, force close your Home app and open it again.
 - Switching input to "TV" might not work properly. Home will not display any error, but the next TV state refresh will bring the input back to the previous one (which is also the one displayed on the TV).
 - Making changes to the TV state (turning on/off, changing input) while the Home app is opened will not trigger a live update. *This is theoretically supported by the plugin, but it seems to not work properly.*. Just switching to another app and then going back to Home will trigger a refresh.
+- Some newer TV models are always reported as turned on: this happens because they still respond to requests, even if they're "off". *As I don't have a such a model to test, I am unfortunately unable to provide a fix: if you have some experience with Python, TypeScript and have some free time, take a look at [this issue](https://github.com/MrAsterisco/homebridge-hisense-tv/issues/18).*
 - ~~Some HiSense TVs have a self-signed certificate which will make any connection fail. Support for this is **planned** and it will be released in a future update, as it is already supported by the base script. If you have some free time and you'd like to contribute, please look at the Contribution section below.~~ This is now supported starting from version 1.1.0.
 
 # Contributions
