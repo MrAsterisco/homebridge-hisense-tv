@@ -37,7 +37,9 @@ Search for the plugin in Homebridge:
 ```
 homebridge-hisense-tv-remotenow
 ```
-Depending on your setup you might also need to run some of the following commands:
+You also need some additional dependencies, if you haven't installed them already. Follow the instructions below for your operating system and then proceed to "Setting up the TV".
+
+### Linux (including Hoobs)
 
 ```bash
 # for Linux distros with APT
@@ -48,6 +50,12 @@ sudo su - homebridge
 pip3 install paho-mqtt
 ```
 *This step is required if you're using [Hoobs](https://hoobs.com). Please note that additional issues may arise when running on Hoobs, as I unfortunately don't have access to one and cannot test on it. I am happy to provide help and support in fixing those issues: just open an issue on this repo and we'll try to figure it out together.*
+
+### macOS
+
+```bash
+pip3 install mqtt-paho
+```
 
 ## Setting up the TV
 
