@@ -3,9 +3,6 @@
 # Homebridge-Hisense-TV
 
 [![Build and Lint](https://github.com/MrAsterisco/homebridge-hisense-tv/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/MrAsterisco/homebridge-hisense-tv/actions/workflows/build.yml)
-<!-- [![npm](https://img.shields.io/npm/v/homebridge-smartglass.svg?style=flat-square)](https://www.npmjs.com/package/homebridge-smartglass)
-[![npm](https://img.shields.io/npm/dt/homebridge-smartglass.svg?style=flat-square)](https://www.npmjs.com/package/homebridge-smartglass) -->
-
 
 This is a plugin for Homebridge that allows you to control your RemoteNow-enabled HiSense TVs, using a custom version of the [hisensetv](https://github.com/MrAsterisco/hisensetv) tool. With this plugin, you can:
 
@@ -21,6 +18,7 @@ This is a plugin for Homebridge that allows you to control your RemoteNow-enable
 - Homebridge 1.3.0 or later.
 - Python 3.8.
 - A HiSense TV that supports the RemoteNow app ([App Store](https://apps.apple.com/us/app/remotenow/id1301866548) or [Play Store](https://play.google.com/store/apps/details?id=com.universal.remote.ms&hl=en&gl=US)).
+- **Homebridge running macOS is currently not supported.**
 
 ## Compatibility
 
@@ -51,7 +49,7 @@ pip3 install paho-mqtt
 ```
 *This step is required if you're using [Hoobs](https://hoobs.com). Please note that additional issues may arise when running on Hoobs, as I unfortunately don't have access to one and cannot test on it. I am happy to provide help and support in fixing those issues: just open an issue on this repo and we'll try to figure it out together.*
 
-### macOS
+### macOS (Unsupported)
 
 ```bash
 pip3 install mqtt-paho
@@ -68,11 +66,15 @@ ip a
 
 *The name of a network interface usually looks similar to this: `ens33`.*
 
-### macOS
+### macOS (Unsupported)
 
 ```
 networksetup -listallhardwareports
 ```
+
+_Even if you manage to get the right network interface name, you won't be able to continue pairing your TV. This is due to macOS not responding correctly to the function we use to determine the MAC Address of the network interface. See [this issue](https://github.com/MrAsterisco/homebridge-hisense-tv/issues/5) and [this issue](https://github.com/MrAsterisco/homebridge-hisense-tv/issues/32) for further information._
+
+_If you have time to open a PR to fix this, please do so on the [Python script repo](https://github.com/MrAsterisco/hisensetv/issues/1)._
 
 ### Continue the Setup
 For this plugin to work correctly, you need to configure your TV to use a static DHCP (or configure a static reservation on your router). You also need to find your TV's MAC Address: this is usually displayed under Settings > Network Information, but it might vary based on your model.
