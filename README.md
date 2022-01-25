@@ -15,12 +15,20 @@ This is a plugin for Homebridge that allows you to control your RemoteNow-enable
 - Control the TV volume.
 - Remote control using the native iOS remote.
 
-## Requirements:
+## Requirements
 
 - NodeJS 10 or later.
 - Homebridge 1.3.0 or later.
 - Python 3.8.
 - A HiSense TV that supports the RemoteNow app ([App Store](https://apps.apple.com/us/app/remotenow/id1301866548) or [Play Store](https://play.google.com/store/apps/details?id=com.universal.remote.ms&hl=en&gl=US)).
+
+## Compatibility
+
+In theory, any RemoteNOW enabled TV should work with this plugin. However, some TVs have different behaviors, different SSL configurations and may not work completely or may require additional steps.
+
+This plugin has been developed and tested running Homebridge on Ubuntu Linux 20.04 with a HiSense 50AE7010F. If your configuration differ, the steps below may not be a 100% accurate: even if the general idea is the same *(pair the TV, add it to Home, use it)*, your mileage may vary.
+
+**If you find anything that is not correct, please open an issue (or even better: a PR changing this file) explaining what you're doing differently to make this plugin work with different TV models and/or on different operating systems.**
 
 # Installation
 
@@ -43,14 +51,22 @@ pip3 install paho-mqtt
 
 ## Setting up the TV
 
-First, you need to get the name of the network interface that your Homebridge machine will use to connect to the TV. On Linux, you can get a list of all the network interfaces on your machine by running:
+First, you need to get the name of the network interface that your Homebridge machine will use to connect to the TV. To get the list of all the network interfaces on your machine, follow the instructions below for the operating system where you're running Homebridge. Once you have the network interface name, go to "Continue the Setup".
 
+### Generic Linux
 ```
 ip a
 ```
 
 *The name of a network interface usually looks similar to this: `ens33`.*
 
+### macOS
+
+```
+networksetup -listallhardwareports
+```
+
+### Continue the Setup
 For this plugin to work correctly, you need to configure your TV to use a static DHCP (or configure a static reservation on your router). You also need to find your TV's MAC Address: this is usually displayed under Settings > Network Information, but it might vary based on your model.
 
 To connect to your TV, you need to pair the machine where you're running Homebridge with your TV. This is done in the command line, by manually running the bundled `hisensetv.py` script. To do this, [find the `node_modules` folder in your system](https://docs.npmjs.com/cli/v7/configuring-npm/folders) (on Linux, it is located in `/usr/local/lib/node_modules`) and move to `homebridge-hisense-tv/bin`, then run:
@@ -129,7 +145,6 @@ This plugin is **under active development**, but most of the features are ready 
 - Switching input to "TV" might not work properly. Home will not display any error, but the next TV state refresh will bring the input back to the previous one (which is also the one displayed on the TV).
 - Making changes to the TV state (turning on/off, changing input) while the Home app is opened will not trigger a live update. *This is theoretically supported by the plugin, but it seems to not work properly.*. Just switching to another app and then going back to Home will trigger a refresh.
 - Some newer TV models are always reported as turned on: this happens because they still respond to requests, even if they're "off". *As I don't have a such a model to test, I am unfortunately unable to provide a fix: if you have some experience with Python, TypeScript and have some free time, take a look at [this issue](https://github.com/MrAsterisco/homebridge-hisense-tv/issues/18).*
-- ~~Some HiSense TVs have a self-signed certificate which will make any connection fail. Support for this is **planned** and it will be released in a future update, as it is already supported by the base script. If you have some free time and you'd like to contribute, please look at the Contribution section below.~~ This is now supported starting from version 1.1.0.
 
 # Contributions
 All contributions to expand the library are welcome. Fork the repo, make the changes you want, and open a Pull Request.
