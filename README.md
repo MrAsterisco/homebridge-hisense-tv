@@ -16,15 +16,15 @@ This is a plugin for Homebridge that allows you to control your RemoteNow-enable
 
 - NodeJS 10 or later.
 - Homebridge 1.3.0 or later.
-- Python 3.8.
+- Python 3.8 with [paho-mqtt](https://pypi.org/project/paho-mqtt/) and [netifaces](https://pypi.org/project/netifaces/).
 - A HiSense TV that supports the RemoteNow app ([App Store](https://apps.apple.com/us/app/remotenow/id1301866548) or [Play Store](https://play.google.com/store/apps/details?id=com.universal.remote.ms&hl=en&gl=US)).
-- **Homebridge running macOS is currently not supported.**
+- *Starting with version 2.0.0, macOS is also supported as host*.
 
 ## Compatibility
 
 In theory, any RemoteNOW enabled TV should work with this plugin. However, some TVs have different behaviors, different SSL configurations and may not work completely or may require additional steps.
 
-This plugin has been developed and tested running Homebridge on Ubuntu Linux 20.04 with a HiSense 50AE7010F. If your configuration differs, the steps below may not be a 100% accurate: even if the general idea is the same *(pair the TV, add it to Home, use it)*, your mileage may vary.
+This plugin has been developed and tested running Homebridge on Ubuntu Linux 20.04 and macOS Monterey with a HiSense 50AE7010F. If your configuration differs, the steps below may not be a 100% accurate: even if the general idea is the same *(pair the TV, add it to Home, use it)*, your mileage may vary.
 
 **If you find anything that is not correct, please open an issue (or even better: a PR changing this file) explaining what you're doing differently to make this plugin work with different TV models and/or on different operating systems.**
 
@@ -41,18 +41,20 @@ You also need some additional dependencies, if you haven't installed them alread
 
 ```bash
 # for Linux distros with APT
-apt install python3-paho-mqtt
+apt install python3-paho-mqtt python3-netifaces
 
 # for any Linux distro, including Hoobs:
 sudo su - homebridge
+pip3 install netifaces
 pip3 install paho-mqtt
 ```
 *This step is required if you're using [Hoobs](https://hoobs.com). Please note that additional issues may arise when running on Hoobs, as I unfortunately don't have access to one and cannot test on it. I am happy to provide help and support in fixing those issues: just open an issue on this repo and we'll try to figure it out together.*
 
-### macOS (Unsupported)
+### macOS
 
 ```bash
-pip3 install mqtt-paho
+pip3 install netifaces
+pip3 install paho-mqtt
 ```
 
 ## Setting up the TV
@@ -66,15 +68,13 @@ ip a
 
 *The name of a network interface usually looks similar to this: `ens33`.*
 
-### macOS (Unsupported)
+### macOS
 
 ```
 networksetup -listallhardwareports
 ```
 
-_Even if you manage to get the right network interface name, you won't be able to continue pairing your TV. This is due to macOS not responding correctly to the function we use to determine the MAC Address of the network interface. See [this issue](https://github.com/MrAsterisco/homebridge-hisense-tv/issues/5) and [this issue](https://github.com/MrAsterisco/homebridge-hisense-tv/issues/32) for further information._
-
-_If you have time to open a PR to fix this, please do so on the [Python script repo](https://github.com/MrAsterisco/hisensetv/issues/1)._
+*The name of a network interface usually looks similar to this: `en0`.*
 
 ### Continue the Setup
 For this plugin to work correctly, you need to configure your TV to use a static DHCP (or configure a static reservation on your router). You also need to find your TV's MAC Address: this is usually displayed under Settings > Network Information, but it might vary based on your model.

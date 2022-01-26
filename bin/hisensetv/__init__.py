@@ -1,23 +1,21 @@
-from types import TracebackType
-from typing import Any
-from typing import Callable
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Type
-from typing import Union
 import functools
 import json
 import logging
-import paho.mqtt.client as mqtt
 import posixpath
 import queue
 import ssl
 import time
 import uuid
-import fcntl
-import socket
-import struct
+from types import TracebackType
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import Optional
+from typing import Type
+from typing import Union
+
+import netifaces
+import paho.mqtt.client as mqtt
 
 
 class HisenseTvError(Exception):
@@ -60,9 +58,8 @@ def _check_connected(func: Callable):
 
 def get_mac_address(ifname):
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        info = fcntl.ioctl(s.fileno(), 0x8927, struct.pack('256s', bytes(ifname, 'utf-8')[:15]))
-        return ':'.join('%02x' % b for b in info[18:24])
+        interface = netifaces.ifaddresses(ifname)
+        return interface[netifaces.AF_LINK][0]["addr"]
     except Exception:
         raise HisenseTvError("Unknown network interface: " + ifname)
 
@@ -117,6 +114,8 @@ class HisenseTv:
         self.ssl_context = ssl_context
 
         self._mac = get_mac_address(network_interface)
+        self.logger.info(f"Network interface MAC Address: {self._mac}")
+
         self._device_topic = f"{self._mac.upper()}$normal"
         self._our_topic = posixpath.join(self._BASE_TOPIC, self._device_topic, "#")
         self._queue = {self._BROADCAST_TOPIC: queue.Queue(), self._our_topic: queue.Queue()}
