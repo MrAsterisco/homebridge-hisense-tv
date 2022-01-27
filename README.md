@@ -50,6 +50,14 @@ pip3 install paho-mqtt
 ```
 *This step is required if you're using [Hoobs](https://hoobs.com). Please note that additional issues may arise when running on Hoobs, as I unfortunately don't have access to one and cannot test on it. I am happy to provide help and support in fixing those issues: just open an issue on this repo and we'll try to figure it out together.*
 
+#### Error when installing Netifaces
+When you install `netifaces`, depending on your configuration, you may run into an error saying `fatal error: Python.h: No such file or directory`. The following commands should fix the issue by updating the setup tools to the latest version:
+```bash
+pip3 install --upgrade setuptools
+sudo apk add python3-dev  # for apk
+sudo apt-get install python3-dev  # for apt
+```
+
 ### macOS
 
 ```bash
