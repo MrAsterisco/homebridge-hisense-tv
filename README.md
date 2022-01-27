@@ -108,6 +108,8 @@ To change how the plugin connects to your TV, use the `sslmode` config key. See 
 
 *If your TV needs a specific encryption key and certificate, you can find the most common ones [here](https://github.com/MrAsterisco/hisensetv/tree/master/cert). Choose the appropriate one and download it onto the machine that executes Homebridge.*
 
+*When providing the certificate and its key, you'll need to store them outside of the plugin folder (i.e. outside of the `node_modules` directory). If you store them in the directory, they will be deleted when a new version of the plugin is installed. It is not important where you store them, as long as they are readable by the `homebridge` user.*
+
 ### Config example
 
 ```json
