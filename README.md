@@ -118,7 +118,7 @@ Press "Apply" and "OK" and restart the service if prompted
 ### Continue the Setup
 For this plugin to work correctly, you need to configure your TV to use a static DHCP (or configure a static reservation on your router). You also need to find your TV's MAC Address: this is usually displayed under Settings > Network Information, but it might vary based on your model.
 
-To connect to your TV, you need to pair the machine where you're running Homebridge with your TV. This is done in the command line, by manually running the bundled `hisensetv.py` script. To do this, [find the `node_modules` folder in your system](https://docs.npmjs.com/cli/v7/configuring-npm/folders) (on Linux, it is located in `/usr/local/lib/node_modules` and in Windows `/users/(username)/AppData/Roaming/npm/node_modules`) and move to `homebridge-hisense-tv/bin`, then run:
+To connect to your TV, you need to pair the machine where you're running Homebridge with your TV. This is done in the command line, by manually running the bundled `hisensetv.py` script. To do this, [find the `node_modules` folder in your system](https://docs.npmjs.com/cli/v7/configuring-npm/folders) (on Linux, it is located in `/usr/local/lib/node_modules` and on Windows, `/users/(username)/AppData/Roaming/npm/node_modules`) and move to `homebridge-hisense-tv/bin`, then run:
 
 ```bash
 python3.8 hisensetv.py <TV_IP_ADDRESS> --authorize --ifname <NETWORK_INTERFACE_NAME>
@@ -130,7 +130,7 @@ Your TV, if compatible, will display a PIN code: insert it in the command line a
 
 ## Configure the plugin
 
-You can use the Homebridge UI to make changes to the plugin configuration. You must set the "Network interface name" to the name you found out previously and then configure your TVs (include the { } is configuring on Windows). Then, just add all the TVs you have authorized earlier:
+You can use the Homebridge UI to make changes to the plugin configuration. You must set the "Network interface name" to the name you found out previously and then configure your TVs (include the { } if configuring on Windows). Then, just add all the TVs you have authorized earlier:
 
 - as ID, you can input your TV's S/N or your own identifier, as long as it's unique in your Home. You can also leave the default value, if you have just one TV. Whatever you input, will be displayed as the accessory "Serial Number" in Home.
 - as name, input the display name that the Home app will suggest when adding this TV to your Home.
