@@ -1,10 +1,10 @@
-![Homebridge-HiSense](images/header.png)
+![Homebridge-Hisense](images/header.png)
 
 # Homebridge-Hisense-TV
 
 [![Build and Lint](https://github.com/MrAsterisco/homebridge-hisense-tv/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/MrAsterisco/homebridge-hisense-tv/actions/workflows/build.yml)
 
-This is a plugin for Homebridge that allows you to control your RemoteNow-enabled HiSense TVs, using a custom version of the [hisensetv](https://github.com/MrAsterisco/hisensetv) tool. With this plugin, you can:
+This is a plugin for Homebridge that allows you to control your RemoteNow-enabled Hisense TVs, using a custom version of the [hisensetv](https://github.com/MrAsterisco/hisensetv) tool. With this plugin, you can:
 
 - See the status of the TV (on/off, current input).
 - Turn on and off.
@@ -17,14 +17,14 @@ This is a plugin for Homebridge that allows you to control your RemoteNow-enable
 - NodeJS 10 or later.
 - Homebridge 1.3.0 or later.
 - Python 3.8 with [paho-mqtt](https://pypi.org/project/paho-mqtt/) and [netifaces](https://pypi.org/project/netifaces/).
-- A HiSense TV that supports the RemoteNow app ([App Store](https://apps.apple.com/us/app/remotenow/id1301866548) or [Play Store](https://play.google.com/store/apps/details?id=com.universal.remote.ms&hl=en&gl=US)).
+- A Hisense TV that supports the RemoteNow app ([App Store](https://apps.apple.com/us/app/remotenow/id1301866548) or [Play Store](https://play.google.com/store/apps/details?id=com.universal.remote.ms&hl=en&gl=US)).
 - *Starting with version 2.0.0, macOS is also supported as host*.
 
 ## Compatibility
 
 In theory, any RemoteNOW enabled TV should work with this plugin. However, some TVs have different behaviors, different SSL configurations and may not work completely or may require additional steps.
 
-This plugin has been developed and tested running Homebridge on Ubuntu Linux 20.04 and macOS Monterey with a HiSense 50AE7010F. If your configuration differs, the steps below may not be a 100% accurate: even if the general idea is the same *(pair the TV, add it to Home, use it)*, your mileage may vary.
+This plugin has been developed and tested running Homebridge on Ubuntu Linux 20.04 and macOS Monterey with a Hisense 50AE7010F. If your configuration differs, the steps below may not be a 100% accurate: even if the general idea is the same *(pair the TV, add it to Home, use it)*, your mileage may vary.
 
 **If you find anything that is not correct, please open an issue (or even better: a PR changing this file) explaining what you're doing differently to make this plugin work with different TV models and/or on different operating systems.**
 
@@ -58,7 +58,7 @@ sudo apk add python3-dev  # for apk
 sudo apt-get install python3-dev  # for apt
 ```
 
-### macOS
+### macOS / Windows
 
 ```bash
 pip3 install netifaces
@@ -84,10 +84,41 @@ networksetup -listallhardwareports
 
 *The name of a network interface usually looks similar to this: `en0`.*
 
+### Windows
+
+Run a Python shell on your system (you should be able to do so by running python or python3 without any parameters) and then typing:
+
+```
+import netifaces
+netifaces.interfaces()
+```
+
+*The name of a network interface usually looks similar to this: `{00000000-0000-0000-0000-000000000000}`.*
+
+To find the correct interface, use the following command in a python shell, repeating it using each network interface name until a matching IP address for the Homebridge host system is identified:
+
+```
+netifaces.ifaddresses('{interface-name-here}')
+```
+
+In order for the plugin to execute properly within Homebridge and retrieve the input names and TV status, you must also change the Local System Account associated with the Homebridge service using the following steps:
+
+```
+Press the Windows Key + R
+services.msc
+Find the Homebridge Service and double-click
+Switch to the "Log On" tab
+Change "Local System Account" to "This Account" and enter your user name (usually .\username)
+-OR- 
+click "Browse..." and search for your username
+Enter your login password in the Password fields
+Press "Apply" and "OK" and restart the service if prompted
+```
+
 ### Continue the Setup
 For this plugin to work correctly, you need to configure your TV to use a static DHCP (or configure a static reservation on your router). You also need to find your TV's MAC Address: this is usually displayed under Settings > Network Information, but it might vary based on your model.
 
-To connect to your TV, you need to pair the machine where you're running Homebridge with your TV. This is done in the command line, by manually running the bundled `hisensetv.py` script. To do this, [find the `node_modules` folder in your system](https://docs.npmjs.com/cli/v7/configuring-npm/folders) (on Linux, it is located in `/usr/local/lib/node_modules`) and move to `homebridge-hisense-tv/bin`, then run:
+To connect to your TV, you need to pair the machine where you're running Homebridge with your TV. This is done in the command line, by manually running the bundled `hisensetv.py` script. To do this, [find the `node_modules` folder in your system](https://docs.npmjs.com/cli/v7/configuring-npm/folders) (on Linux, it is located in `/usr/local/lib/node_modules` and on Windows, `/users/(username)/AppData/Roaming/npm/node_modules`) and move to `homebridge-hisense-tv/bin`, then run:
 
 ```bash
 python3.8 hisensetv.py <TV_IP_ADDRESS> --authorize --ifname <NETWORK_INTERFACE_NAME>
@@ -99,18 +130,18 @@ Your TV, if compatible, will display a PIN code: insert it in the command line a
 
 ## Configure the plugin
 
-You can use the Homebridge UI to make changes to the plugin configuration. You must set the "Network interface name" to the name you found out previously and then configure your TVs. Then, just add all the TVs you have authorized earlier:
+You can use the Homebridge UI to make changes to the plugin configuration. You must set the "Network interface name" to the name you found out previously and then configure your TVs (include the { } if configuring on Windows). Then, just add all the TVs you have authorized earlier:
 
 - as ID, you can input your TV's S/N or your own identifier, as long as it's unique in your Home. You can also leave the default value, if you have just one TV. Whatever you input, will be displayed as the accessory "Serial Number" in Home.
 - as name, input the display name that the Home app will suggest when adding this TV to your Home.
 - as IP address, input the IP that you have assigned to your TV.
-- as MAC Address, input the MAC Address of your TV (if your TV is connected both via WiFi and Ethernet, make sure to configure the interface that your TV is using).
+- as MAC Address, input the MAC Address of your TV (if your TV is connected both via WiFi and Ethernet, make sure to configure the interface that your TV is using). 
 
 Repeat the configuration for each TV you want to use, then restart Homebridge.
 
 ### SSL mode
 
-Since version 1.1.0, this plugin also supports connecting to HiSense TVs that require different SSL modes than the default one. For example, some models have an unrecognized certificate and some other models need a specific encryption to be used.
+Since version 1.1.0, this plugin also supports connecting to Hisense TVs that require different SSL modes than the default one. For example, some models have an unrecognized certificate and some other models need a specific encryption to be used.
 
 To change how the plugin connects to your TV, use the `sslmode` config key. See below in the config example for more info.
 
