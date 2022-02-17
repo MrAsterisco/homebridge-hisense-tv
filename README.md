@@ -28,6 +28,12 @@ This plugin has been developed and tested running Homebridge on Ubuntu Linux 20.
 
 **If you find anything that is not correct, please open an issue (or even better: a PR changing this file) explaining what you're doing differently to make this plugin work with different TV models and/or on different operating systems.**
 
+### Known Incompatibilities
+
+Some TV models have been reported as incompatible or are known to cause problems.
+
+- HU50A6800FUW (50" H8G 2020) - See [this issue](https://github.com/MrAsterisco/homebridge-hisense-tv/issues/37).
+
 # Installation
 
 Search for the plugin in Homebridge:
