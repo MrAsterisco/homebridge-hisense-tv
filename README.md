@@ -204,7 +204,9 @@ This plugin is **under active development**, but most of the features are ready 
 - Some newer TV models are always reported as turned on: this happens because they still respond to requests, even if they're "off". *As I don't have a such a model to test, I am unfortunately unable to provide a fix: if you have some experience with Python, TypeScript and have some free time, take a look at [this issue](https://github.com/MrAsterisco/homebridge-hisense-tv/issues/18).*
 
 # Contributions
-All contributions to expand the library are welcome. Fork the repo, make the changes you want, and open a Pull Request.
+All contributions to expand the library are welcome.To contribute to the library, the first step is to fork the repository, which creates a copy of the codebase that can be modified independently. Once the fork is created, changes can be made to the codebase as needed, such as adding new features, improving existing functionality, or fixing bugs.
+
+After the changes are made, the contributor can open a Pull Request, which is a request to merge the changes back into the original codebase. The Pull Request is reviewed by the maintainers of the library, who may ask for additional changes based on how the rest of the library is structured or how it is coded.
 
 If you make changes to the codebase, I am not enforcing a coding style, but I may ask you to make changes based on how the rest of the library is made.
 
