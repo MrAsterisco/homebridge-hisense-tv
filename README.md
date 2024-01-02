@@ -22,17 +22,21 @@ This is a plugin for Homebridge that allows you to control your RemoteNow-enable
 
 ## Compatibility
 
+### TVs
 In theory, any RemoteNOW enabled TV should work with this plugin. However, some TVs have different behaviors, different SSL configurations and may not work completely or may require additional steps.
 
-This plugin has been developed and tested running Homebridge on Ubuntu Linux 20.04 and macOS Monterey with a Hisense 50AE7010F. If your configuration differs, the steps below may not be a 100% accurate: even if the general idea is the same *(pair the TV, add it to Home, use it)*, your mileage may vary.
+> Starting with VIDAA U6 (2022) and continuing with VIDAA U7 (2023), native AirPlay and HomeKit support is built-in. For these TVs, this plugin is not required.
 
-**If you find anything that is not correct, please open an issue (or even better: a PR changing this file) explaining what you're doing differently to make this plugin work with different TV models and/or on different operating systems.**
-
-### Known Incompatibilities
+#### Known Incompatibilities
 
 Some TV models have been reported as incompatible or are known to cause problems.
 
 - HU50A6800FUW (50" H8G 2020) - See [this issue](https://github.com/MrAsterisco/homebridge-hisense-tv/issues/37).
+
+### Homebridge Hosts
+This plugin has been developed and tested running Homebridge on Ubuntu Linux 20.04 and macOS Monterey with a Hisense 50AE7010F. If your configuration differs, the steps below may not be a 100% accurate: even if the general idea is the same *(pair the TV, add it to Home, use it)*, your mileage may vary.
+
+**If you find anything that is not correct, please open an issue (or even better: a PR changing this file) explaining what you're doing differently to make this plugin work with different TV models and/or on different operating systems.**
 
 # Installation
 
