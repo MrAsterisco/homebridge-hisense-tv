@@ -56,7 +56,7 @@ apt install python3-paho-mqtt python3-netifaces
 # for any Linux distro, including Hoobs:
 sudo su - homebridge
 pip3 install netifaces
-pip3 install paho-mqtt
+pip3 install "paho-mqtt==1.6.1"
 ```
 
 #### Hoobs
