@@ -16,7 +16,7 @@ This is a plugin for Homebridge that allows you to control your RemoteNow-enable
 
 - NodeJS 10 or later.
 - Homebridge 1.3.0 or later.
-- Python 3.8 with [paho-mqtt](https://pypi.org/project/paho-mqtt/) and [netifaces](https://pypi.org/project/netifaces/).
+- Python 3.8 with [paho-mqtt](https://pypi.org/project/paho-mqtt/) version 1.6.1 and [netifaces](https://pypi.org/project/netifaces/).
 - A Hisense TV that supports the RemoteNow app ([App Store](https://apps.apple.com/us/app/remotenow/id1301866548) or [Play Store](https://play.google.com/store/apps/details?id=com.universal.remote.ms&hl=en&gl=US)).
 - *Starting with version 2.0.0, macOS is also supported as host*.
 
