@@ -115,8 +115,10 @@ def main():
         logger.info("No SSL context specified.")
         ssl_context = None
     elif args.certfile is not None and args.keyfile is not None:
-        ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
         ssl_context.load_cert_chain(certfile=args.certfile, keyfile=args.keyfile)
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
         logger.info("SSL context created with cert file (" + args.certfile + ") and private key (" + args.keyfile + ")")
     else:
         ssl_context = ssl._create_unverified_context()
