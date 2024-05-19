@@ -14,10 +14,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com:MrAsterisco/homebridge-hisense-tv.git"
+    "url": "git+https://github.com/MrAsterisco/homebridge-hisense-tv.git"
   },
   "bugs": {
-    "url": "http://github.com/MrAsterisco/homebridge-hisense-tv/issues"
+    "url": "https://github.com/MrAsterisco/homebridge-hisense-tv/issues"
   },
   "scripts": {
     "lint": "npm run version && eslint src/**.ts --max-warnings=5 --fix",
