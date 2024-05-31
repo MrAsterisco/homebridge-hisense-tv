@@ -17,17 +17,12 @@ export class HiSenseTVAccessory {
   private speakerService: Service;
 
   private deviceState = {
-    isConnected: false,
-    hasFetchedInputs: false,
-    currentSourceName: '',
+    isConnected: false, hasFetchedInputs: false, currentSourceName: '',
   };
 
   private inputSources: InputSource[] = [];
 
-  constructor(
-    private readonly platform: HiSenseTVPlatform,
-    private readonly accessory: PlatformAccessory,
-  ) {
+  constructor(private readonly platform: HiSenseTVPlatform, private readonly accessory: PlatformAccessory) {
     // Start the asynchronous check of the TV status.
     this.checkTVStatus();
 
@@ -113,7 +108,7 @@ export class HiSenseTVAccessory {
 
   async setRemoteKey(newValue: CharacteristicValue) {
     let keyName = '';
-    switch(newValue) {
+    switch (newValue) {
       case this.platform.Characteristic.RemoteKey.REWIND: {
         this.platform.log.debug('set Remote Key Pressed: REWIND');
         keyName = 'rewind';
@@ -212,7 +207,7 @@ export class HiSenseTVAccessory {
     if (value === 0) {
       this.platform.log.debug('Switching to the Other input is unsupported. This input is only used when the plugin is unable to identify the current input on the TV (i.e. you are using an app).');
     } else if (this.deviceState.hasFetchedInputs) {
-      const inputSource = this.inputSources[(value as number)-1];
+      const inputSource = this.inputSources[(value as number) - 1];
       await this.sendCommand(['--key', 'source_' + inputSource.sourceid]);
       this.service.updateCharacteristic(this.platform.Characteristic.ActiveIdentifier, value);
     } else {
@@ -240,13 +235,15 @@ export class HiSenseTVAccessory {
 
     const [_, output] = await this.sendCommand(['--get', 'sources']);
     try {
-      this.inputSources = JSON.parse((output as string[]).join('')) as InputSource[];
+      this.inputSources = (JSON.parse((output as string[]).join('')) as InputSource[])
+        .sort((a, b) => {
+          return parseInt(a.sourceid, 10) - parseInt(b.sourceid, 10);
+        });
 
       this.inputSources.forEach((inputSource, index) => {
         this.platform.log.debug('Adding input: ' + JSON.stringify(inputSource));
 
-        const inputService = this.accessory.getService('input'+inputSource.sourceid)
-          || this.accessory.addService(this.platform.Service.InputSource, 'input'+inputSource.sourceid, 'input'+inputSource.sourceid);
+        const inputService = this.accessory.getService('input' + inputSource.sourceid) || this.accessory.addService(this.platform.Service.InputSource, 'input' + inputSource.sourceid, 'input' + inputSource.sourceid);
 
         inputService.setCharacteristic(this.platform.Characteristic.IsConfigured, this.platform.Characteristic.IsConfigured.CONFIGURED);
         inputService.setCharacteristic(this.platform.Characteristic.ConfiguredName, inputSource.displayname);
@@ -263,14 +260,15 @@ export class HiSenseTVAccessory {
         }
 
         inputService.setCharacteristic(this.platform.Characteristic.InputSourceType, inputType);
-        inputService.setCharacteristic(this.platform.Characteristic.Identifier, (index+1));
-
-        inputService.updateCharacteristic(this.platform.Characteristic.CurrentVisibilityState, this.platform.Characteristic.CurrentVisibilityState.SHOWN);
+        inputService.setCharacteristic(this.platform.Characteristic.Identifier, (index + 1));
 
         inputSource.service = inputService;
 
         this.service.addLinkedService(inputService);
       });
+
+      const displayOrder = [0].concat(this.inputSources.map((_, index) => index+1));
+      this.service.setCharacteristic(this.platform.api.hap.Characteristic.DisplayOrder, this.platform.api.hap.encode(1, displayOrder).toString('base64'));
 
       this.deviceState.hasFetchedInputs = true;
       this.getCurrentInput();
@@ -291,8 +289,7 @@ export class HiSenseTVAccessory {
   createHomeSource() {
     this.platform.log.debug('Adding unknown source...');
 
-    const inputService = this.accessory.getService('inputhome')
-        || this.accessory.addService(this.platform.Service.InputSource, 'inputhome', 'inputhome');
+    const inputService = this.accessory.getService('inputhome') || this.accessory.addService(this.platform.Service.InputSource, 'inputhome', 'inputhome');
 
     inputService
       .setCharacteristic(this.platform.Characteristic.IsConfigured, this.platform.Characteristic.IsConfigured.CONFIGURED)
@@ -300,15 +297,7 @@ export class HiSenseTVAccessory {
       .setCharacteristic(this.platform.Characteristic.InputSourceType, this.platform.Characteristic.InputSourceType.OTHER)
       .setCharacteristic(this.platform.Characteristic.Identifier, 0);
 
-    inputService.updateCharacteristic(this.platform.Characteristic.CurrentVisibilityState, this.platform.Characteristic.CurrentVisibilityState.HIDDEN);
-
     this.service.addLinkedService(inputService);
-  }
-
-  public setVisibilityState(state: CharacteristicValue) {
-    this.inputSources.forEach((inputSource) => {
-      inputSource.service?.updateCharacteristic(this.platform.Characteristic.CurrentVisibilityState, state);
-    });
   }
 
   /**
@@ -336,7 +325,6 @@ export class HiSenseTVAccessory {
         this.getSources();
       } else {
         this.getCurrentInput();
-        this.setVisibilityState(this.platform.Characteristic.CurrentVisibilityState.SHOWN);
       }
     });
 
@@ -344,7 +332,6 @@ export class HiSenseTVAccessory {
       this.platform.log.debug('Connection to TV timed out.');
       this.deviceState.isConnected = false;
       this.service.updateCharacteristic(this.platform.Characteristic.Active, this.deviceState.isConnected);
-      this.setVisibilityState(this.platform.Characteristic.CurrentVisibilityState.HIDDEN);
       socket.destroy();
     });
 
@@ -352,7 +339,6 @@ export class HiSenseTVAccessory {
       this.platform.log.debug('An error occurred while connecting to TV: ' + err);
       this.deviceState.isConnected = false;
       this.service.updateCharacteristic(this.platform.Characteristic.Active, this.deviceState.isConnected);
-      this.setVisibilityState(this.platform.Characteristic.CurrentVisibilityState.HIDDEN);
       socket.destroy();
     });
   }
@@ -403,7 +389,7 @@ export class HiSenseTVAccessory {
     for (let index = 0; index < this.inputSources.length; index++) {
       const inputSource = this.inputSources[index];
       if (inputSource.sourcename === this.deviceState.currentSourceName) {
-        return index+1;
+        return index + 1;
       }
     }
 
@@ -421,11 +407,7 @@ export class HiSenseTVAccessory {
 
     const pythonScript = path.resolve(__dirname, '../bin/hisensetv.py');
 
-    let pythonArgs = args.concat([
-      this.accessory.context.device.ipaddress,
-      '--ifname',
-      this.platform.config.ifname,
-    ]);
+    let pythonArgs = args.concat([this.accessory.context.device.ipaddress, '--ifname', this.platform.config.ifname]);
     if (sslParameter !== null) {
       pythonArgs = pythonArgs.concat(sslParameter);
     }
@@ -458,12 +440,7 @@ export class HiSenseTVAccessory {
         sslParameter = ['--no-ssl'];
         break;
       case 'custom':
-        sslParameter = [
-          '--certfile',
-          this.accessory.context.device.sslcertificate.trim(),
-          '--keyfile',
-          this.accessory.context.device.sslprivatekey.trim(),
-        ];
+        sslParameter = ['--certfile', this.accessory.context.device.sslcertificate.trim(), '--keyfile', this.accessory.context.device.sslprivatekey.trim()];
         break;
     }
 
