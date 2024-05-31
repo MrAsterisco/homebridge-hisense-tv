@@ -358,7 +358,7 @@ export class HiSenseTVAccessory {
     const [_, output] = await this.sendCommand(['--get', 'state']);
 
     try {
-      const response: TVState = JSON.parse((output as any[]).join(''));
+      const response = JSON.parse((output as string[]).join('')) as TVState;
       if (response.statetype === 'sourceswitch') {
         this.deviceState.currentSourceName = response.sourcename;
         this.platform.log.debug('Current input is: ' + this.deviceState.currentSourceName);
