@@ -270,9 +270,9 @@ export class HiSenseTVAccessory {
       const displayOrder = [0].concat(this.inputSources.map((_, index) => index+1));
       this.service.setCharacteristic(this.platform.api.hap.Characteristic.DisplayOrder, this.platform.api.hap.encode(1, displayOrder).toString('base64'));
 
-      this.deviceState.hasFetchedInputs = true;
       this.getCurrentInput();
     } catch (error) {
+      this.deviceState.hasFetchedInputs = false;
       this.platform.log.error('An error occurred while fetching inputs: ' + error);
     }
   }
@@ -322,6 +322,7 @@ export class HiSenseTVAccessory {
       socket.destroy();
 
       if (!this.deviceState.hasFetchedInputs) {
+        this.deviceState.hasFetchedInputs = true;
         this.getSources();
       } else {
         this.getCurrentInput();
