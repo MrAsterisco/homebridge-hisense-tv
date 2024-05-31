@@ -43,6 +43,13 @@
               "placeholder": "192.168.1.0",
               "description": "This plugin cannot discover TVs automatically on the local network. Make sure to set your TV with a static DHCP to the IP address you input here."
             },
+            "pollingInterval": {
+              "title": "Polling interval",
+              "type": "integer",
+              "required": true,
+              "placeholder": 10,
+              "description": "This plugin needs to periodically sync with the television. The polling interval is the time between each sync. The default value is 10 seconds."
+            },
             "macaddress": {
               "title": "MAC Address",
               "type": "string",

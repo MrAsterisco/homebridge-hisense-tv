@@ -6,6 +6,7 @@ import { HiSenseTVAccessory } from './platformAccessory';
 interface DeviceConfig {
   id: string;
   name: string;
+  pollingInterval: number;
   ipaddress: string;
   macaddress: string;
 }

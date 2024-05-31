@@ -76,7 +76,7 @@ export class HiSenseTVAccessory {
     // Setup an interval to periodically check the TV status.
     setInterval(() => {
       this.checkTVStatus();
-    }, 10000);
+    }, this.accessory.context.pollingInterval * 1000);
 
   }
 
