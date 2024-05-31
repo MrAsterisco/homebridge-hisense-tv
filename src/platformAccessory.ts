@@ -45,7 +45,7 @@ export class HiSenseTVAccessory {
     // Configure the service.
     this.service
       .setCharacteristic(this.platform.Characteristic.ConfiguredName, accessory.context.device.name)
-      .setCharacteristic(this.platform.Characteristic.SleepDiscoveryMode, this.platform.Characteristic.SleepDiscoveryMode.ALWAYS_DISCOVERABLE);
+      .setCharacteristic(this.platform.Characteristic.SleepDiscoveryMode, this.platform.Characteristic.SleepDiscoveryMode.NOT_DISCOVERABLE);
 
     // Bind to events.
     this.service.getCharacteristic(this.platform.Characteristic.Active)
