@@ -23,6 +23,7 @@ export class HiSenseTVAccessory {
   private inputSources: InputSource[] = [];
 
   constructor(private readonly platform: HiSenseTVPlatform, private readonly accessory: PlatformAccessory) {
+    let isFirstRun = true;
     // Start the asynchronous check of the TV status.
     this.checkTVStatus();
 
@@ -75,6 +76,10 @@ export class HiSenseTVAccessory {
 
     // Setup an interval to periodically check the TV status.
     setInterval(() => {
+      if (isFirstRun && this.deviceState.hasFetchedInputs) {
+        isFirstRun = false;
+        return;
+      }
       this.checkTVStatus();
     }, this.accessory.context.pollingInterval * 1000);
 
