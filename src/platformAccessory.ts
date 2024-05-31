@@ -1,8 +1,8 @@
-import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
+import {CharacteristicValue, PlatformAccessory, Service} from 'homebridge';
 
-import { HiSenseTVPlatform } from './platform';
+import {HiSenseTVPlatform} from './platform';
 import wol from 'wol';
-import { PythonShell } from 'python-shell';
+import {PythonShell} from 'python-shell';
 import net from 'net';
 
 import path from 'path';
@@ -241,10 +241,9 @@ export class HiSenseTVAccessory {
       return;
     }
 
-    const [err, output] = await this.sendCommand(['--get', 'sources']);
+    const [_, output] = await this.sendCommand(['--get', 'sources']);
     try {
-      const response: InputSource[] = JSON.parse((output as any[]).join(''));
-      this.inputSources = response;
+      this.inputSources = JSON.parse((output as string[]).join('')) as InputSource[];
 
       this.inputSources.forEach((inputSource, index) => {
         this.platform.log.debug('Adding input: ' + JSON.stringify(inputSource));
@@ -356,7 +355,7 @@ export class HiSenseTVAccessory {
   async getCurrentInput() {
     this.platform.log.debug('Checking current input...');
 
-    const [err, output] = await this.sendCommand(['--get', 'state']);
+    const [_, output] = await this.sendCommand(['--get', 'state']);
 
     try {
       const response: TVState = JSON.parse((output as any[]).join(''));
@@ -402,7 +401,7 @@ export class HiSenseTVAccessory {
    * @param args the arguments to pass to the Hisense script.
    * @param callback A callback to call with an error and the output of the script.
    */
-  async sendCommand(args: string[]): Promise<[err?: Error, output?: any]> {
+  async sendCommand(args: string[]): Promise<[err?: Error, output?: unknown]> {
     const sslParameter = this.getSslArgument();
 
     const pythonScript = path.resolve(__dirname, '../bin/hisensetv.py');
