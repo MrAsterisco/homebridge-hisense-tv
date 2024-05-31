@@ -1,4 +1,4 @@
-import {Characteristic, CharacteristicValue, PlatformAccessory, Service} from 'homebridge';
+import {CharacteristicValue, PlatformAccessory, Service} from 'homebridge';
 
 import {HiSenseTVPlatform} from './platform';
 import wol from 'wol';
