@@ -1,4 +1,4 @@
-import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
+import {API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic, Categories} from 'homebridge';
 
 import { PLUGIN_NAME } from './settings';
 import { HiSenseTVAccessory } from './platformAccessory';
@@ -101,7 +101,7 @@ export class HiSenseTVPlatform implements DynamicPlatformPlugin {
         this.log.info('Adding new accessory:', device.name);
 
         // create a new accessory
-        const accessory = new this.api.platformAccessory(device.name, uuid);
+        const accessory = new this.api.platformAccessory(device.name, uuid, Categories.TELEVISION);
 
         // store a copy of the device object in the `accessory.context`
         // the `context` property can be used to store any data about the accessory you may need
