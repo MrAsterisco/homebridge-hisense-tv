@@ -1,4 +1,4 @@
-import {CharacteristicValue, PlatformAccessory, Service} from 'homebridge';
+import {Characteristic, CharacteristicValue, PlatformAccessory, Service} from 'homebridge';
 
 import {HiSenseTVPlatform} from './platform';
 import wol from 'wol';
@@ -253,6 +253,8 @@ export class HiSenseTVAccessory {
 
         inputService.setCharacteristic(this.platform.Characteristic.IsConfigured, this.platform.Characteristic.IsConfigured.CONFIGURED);
         inputService.setCharacteristic(this.platform.Characteristic.ConfiguredName, inputSource.displayname);
+        inputService.setCharacteristic(this.platform.Characteristic.Name, inputSource.displayname);
+        inputService.setCharacteristic(this.platform.Characteristic.CurrentVisibilityState, this.platform.Characteristic.CurrentVisibilityState.SHOWN);
 
         let inputType = this.platform.Characteristic.InputSourceType.OTHER;
         if (inputSource.sourcename === 'TV') {
@@ -265,6 +267,8 @@ export class HiSenseTVAccessory {
 
         inputService.setCharacteristic(this.platform.Characteristic.InputSourceType, inputType);
         inputService.setCharacteristic(this.platform.Characteristic.Identifier, (index+1));
+
+        inputSource.service = inputService;
 
         this.service.addLinkedService(inputService);
       });
@@ -300,6 +304,12 @@ export class HiSenseTVAccessory {
     this.service.addLinkedService(inputService);
   }
 
+  public setInputState(state: CharacteristicValue) {
+    this.inputSources.forEach((inputSource) => {
+      inputSource.service?.updateCharacteristic(this.platform.Characteristic.CurrentVisibilityState, state);
+    });
+  }
+
   /**
    * Check the current TV status by attempting to telnet the MQTT service directly.
    *
@@ -320,10 +330,12 @@ export class HiSenseTVAccessory {
       this.service.updateCharacteristic(this.platform.Characteristic.Active, this.deviceState.isConnected);
 
       socket.destroy();
+
       if (!this.deviceState.hasFetchedInputs) {
         this.getSources();
       } else {
         this.getCurrentInput();
+        this.setInputState(this.platform.Characteristic.CurrentVisibilityState.SHOWN);
       }
     });
 
@@ -331,6 +343,7 @@ export class HiSenseTVAccessory {
       this.platform.log.debug('Connection to TV timed out.');
       this.deviceState.isConnected = false;
       this.service.updateCharacteristic(this.platform.Characteristic.Active, this.deviceState.isConnected);
+      this.setInputState(this.platform.Characteristic.CurrentVisibilityState.HIDDEN);
       socket.destroy();
     });
 
@@ -338,6 +351,7 @@ export class HiSenseTVAccessory {
       this.platform.log.debug('An error occurred while connecting to TV: ' + err);
       this.deviceState.isConnected = false;
       this.service.updateCharacteristic(this.platform.Characteristic.Active, this.deviceState.isConnected);
+      this.setInputState(this.platform.Characteristic.CurrentVisibilityState.HIDDEN);
       socket.destroy();
     });
   }
@@ -463,6 +477,7 @@ class InputSource {
   sourceid = '';
   sourcename = '';
   displayname = '';
+  service?: Service;
 }
 
 class TVState {
