@@ -301,6 +301,8 @@ export class HiSenseTVAccessory {
       .setCharacteristic(this.platform.Characteristic.InputSourceType, this.platform.Characteristic.InputSourceType.OTHER)
       .setCharacteristic(this.platform.Characteristic.Identifier, 0);
 
+    inputService.setCharacteristic(this.platform.Characteristic.CurrentVisibilityState, this.platform.Characteristic.CurrentVisibilityState.HIDDEN);
+
     this.service.addLinkedService(inputService);
   }
 
