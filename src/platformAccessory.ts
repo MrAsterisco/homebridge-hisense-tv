@@ -1,4 +1,4 @@
-import {CharacteristicValue, PlatformAccessory, Service} from 'homebridge';
+import {Characteristic, CharacteristicValue, PlatformAccessory, Service} from 'homebridge';
 
 import {HiSenseTVPlatform} from './platform';
 import wol from 'wol';
@@ -13,6 +13,9 @@ import path from 'path';
  * Each accessory may expose multiple services of different service types.
  */
 export class HiSenseTVAccessory {
+  private Characteristic: typeof Characteristic;
+  private Service: typeof Service;
+
   private service: Service;
   private speakerService: Service;
 
@@ -23,48 +26,51 @@ export class HiSenseTVAccessory {
   private inputSources: InputSource[] = [];
 
   constructor(private readonly platform: HiSenseTVPlatform, private readonly accessory: PlatformAccessory) {
+    this.Characteristic = platform.Characteristic;
+    this.Service = platform.Service;
+
     // Start the asynchronous check of the TV status.
     this.checkTVStatus();
 
     // Configure the TV details.
-    this.accessory.getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'HiSense')
-      .setCharacteristic(this.platform.Characteristic.Model, 'TV')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.context.device.id);
+    this.accessory.getService(this.Service.AccessoryInformation)!
+      .setCharacteristic(this.Characteristic.Manufacturer, 'HiSense')
+      .setCharacteristic(this.Characteristic.Model, 'TV')
+      .setCharacteristic(this.Characteristic.SerialNumber, accessory.context.device.id);
 
     // Create the service.
-    this.service = this.accessory.getService(this.platform.Service.Television) || this.accessory.addService(this.platform.Service.Television);
+    this.service = this.accessory.getService(this.Service.Television) || this.accessory.addService(this.Service.Television);
 
     // Configure the service.
     this.service
-      .setCharacteristic(this.platform.Characteristic.ConfiguredName, accessory.context.device.name)
-      .setCharacteristic(this.platform.Characteristic.SleepDiscoveryMode, this.platform.Characteristic.SleepDiscoveryMode.NOT_DISCOVERABLE);
+      .setCharacteristic(this.Characteristic.ConfiguredName, accessory.context.device.name)
+      .setCharacteristic(this.Characteristic.SleepDiscoveryMode, this.Characteristic.SleepDiscoveryMode.NOT_DISCOVERABLE);
 
     // Bind to events.
-    this.service.getCharacteristic(this.platform.Characteristic.Active)
+    this.service.getCharacteristic(this.Characteristic.Active)
       .onSet(this.setOn.bind(this))
       .onGet(this.getOn.bind(this));
 
-    this.service.getCharacteristic(this.platform.Characteristic.RemoteKey)
+    this.service.getCharacteristic(this.Characteristic.RemoteKey)
       .onSet(this.setRemoteKey.bind(this));
 
-    this.service.setCharacteristic(this.platform.Characteristic.ActiveIdentifier, 0);
+    this.service.setCharacteristic(this.Characteristic.ActiveIdentifier, 0);
 
-    this.service.getCharacteristic(this.platform.Characteristic.ActiveIdentifier)
+    this.service.getCharacteristic(this.Characteristic.ActiveIdentifier)
       .onSet(this.setCurrentApplication.bind(this))
       .onGet(this.getCurrentApplication.bind(this));
 
     // Create the TV speaker service.
-    this.speakerService = this.accessory.getService(this.platform.Service.TelevisionSpeaker) || this.accessory.addService(this.platform.Service.TelevisionSpeaker);
+    this.speakerService = this.accessory.getService(this.Service.TelevisionSpeaker) || this.accessory.addService(this.Service.TelevisionSpeaker);
 
     // Configure the TV speaker service.
     this.speakerService
-      .setCharacteristic(this.platform.Characteristic.Active, 1)
-      .setCharacteristic(this.platform.Characteristic.VolumeControlType, this.platform.Characteristic.VolumeControlType.RELATIVE);
+      .setCharacteristic(this.Characteristic.Active, 1)
+      .setCharacteristic(this.Characteristic.VolumeControlType, this.Characteristic.VolumeControlType.RELATIVE);
 
     // Bind to TV speaker events.
     this.speakerService
-      .getCharacteristic(this.platform.Characteristic.VolumeSelector)
+      .getCharacteristic(this.Characteristic.VolumeSelector)
       .onSet(this.setVolume.bind(this));
 
     // Add the TV speaker to the TV.
@@ -94,7 +100,7 @@ export class HiSenseTVAccessory {
       }
       await wol.wake(this.accessory.context.device.macaddress);
       this.deviceState.isConnected = true;
-      this.service.updateCharacteristic(this.platform.Characteristic.Active, this.platform.Characteristic.Active.ACTIVE);
+      this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.ACTIVE);
     } else {
       if (!this.deviceState.isConnected) {
         // The device is already turned off. Nothing to do
@@ -102,72 +108,72 @@ export class HiSenseTVAccessory {
       }
       await this.sendCommand(['--key', 'power']);
       this.deviceState.isConnected = false;
-      this.service.updateCharacteristic(this.platform.Characteristic.Active, this.platform.Characteristic.Active.INACTIVE);
+      this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
     }
   }
 
   async setRemoteKey(newValue: CharacteristicValue) {
     let keyName = '';
     switch (newValue) {
-      case this.platform.Characteristic.RemoteKey.REWIND: {
+      case this.Characteristic.RemoteKey.REWIND: {
         this.platform.log.debug('set Remote Key Pressed: REWIND');
         keyName = 'rewind';
         break;
       }
-      case this.platform.Characteristic.RemoteKey.FAST_FORWARD: {
+      case this.Characteristic.RemoteKey.FAST_FORWARD: {
         this.platform.log.debug('set Remote Key Pressed: FAST_FORWARD');
         keyName = 'fast_forward';
         break;
       }
-      case this.platform.Characteristic.RemoteKey.NEXT_TRACK: {
+      case this.Characteristic.RemoteKey.NEXT_TRACK: {
         this.platform.log.debug('unsupported Remote Key Pressed: NEXT_TRACK, ignoring.');
         return;
       }
-      case this.platform.Characteristic.RemoteKey.PREVIOUS_TRACK: {
+      case this.Characteristic.RemoteKey.PREVIOUS_TRACK: {
         this.platform.log.debug('unsupported Remote Key Pressed: PREVIOUS_TRACK, ignoring.');
         return;
       }
-      case this.platform.Characteristic.RemoteKey.ARROW_UP: {
+      case this.Characteristic.RemoteKey.ARROW_UP: {
         this.platform.log.debug('set Remote Key Pressed: ARROW_UP');
         keyName = 'up';
         break;
       }
-      case this.platform.Characteristic.RemoteKey.ARROW_DOWN: {
+      case this.Characteristic.RemoteKey.ARROW_DOWN: {
         this.platform.log.debug('set Remote Key Pressed: ARROW_DOWN');
         keyName = 'down';
         break;
       }
-      case this.platform.Characteristic.RemoteKey.ARROW_LEFT: {
+      case this.Characteristic.RemoteKey.ARROW_LEFT: {
         this.platform.log.debug('set Remote Key Pressed: ARROW_LEFT');
         keyName = 'left';
         break;
       }
-      case this.platform.Characteristic.RemoteKey.ARROW_RIGHT: {
+      case this.Characteristic.RemoteKey.ARROW_RIGHT: {
         this.platform.log.debug('set Remote Key Pressed: ARROW_RIGHT');
         keyName = 'right';
         break;
       }
-      case this.platform.Characteristic.RemoteKey.SELECT: {
+      case this.Characteristic.RemoteKey.SELECT: {
         this.platform.log.debug('set Remote Key Pressed: SELECT');
         keyName = 'ok';
         break;
       }
-      case this.platform.Characteristic.RemoteKey.BACK: {
+      case this.Characteristic.RemoteKey.BACK: {
         this.platform.log.debug('set Remote Key Pressed: BACK');
         keyName = 'back';
         break;
       }
-      case this.platform.Characteristic.RemoteKey.EXIT: {
+      case this.Characteristic.RemoteKey.EXIT: {
         this.platform.log.debug('set Remote Key Pressed: EXIT');
         keyName = 'exit';
         break;
       }
-      case this.platform.Characteristic.RemoteKey.PLAY_PAUSE: {
+      case this.Characteristic.RemoteKey.PLAY_PAUSE: {
         this.platform.log.debug('set Remote Key Pressed: PLAY_PAUSE');
         keyName = 'play';
         break;
       }
-      case this.platform.Characteristic.RemoteKey.INFORMATION: {
+      case this.Characteristic.RemoteKey.INFORMATION: {
         this.platform.log.debug('set Remote Key Pressed: INFORMATION');
         keyName = 'home';
         break;
@@ -209,7 +215,7 @@ export class HiSenseTVAccessory {
     } else if (this.deviceState.hasFetchedInputs) {
       const inputSource = this.inputSources[(value as number) - 1];
       await this.sendCommand(['--key', 'source_' + inputSource.sourceid]);
-      this.service.updateCharacteristic(this.platform.Characteristic.ActiveIdentifier, value);
+      this.service.updateCharacteristic(this.Characteristic.ActiveIdentifier, value);
     } else {
       //callback(EvalError('Inputs are not available'));
     }
@@ -243,24 +249,23 @@ export class HiSenseTVAccessory {
       this.inputSources.forEach((inputSource, index) => {
         this.platform.log.debug('Adding input: ' + JSON.stringify(inputSource));
 
-        const inputService = this.accessory.getService('input' + inputSource.sourceid) || this.accessory.addService(this.platform.Service.InputSource, 'input' + inputSource.sourceid, 'input' + inputSource.sourceid);
+        const inputService = this.accessory.getService('input' + inputSource.sourceid) || this.accessory.addService(this.Service.InputSource, 'input' + inputSource.sourceid, 'input' + inputSource.sourceid);
 
-        inputService.setCharacteristic(this.platform.Characteristic.IsConfigured, this.platform.Characteristic.IsConfigured.CONFIGURED);
-        inputService.setCharacteristic(this.platform.Characteristic.ConfiguredName, inputSource.displayname);
-        inputService.setCharacteristic(this.platform.Characteristic.Name, inputSource.displayname);
-        inputService.setCharacteristic(this.platform.Characteristic.CurrentVisibilityState, this.platform.Characteristic.CurrentVisibilityState.SHOWN);
+        inputService.setCharacteristic(this.Characteristic.IsConfigured, this.Characteristic.IsConfigured.CONFIGURED);
+        inputService.setCharacteristic(this.Characteristic.ConfiguredName, inputSource.displayname);
+        inputService.setCharacteristic(this.Characteristic.Name, inputSource.displayname);
 
-        let inputType = this.platform.Characteristic.InputSourceType.OTHER;
+        let inputType = this.Characteristic.InputSourceType.OTHER;
         if (inputSource.sourcename === 'TV') {
-          inputType = this.platform.Characteristic.InputSourceType.TUNER;
+          inputType = this.Characteristic.InputSourceType.TUNER;
         } else if (inputSource.sourcename === 'AV') {
-          inputType = this.platform.Characteristic.InputSourceType.COMPOSITE_VIDEO;
+          inputType = this.Characteristic.InputSourceType.COMPOSITE_VIDEO;
         } else if (inputSource.sourcename.startsWith('HDMI')) {
-          inputType = this.platform.Characteristic.InputSourceType.HDMI;
+          inputType = this.Characteristic.InputSourceType.HDMI;
         }
 
-        inputService.setCharacteristic(this.platform.Characteristic.InputSourceType, inputType);
-        inputService.setCharacteristic(this.platform.Characteristic.Identifier, (index + 1));
+        inputService.setCharacteristic(this.Characteristic.InputSourceType, inputType);
+        inputService.setCharacteristic(this.Characteristic.Identifier, (index + 1));
 
         inputSource.service = inputService;
 
@@ -289,13 +294,13 @@ export class HiSenseTVAccessory {
   createHomeSource() {
     this.platform.log.debug('Adding unknown source...');
 
-    const inputService = this.accessory.getService('inputhome') || this.accessory.addService(this.platform.Service.InputSource, 'inputhome', 'inputhome');
+    const inputService = this.accessory.getService('inputhome') || this.accessory.addService(this.Service.InputSource, 'inputhome', 'inputhome');
 
     inputService
-      .setCharacteristic(this.platform.Characteristic.IsConfigured, this.platform.Characteristic.IsConfigured.CONFIGURED)
-      .setCharacteristic(this.platform.Characteristic.ConfiguredName, 'Unknown')
-      .setCharacteristic(this.platform.Characteristic.InputSourceType, this.platform.Characteristic.InputSourceType.OTHER)
-      .setCharacteristic(this.platform.Characteristic.Identifier, 0);
+      .setCharacteristic(this.Characteristic.IsConfigured, this.Characteristic.IsConfigured.CONFIGURED)
+      .setCharacteristic(this.Characteristic.ConfiguredName, 'Unknown')
+      .setCharacteristic(this.Characteristic.InputSourceType, this.Characteristic.InputSourceType.OTHER)
+      .setCharacteristic(this.Characteristic.Identifier, 0);
 
     this.service.addLinkedService(inputService);
   }
@@ -317,7 +322,7 @@ export class HiSenseTVAccessory {
     socket.on('connect', () => {
       this.platform.log.debug('Connected to TV!');
       this.deviceState.isConnected = true;
-      this.service.updateCharacteristic(this.platform.Characteristic.Active, this.deviceState.isConnected);
+      this.service.updateCharacteristic(this.Characteristic.Active, this.deviceState.isConnected);
 
       socket.destroy();
 
@@ -331,14 +336,14 @@ export class HiSenseTVAccessory {
     socket.on('timeout', () => {
       this.platform.log.debug('Connection to TV timed out.');
       this.deviceState.isConnected = false;
-      this.service.updateCharacteristic(this.platform.Characteristic.Active, this.deviceState.isConnected);
+      this.service.updateCharacteristic(this.Characteristic.Active, this.deviceState.isConnected);
       socket.destroy();
     });
 
     socket.on('error', (err) => {
       this.platform.log.debug('An error occurred while connecting to TV: ' + err);
       this.deviceState.isConnected = false;
-      this.service.updateCharacteristic(this.platform.Characteristic.Active, this.deviceState.isConnected);
+      this.service.updateCharacteristic(this.Characteristic.Active, this.deviceState.isConnected);
       socket.destroy();
     });
   }
@@ -371,7 +376,7 @@ export class HiSenseTVAccessory {
         this.platform.log.debug('Current input is unsupported.');
       }
 
-      this.service.updateCharacteristic(this.platform.Characteristic.ActiveIdentifier, this.getCurrentInputIndex());
+      this.service.updateCharacteristic(this.Characteristic.ActiveIdentifier, this.getCurrentInputIndex());
     } catch (error) {
       this.platform.log.error('An error occurred while fetching the current input: ' + error);
     }
