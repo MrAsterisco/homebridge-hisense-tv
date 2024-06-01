@@ -69,6 +69,7 @@ export class HiSenseTVAccessory {
     });
 
     this.mqttClient.on('disconnect', () => {
+      this.platform.log.debug('Disconnected from MQTT service on TV.');
       this.deviceState.isConnected = false;
     });
 
