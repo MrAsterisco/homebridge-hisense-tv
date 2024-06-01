@@ -6,7 +6,7 @@ import {PythonShell} from 'python-shell';
 import net from 'net';
 
 import path from 'path';
-import mqtt from 'mqtt/*';
+import * as mqtt from 'mqtt';
 import {DeviceConfig} from './interfaces/device-config.interface';
 import {TVState} from './interfaces/tv-state.interface';
 import {InputSource} from './interfaces/input-source.interface';
