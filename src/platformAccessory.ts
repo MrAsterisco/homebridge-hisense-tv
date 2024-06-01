@@ -75,9 +75,9 @@ export class HiSenseTVAccessory {
     this.mqttClient.on('message', (topic, message) => {
       if(topic.startsWith(_DEVICE_TOPIC)) {
         const messageString = message.toString();
-        this.platform.log.debug('Received message from TV: ' + messageString);
+        this.platform.log.debug(`Received message from TV (${topic}):` + messageString);
       }else {
-        this.platform.log.debug('Received message from TV (broadcast): ' + message.toString());
+        this.platform.log.debug(`Received message from TV (${topic}): ` + message.toString());
       }
     });
 
