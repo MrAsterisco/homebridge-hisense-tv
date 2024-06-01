@@ -37,6 +37,7 @@
     "homebridge": "^1.6.0"
   },
   "dependencies": {
+    "mqtt": "^5.7.0",
     "python-shell": "^2.0.3",
     "telnet-stream": "^1.0.5",
     "wol": "^1.0.7"

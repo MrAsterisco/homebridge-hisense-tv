@@ -2,13 +2,7 @@ import {API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, S
 
 import { PLUGIN_NAME } from './settings';
 import { HiSenseTVAccessory } from './platformAccessory';
-
-interface DeviceConfig {
-  id: string;
-  name: string;
-  ipaddress: string;
-  macaddress: string;
-}
+import {DeviceConfig} from './interfaces/device-config.interface';
 
 /**
  * HomebridgePlatform

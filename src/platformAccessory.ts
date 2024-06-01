@@ -6,6 +6,11 @@ import {PythonShell} from 'python-shell';
 import net from 'net';
 
 import path from 'path';
+import mqtt from 'mqtt/*';
+import {DeviceConfig} from './interfaces/device-config.interface';
+import {TVState} from './interfaces/tv-state.interface';
+import {InputSource} from './interfaces/input-source.interface';
+import * as fs from 'node:fs';
 
 /**
  * Platform Accessory
@@ -19,6 +24,9 @@ export class HiSenseTVAccessory {
   private service: Service;
   private speakerService: Service;
 
+  private mqttClient: mqtt.MqttClient;
+  private deviceConfig: DeviceConfig;
+
   private deviceState = {
     isConnected: false, hasFetchedInputs: false, currentSourceName: '',
   };
@@ -28,6 +36,45 @@ export class HiSenseTVAccessory {
   constructor(private readonly platform: HiSenseTVPlatform, private readonly accessory: PlatformAccessory) {
     this.Characteristic = platform.Characteristic;
     this.Service = platform.Service;
+
+    this.deviceConfig = accessory.context.device;
+
+    let key: Buffer|null = null;
+    let cert: Buffer|null = null;
+
+    if(this.deviceConfig.sslmode === 'custom') {
+      key = fs.readFileSync(this.deviceConfig.sslprivatekey);
+      cert = fs.readFileSync(this.deviceConfig.sslcertificate);
+    }
+
+    this.mqttClient = mqtt.connect({
+      port: 36669,
+      host: this.deviceConfig.ipaddress,
+      key: key,
+      cert: cert,
+      username: 'hisenseservice',
+      password: 'multimqttservice',
+      rejectUnauthorized: false,
+      protocol: 'mqtts',
+    } as mqtt.IClientOptions);
+
+    this.mqttClient.on('connect', () => {
+      this.platform.log.debug('Connected to MQTT service on TV.');
+      this.deviceState.isConnected = true;
+    });
+
+    this.mqttClient.on('reconnect', () => {
+      this.platform.log.debug('Reconnected to MQTT service on TV.');
+      this.deviceState.isConnected = true;
+    });
+
+    this.mqttClient.on('disconnect', () => {
+      this.deviceState.isConnected = false;
+    });
+
+    this.mqttClient.on('error', (err) => {
+      this.platform.log.error('An error occurred while connecting to MQTT service: ' + err);
+    });
 
     // Start the asynchronous check of the TV status.
     this.checkTVStatus();
@@ -98,7 +145,7 @@ export class HiSenseTVAccessory {
         // The device is already turned on. Nothing to do
         return;
       }
-      await wol.wake(this.accessory.context.device.macaddress);
+      await wol.wake(this.deviceConfig.macaddress);
       this.deviceState.isConnected = true;
       this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.ACTIVE);
     } else {
@@ -316,9 +363,9 @@ export class HiSenseTVAccessory {
    * Otherwise, it'll just check for the current visible input, by calling `getCurrentInput`.
    */
   checkTVStatus() {
-    this.platform.log.debug('Checking state for TV at IP: ' + this.accessory.context.device.ipaddress);
+    this.platform.log.debug('Checking state for TV at IP: ' + this.deviceConfig.ipaddress);
 
-    const socket = net.createConnection({host: this.accessory.context.device.ipaddress, port: 36669, timeout: 500});
+    const socket = net.createConnection({host: this.deviceConfig.ipaddress, port: 36669, timeout: 500});
     socket.on('connect', () => {
       this.platform.log.debug('Connected to TV!');
       this.deviceState.isConnected = true;
@@ -412,7 +459,7 @@ export class HiSenseTVAccessory {
 
     const pythonScript = path.resolve(__dirname, '../bin/hisensetv.py');
 
-    let pythonArgs = args.concat([this.accessory.context.device.ipaddress, '--ifname', this.platform.config.ifname]);
+    let pythonArgs = args.concat([this.deviceConfig.ipaddress, '--ifname', this.platform.config.ifname]);
     if (sslParameter !== null) {
       pythonArgs = pythonArgs.concat(sslParameter);
     }
@@ -440,12 +487,12 @@ export class HiSenseTVAccessory {
    */
   getSslArgument(): string[] {
     let sslParameter: string[] = [];
-    switch (this.accessory.context.device.sslmode) {
+    switch (this.deviceConfig.sslmode) {
       case 'disabled':
         sslParameter = ['--no-ssl'];
         break;
       case 'custom':
-        sslParameter = ['--certfile', this.accessory.context.device.sslcertificate.trim(), '--keyfile', this.accessory.context.device.sslprivatekey.trim()];
+        sslParameter = ['--certfile', this.deviceConfig.sslcertificate.trim(), '--keyfile', this.deviceConfig.sslprivatekey.trim()];
         break;
     }
 
@@ -453,17 +500,4 @@ export class HiSenseTVAccessory {
   }
 
   // #endregion
-
-}
-
-class InputSource {
-  sourceid = '';
-  sourcename = '';
-  displayname = '';
-  service?: Service;
-}
-
-class TVState {
-  statetype = '';
-  sourcename = '';
 }
