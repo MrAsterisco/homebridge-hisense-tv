@@ -1,3 +1,4 @@
-# 2.0.1
+# 2.0.2
 
-- Upgraded python mqtt plugin to support python >3.8
+- Fixed plugin to work with newer versions of homebridge.
+- Fixed order of Input Sources
