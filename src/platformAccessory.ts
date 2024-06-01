@@ -55,25 +55,45 @@ export class HiSenseTVAccessory {
       username: 'hisenseservice',
       password: 'multimqttservice',
       rejectUnauthorized: false,
-      protocol: 'mqtts',
+      protocol: this.deviceConfig.sslmode === 'disabled' ? 'mqtt' : 'mqtts',
     } as mqtt.IClientOptions);
+
+    const _BASE_TOPIC = path.join('/', 'remoteapp', 'mobile');
+    const _BROADCAST_TOPIC = path.join(_BASE_TOPIC, 'broadcast', '#');
+    const _DEVICE_TOPIC = path.join(_BASE_TOPIC, `${this.deviceConfig.macaddress.toUpperCase()}$normal`, '#');
 
     this.mqttClient.on('connect', () => {
       this.platform.log.debug('Connected to MQTT service on TV.');
       this.deviceState.isConnected = true;
+      this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.ACTIVE);
+
+
+      this.mqttClient.subscribe(_DEVICE_TOPIC);
+      this.mqttClient.subscribe(_BROADCAST_TOPIC);
+    });
+
+    this.mqttClient.on('message', (topic, message) => {
+      if(topic.startsWith(_DEVICE_TOPIC)) {
+        const messageString = message.toString();
+        this.platform.log.debug('Received message from TV: ' + messageString);
+      }else {
+        this.platform.log.debug('Received message from TV (broadcast): ' + message.toString());
+      }
     });
 
     this.mqttClient.on('reconnect', () => {
       this.platform.log.debug('Reconnected to MQTT service on TV.');
-      this.deviceState.isConnected = true;
     });
 
     this.mqttClient.on('disconnect', () => {
       this.platform.log.debug('Disconnected from MQTT service on TV.');
+      this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
       this.deviceState.isConnected = false;
     });
 
+
     this.mqttClient.on('error', (err) => {
+      this.platform.log.debug('name', err.name);
       this.platform.log.error('An error occurred while connecting to MQTT service: ' + err);
     });
 
