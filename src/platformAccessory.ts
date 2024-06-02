@@ -309,14 +309,14 @@ export class HiSenseTVAccessory {
       socket.destroy();
       this.platform.log.debug('Connection to TV timed out.');
 
-      this.mqttHelper.mqttClient.end();
+      this.mqttHelper.mqttClient.end(true);
     });
 
     socket.on('error', (err) => {
       socket.destroy();
       this.platform.log.debug('An error occurred while connecting to TV: ' + JSON.stringify(err));
 
-      this.mqttHelper.mqttClient.end();
+      this.mqttHelper.mqttClient.end(true);
     });
   }
 
