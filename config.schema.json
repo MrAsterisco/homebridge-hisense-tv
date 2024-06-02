@@ -35,6 +35,15 @@
               "default": "HiSense",
               "description": "The name of your TV. This will be used as default name in Home."
             },
+            "pollingInterval": {
+              "title": "Polling Interval",
+              "type": "integer",
+              "required": true,
+              "default": 2,
+              "minimum": 1,
+              "maximum": 10,
+              "description": "The interval in seconds between each state check (state needs to be polled). The default value is 1 second. Increase this value if you want to reduce the network traffic."
+            },
             "ipaddress": {
               "title": "IP Address",
               "type": "string",

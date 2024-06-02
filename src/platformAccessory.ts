@@ -24,6 +24,9 @@ export class HiSenseTVAccessory {
   private mqttHelper: MqttHelper;
   private deviceConfig: DeviceConfig;
 
+  private offCounter = 0;
+  private onCounter = 0;
+
   private deviceState = {
     isConnected: false, hasFetchedInputs: false, currentSourceName: '',
   };
@@ -86,7 +89,7 @@ export class HiSenseTVAccessory {
 
     setInterval(() => {
       this.checkTVStatus();
-    }, 1000);
+    }, this.deviceConfig.pollingInterval * 1000);
   }
 
   public setupMqtt() {
@@ -137,7 +140,6 @@ export class HiSenseTVAccessory {
 
 
     this.mqttHelper.mqttClient.on('error', (err) => {
-      this.platform.log.debug('name', err.name);
       this.platform.log.error('An error occurred while connecting to MQTT service: ' + JSON.stringify(err));
       this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
       this.deviceState.isConnected = false;
@@ -151,10 +153,14 @@ export class HiSenseTVAccessory {
       try {
         const result = await wol.wake(this.deviceConfig.macaddress, {address: this.deviceConfig.ipaddress});
         this.platform.log.debug('Wake on LAN result:', result);
+        this.onCounter = -1;
+        this.offCounter = 0;
       } catch (error) {
         this.platform.log.error('An error occurred while turning on the TV: ' + error);
       }
     } else {
+      this.offCounter = -1;
+      this.onCounter = 0;
       this.mqttHelper.sendKey('KEY_POWER');
     }
   }
@@ -314,6 +320,16 @@ export class HiSenseTVAccessory {
       socket.destroy();
       this.platform.log.debug('Connected to TV!');
 
+      if(this.offCounter == -1){
+        this.onCounter++;
+      }
+
+      if(this.onCounter == 8){
+        this.offCounter = 0;
+        this.deviceState.isConnected = true;
+        this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.ACTIVE);
+      }
+
       if(!this.mqttHelper.mqttClient.connected){
         this.mqttHelper.mqttClient.reconnect();
       }
@@ -323,12 +339,30 @@ export class HiSenseTVAccessory {
       socket.destroy();
       this.platform.log.debug('Connection to TV timed out.');
 
+      if(this.onCounter == -1){
+        this.offCounter++;
+      }
+      if(this.offCounter == 8){
+        this.onCounter = 0;
+        this.deviceState.isConnected = false;
+        this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
+      }
+
       this.mqttHelper.mqttClient.end(true);
     });
 
     socket.on('error', (err) => {
       socket.destroy();
       this.platform.log.debug('An error occurred while connecting to TV: ' + JSON.stringify(err));
+
+      if(this.onCounter == -1){
+        this.offCounter++;
+      }
+      if(this.offCounter == 8){
+        this.onCounter = 0;
+        this.deviceState.isConnected = false;
+        this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
+      }
 
       this.mqttHelper.mqttClient.end(true);
     });
