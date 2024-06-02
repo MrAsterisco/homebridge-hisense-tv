@@ -32,7 +32,7 @@ if(require.main === module) {
     ifname: {
       type: 'string',
     },
-  };
+  } as const;
   const {values} = parseArgs({args, options});
 
   const sslMode = values['no-ssl'] ? 'disabled' : 'custom';
