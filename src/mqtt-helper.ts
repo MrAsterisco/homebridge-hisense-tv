@@ -40,6 +40,7 @@ export class MqttHelper {
       username: 'hisenseservice',
       password: 'multimqttservice',
       rejectUnauthorized: false,
+      queueQoSZero: false,
       protocol: this.deviceConfig.sslmode === 'disabled' ? 'mqtt' : 'mqtts',
     } as mqtt.IClientOptions);
   }
