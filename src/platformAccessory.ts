@@ -191,7 +191,11 @@ export class HiSenseTVAccessory {
     } else if (this.deviceState.hasFetchedInputs) {
       const inputSource = this.inputSources[(value as number) - 1];
 
-      this.mqttHelper.changeSource(inputSource.sourceid);
+      if(this.deviceState.currentSourceName == inputSource.sourcename){
+        this.platform.log.debug(`Input ${inputSource.sourcename} is already selected.`);
+      }else {
+        this.mqttHelper.changeSource(inputSource.sourceid);
+      }
     } else {
       this.platform.log.debug('Cannot switch input because the input list has not been fetched yet.');
     }
