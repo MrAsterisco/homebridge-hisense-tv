@@ -95,8 +95,8 @@ export class HiSenseTVAccessory {
       this.mqttHelper.subscribe(this.mqttHelper._SOURCE_LIST_TOPIC);
       this.mqttHelper.subscribe(this.mqttHelper._STATE_TOPIC);
 
-      this.mqttHelper.callService('ui_service', 'gettvstate');
       this.mqttHelper.callService('ui_service', 'sourcelist');
+      this.mqttHelper.callService('ui_service', 'gettvstate');
     });
 
 
@@ -252,6 +252,9 @@ export class HiSenseTVAccessory {
     const displayOrder = [0].concat(this.inputSources.map((_, index) => index+1));
     this.service.setCharacteristic(this.platform.api.hap.Characteristic.DisplayOrder, this.platform.api.hap.encode(1, displayOrder).toString('base64'));
     this.deviceState.hasFetchedInputs = true;
+
+    // run incase the current input is not set after fetching the sources
+    this.service.setCharacteristic(this.Characteristic.ActiveIdentifier, this.getCurrentInputIndex());
   }
 
   /**
