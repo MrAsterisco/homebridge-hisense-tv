@@ -19,6 +19,9 @@
   "bugs": {
     "url": "https://github.com/MrAsterisco/homebridge-hisense-tv/issues"
   },
+  "bin": {
+    "hisense-tv-authorize": "dist/authorize.js"
+  },
   "scripts": {
     "lint": "npm run version && eslint src/**.ts --max-warnings=5 --fix",
     "watch": "npm run build && npm link && nodemon",
