@@ -122,7 +122,7 @@ export class HiSenseTVAccessory {
 
     this.mqttHelper.mqttClient.on('error', (err) => {
       this.platform.log.debug('name', err.name);
-      this.platform.log.error('An error occurred while connecting to MQTT service: ' + err);
+      this.platform.log.error('An error occurred while connecting to MQTT service: ' + JSON.stringify(err));
       this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
       this.deviceState.isConnected = false;
     });
@@ -130,11 +130,6 @@ export class HiSenseTVAccessory {
 
   async setOn(value: CharacteristicValue) {
     this.platform.log.debug('Set Characteristic On ->', value);
-
-    if((value === 1 && this.deviceState.isConnected) || (value === 0 && !this.deviceState.isConnected)){
-      // early return if the TV is already in the desired state
-      return;
-    }
 
     if (value === 1) {
       try {
