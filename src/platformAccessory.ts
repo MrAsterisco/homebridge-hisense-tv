@@ -133,7 +133,7 @@ export class HiSenseTVAccessory {
 
     if (value === 1) {
       try {
-        const result = await wol.wake(this.deviceConfig.macaddress);
+        const result = await wol.wake(this.deviceConfig.macaddress, {address: this.deviceConfig.ipaddress});
         this.platform.log.debug('Wake on LAN result:', result);
       } catch (error) {
         this.platform.log.error('An error occurred while turning on the TV: ' + error);
