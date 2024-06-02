@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import {MqttHelper} from './mqtt-helper';
 import {parseArgs} from 'node:util';
 import * as readline from 'node:readline/promises';
