@@ -44,13 +44,13 @@ export class MqttHelper {
     } as mqtt.IClientOptions);
   }
 
-  public callService(service: string, action: string, payload?: unknown) {
+  public callService(service: string, action: string, payload?: string) {
     const topic = path.join('/', 'remoteapp', 'tv', service, this._DEVICE_TOPIC, 'actions', action);
-    this.mqttClient.publish(topic, payload ? JSON.stringify(payload) : '');
+    this.mqttClient.publish(topic, payload ?? '');
   }
 
   public changeSource(sourceId: string) {
-    this.callService('ui_service', 'changesource', {'sourceid': sourceId});
+    this.callService('ui_service', 'changesource', JSON.stringify({'sourceid': sourceId}));
   }
 
   public sendKey(key) {
