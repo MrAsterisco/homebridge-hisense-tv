@@ -83,6 +83,10 @@ export class HiSenseTVAccessory {
 
     this.mqttHelper = new MqttHelper(this.deviceConfig, this.platform.config.ifname);
     this.setupMqtt();
+
+    setInterval(() => {
+      this.checkTVStatus();
+    }, 1000);
   }
 
   public setupMqtt() {
@@ -295,18 +299,24 @@ export class HiSenseTVAccessory {
 
     const socket = net.createConnection({host: this.deviceConfig.ipaddress, port: 36669, timeout: 500});
     socket.on('connect', () => {
-      this.platform.log.debug('Legacy-Method: Connected to TV!');
       socket.destroy();
+      this.platform.log.debug('Connected to TV!');
+
+      this.mqttHelper.mqttClient.reconnect();
     });
 
     socket.on('timeout', () => {
-      this.platform.log.debug('Legacy-Method: Connection to TV timed out.');
       socket.destroy();
+      this.platform.log.debug('Connection to TV timed out.');
+
+      this.mqttHelper.mqttClient.end();
     });
 
     socket.on('error', (err) => {
-      this.platform.log.debug('Legacy-Method: An error occurred while connecting to TV: ' + err);
       socket.destroy();
+      this.platform.log.debug('An error occurred while connecting to TV: ' + JSON.stringify(err));
+
+      this.mqttHelper.mqttClient.end();
     });
   }
 
