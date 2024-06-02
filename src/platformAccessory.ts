@@ -302,7 +302,9 @@ export class HiSenseTVAccessory {
       socket.destroy();
       this.platform.log.debug('Connected to TV!');
 
-      this.mqttHelper.mqttClient.reconnect();
+      if(!this.mqttHelper.mqttClient.connected){
+        this.mqttHelper.mqttClient.reconnect();
+      }
     });
 
     socket.on('timeout', () => {
