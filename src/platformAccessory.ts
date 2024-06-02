@@ -117,6 +117,18 @@ export class HiSenseTVAccessory {
       this.platform.log.debug('Reconnecting to MQTT service on TV.');
     });
 
+    this.mqttHelper.mqttClient.on('close', () => {
+      this.platform.log.debug('Closed connection to MQTT service on TV.');
+      this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
+      this.deviceState.isConnected = false;
+    });
+
+    this.mqttHelper.mqttClient.on('end', () => {
+      this.platform.log.debug('Connection to MQTT service on TV ended.');
+      this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
+      this.deviceState.isConnected = false;
+    });
+
     this.mqttHelper.mqttClient.on('disconnect', () => {
       this.platform.log.debug('Disconnected from MQTT service on TV.');
       this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
