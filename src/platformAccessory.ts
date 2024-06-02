@@ -81,7 +81,7 @@ export class HiSenseTVAccessory {
     // Create "Unknown" source.
     this.createHomeSource();
 
-    this.mqttHelper = new MqttHelper(this.deviceConfig);
+    this.mqttHelper = new MqttHelper(this.deviceConfig, this.platform.config.ifname);
     this.setupMqtt();
   }
 
