@@ -89,7 +89,7 @@ export class HiSenseTVAccessory {
 
     setInterval(() => {
       this.checkTVStatus();
-    }, this.deviceConfig.pollingInterval * 1000);
+    }, (this.deviceConfig.pollingInterval ?? 2) * 1000);
   }
 
   public setupMqtt() {
