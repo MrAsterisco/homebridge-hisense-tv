@@ -12,7 +12,7 @@ export class MqttHelper {
 
   public mqttClient: mqtt.MqttClient;
 
-  constructor(public deviceConfig: DeviceConfig, ifname: string) {
+  constructor(public deviceConfig: Pick<DeviceConfig, 'sslmode' | 'ipaddress' | 'sslcertificate' | 'sslprivatekey'>, ifname: string) {
     this._BASE_TOPIC = path.join('/', 'remoteapp', 'mobile');
     this._STATE_TOPIC = path.join(this._BASE_TOPIC, 'broadcast', 'ui_service', 'state');
     const interfaces = networkInterfaces();
@@ -60,5 +60,9 @@ export class MqttHelper {
 
   public subscribe(topic: string){
     this.mqttClient.subscribe(topic);
+  }
+
+  public sendAuthCode(code: string) {
+    this.callService('ui_service', 'authenticationcode', JSON.stringify({'authNum': code}));
   }
 }
