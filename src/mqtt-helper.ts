@@ -54,7 +54,7 @@ export class MqttHelper {
   }
 
   public sendKey(key) {
-    this.callService('remote_service', 'sendKey', key);
+    this.callService('remote_service', 'sendkey', key);
   }
 
   public subscribe(topic: string){
