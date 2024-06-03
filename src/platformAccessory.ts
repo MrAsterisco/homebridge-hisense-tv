@@ -106,9 +106,13 @@ export class HiSenseTVAccessory {
         // The device is already turned off. Nothing to do
         return;
       }
-      await this.sendCommand(['--key', 'power']);
-      this.deviceState.isConnected = false;
-      this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
+      const [err, _] = await this.sendCommand(['--key', 'power']);
+      if (err) {
+        this.platform.log.error('An error occurred while turning off the TV: ' + err);
+      }else {
+        this.deviceState.isConnected = false;
+        this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
+      }
     }
   }
 
@@ -214,10 +218,14 @@ export class HiSenseTVAccessory {
       this.platform.log.debug('Switching to the Other input is unsupported. This input is only used when the plugin is unable to identify the current input on the TV (i.e. you are using an app).');
     } else if (this.deviceState.hasFetchedInputs) {
       const inputSource = this.inputSources[(value as number) - 1];
-      await this.sendCommand(['--key', 'source_' + inputSource.sourceid]);
-      this.service.updateCharacteristic(this.Characteristic.ActiveIdentifier, value);
+      const [err, _] = await this.sendCommand(['--key', 'source_' + inputSource.sourceid]);
+      if(err) {
+        this.platform.log.error('An error occurred while changing the input: ' + err);
+      }else {
+        this.service.updateCharacteristic(this.Characteristic.ActiveIdentifier, value);
+      }
     } else {
-      //callback(EvalError('Inputs are not available'));
+      this.platform.log.debug('Inputs have not been fetched yet. Please wait until the TV is turned on.');
     }
   }
 
@@ -239,7 +247,13 @@ export class HiSenseTVAccessory {
       return;
     }
 
-    const [_, output] = await this.sendCommand(['--get', 'sources']);
+    const [err, output] = await this.sendCommand(['--get', 'sources']);
+    if (err) {
+      this.platform.log.error('An error occurred while fetching inputs: ' + err);
+      this.deviceState.hasFetchedInputs = false;
+      return;
+    }
+
     try {
       this.inputSources = (JSON.parse((output as string[]).join('')) as InputSource[])
         .sort((a, b) => {
