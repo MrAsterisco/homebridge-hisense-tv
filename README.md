@@ -74,9 +74,10 @@ The mac address is needed in the next step and needed in the config.json file.
 For this plugin to work correctly, you need to configure your TV to use a static DHCP (or configure a static reservation on your router). 
 
 To connect to your TV, you need to pair the machine where you're running Homebridge with your TV. This is done in the command line, by manually running the bundled `hisense-tv-authorize` command. To do this, open the homebridge UI and go to Terminal.
+
 ![terminal](images/terminal-location.png)
     
-Then, run one of the following commands, replacing `<TV_IP_ADDRESS>` with the IP address of your TV and `<HOMEBRIDGE_MAC_ADDRESS>` with the mac address of the network interface you found out previously.
+Then **turn your TV on** and run one of the following commands, replacing `<TV_IP_ADDRESS>` with the IP address of your TV and `<HOMEBRIDGE_MAC_ADDRESS>` with the mac address of the network interface you found out previously.
 If they fail, try the other commands.
 
 SSLMode: default (most common)
@@ -94,7 +95,6 @@ Replace `<CERTFILE>` and `<KEYFILE>` with the path to the certificate and key fi
 ```bash
 hisense-tv-authorize --hostname <TV_IP_ADDRESS> --mac <HOMEBRIDGE_MAC_ADDRESS> --certfile <CERTFILE> --keyfile <KEYFILE>
 ```
-
 
 Your TV, if compatible, will display a PIN code: insert it in the command line and confirm. Your device is now paired with your TV and they can communicate when the TV is on. Repeat this step for all the TVs you want to use via HomeKit.
 
