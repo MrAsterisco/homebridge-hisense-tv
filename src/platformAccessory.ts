@@ -397,7 +397,9 @@ export class HiSenseTVAccessory {
         this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
       }
 
-      this.mqttHelper.mqttClient.end(true);
+      if(!this.mqttHelper.mqttClient.disconnected){
+        this.mqttHelper.mqttClient.end(true);
+      }
     });
 
     socket.on('error', (err) => {
@@ -417,7 +419,9 @@ export class HiSenseTVAccessory {
         this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
       }
 
-      this.mqttHelper.mqttClient.end(true);
+      if(!this.mqttHelper.mqttClient.disconnected){
+        this.mqttHelper.mqttClient.end(true);
+      }
     });
   }
 
