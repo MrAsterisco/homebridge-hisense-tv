@@ -351,10 +351,13 @@ export class HiSenseTVAccessory {
 
       if(this.offCounter == -1){
         this.onCounter++;
+      }else {
+        this.onCounter = 0;
       }
 
       if(this.onCounter == this.counterThreshold){
         this.offCounter = 0;
+        this.onCounter = 0;
         this.deviceState.isConnected = true;
         this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.ACTIVE);
       }
@@ -370,9 +373,13 @@ export class HiSenseTVAccessory {
 
       if(this.onCounter == -1){
         this.offCounter++;
+      }else {
+        this.offCounter = 0;
       }
+
       if(this.offCounter == this.counterThreshold){
         this.onCounter = 0;
+        this.offCounter = 0;
         this.deviceState.isConnected = false;
         this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
       }
@@ -386,9 +393,13 @@ export class HiSenseTVAccessory {
 
       if(this.onCounter == -1){
         this.offCounter++;
+      }else {
+        this.offCounter = 0;
       }
+
       if(this.offCounter == this.counterThreshold){
         this.onCounter = 0;
+        this.offCounter = 0;
         this.deviceState.isConnected = false;
         this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
       }
