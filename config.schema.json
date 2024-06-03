@@ -39,10 +39,10 @@
               "title": "Polling Interval",
               "type": "integer",
               "required": true,
-              "default": 2,
+              "default": 4,
               "minimum": 1,
               "maximum": 10,
-              "description": "The interval in seconds between each state check (state needs to be polled). The default value is 1 second. Increase this value if you want to reduce the network traffic."
+              "description": "The interval in seconds between each state check (state needs to be polled). The default value is 4 second. Increase this value if you want to reduce the network traffic."
             },
             "ipaddress": {
               "title": "IP Address",

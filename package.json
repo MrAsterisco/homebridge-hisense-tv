@@ -23,11 +23,10 @@
     "hisense-tv-authorize": "dist/authorize.js"
   },
   "scripts": {
-    "lint": "npm run version && eslint src/**.ts --max-warnings=5 --fix",
+    "lint": "eslint src/**.ts --max-warnings=5 --fix",
     "watch": "npm run build && npm link && nodemon",
-    "build": "rimraf ./dist && npm run version && tsc && chmod +x dist/authorize.js",
+    "build": "rimraf ./dist && tsc && chmod +x dist/authorize.js",
     "prepublishOnly": "npm run lint && npm run build",
-    "version": "cp package.json src/package-info.json",
     "prepare": "husky"
   },
   "lint-staged": {

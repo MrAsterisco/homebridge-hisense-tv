@@ -24,8 +24,23 @@ export class HiSenseTVAccessory {
   private mqttHelper: MqttHelper;
   private deviceConfig: DeviceConfig;
 
+  /**
+   * Counter to keep track of how many times the TV state has been checked and its not yet correct.
+   *
+   * When turning off the TV offCounter is set to -1, it means the TV should be off.
+   * at the same time onCounter is set to 0, and everytime the tv is still on in the polling phase, it will be incremented.
+   * if onCounter reaches 8, the TV will be considered on. (means the TV didn't turn off)
+   *
+   * The same applies for turning on the TV, but with onCounter set to -1 and increasing offCounter.
+   *
+   * This is done to prevent false positives/negatives when checking the TV state.
+   */
   private offCounter = 0;
   private onCounter = 0;
+
+  // Counter threshold to determine if the TV is on or off.
+  // 8 seconds seems reasonable, as the TV should respond faster.
+  private counterThreshold = 8;
 
   private deviceState = {
     isConnected: false, hasFetchedInputs: false, currentSourceName: '',
@@ -87,9 +102,15 @@ export class HiSenseTVAccessory {
     this.mqttHelper = new MqttHelper(this.deviceConfig, this.platform.config.ifname);
     this.setupMqtt();
 
+    // set the counter threshold based on the polling interval
+    this.counterThreshold = Math.round(8 / (this.deviceConfig.pollingInterval ?? 4));
+    if(this.counterThreshold < 1){
+      this.counterThreshold = 1;
+    }
+
     setInterval(() => {
       this.checkTVStatus();
-    }, (this.deviceConfig.pollingInterval ?? 2) * 1000);
+    }, (this.deviceConfig.pollingInterval ?? 4) * 1000);
   }
 
   public setupMqtt() {
@@ -257,7 +278,8 @@ export class HiSenseTVAccessory {
         inputType = this.Characteristic.InputSourceType.HDMI;
       }
 
-      const inputService = this.accessory.getService('input' + inputSource.sourceid) || this.accessory.addService(this.Service.InputSource, 'input' + inputSource.sourceid, 'input' + inputSource.sourceid);
+      const inputService = this.accessory.getService('input' + inputSource.sourceid)
+        || this.accessory.addService(this.Service.InputSource, 'input' + inputSource.sourceid, 'input' + inputSource.sourceid);
 
       inputService
         .setCharacteristic(this.Characteristic.Identifier, (index + 1))
@@ -327,7 +349,7 @@ export class HiSenseTVAccessory {
         this.onCounter++;
       }
 
-      if(this.onCounter == 8){
+      if(this.onCounter == this.counterThreshold){
         this.offCounter = 0;
         this.deviceState.isConnected = true;
         this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.ACTIVE);
@@ -345,7 +367,7 @@ export class HiSenseTVAccessory {
       if(this.onCounter == -1){
         this.offCounter++;
       }
-      if(this.offCounter == 8){
+      if(this.offCounter == this.counterThreshold){
         this.onCounter = 0;
         this.deviceState.isConnected = false;
         this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
@@ -361,7 +383,7 @@ export class HiSenseTVAccessory {
       if(this.onCounter == -1){
         this.offCounter++;
       }
-      if(this.offCounter == 8){
+      if(this.offCounter == this.counterThreshold){
         this.onCounter = 0;
         this.deviceState.isConnected = false;
         this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
