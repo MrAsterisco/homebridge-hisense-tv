@@ -1,4 +1,6 @@
-# 2.0.2
+# 3.0.0
 
-- Fixed plugin to work with newer versions of homebridge.
-- Fixed order of Input Sources
+- Plugin now connects to mqtt directly while tv is online
+  - Input Source is now updated in real time
+- Added mandatory config option pollingInterval
+    - Time to wait between polling the tv for the on/off state
