@@ -263,12 +263,6 @@ export class HiSenseTVAccessory {
       this.inputSources.forEach((inputSource, index) => {
         this.platform.log.debug('Adding input: ' + JSON.stringify(inputSource));
 
-        const inputService = this.accessory.getService('input' + inputSource.sourceid) || this.accessory.addService(this.Service.InputSource, 'input' + inputSource.sourceid, 'input' + inputSource.sourceid);
-
-        inputService.setCharacteristic(this.Characteristic.IsConfigured, this.Characteristic.IsConfigured.CONFIGURED);
-        inputService.setCharacteristic(this.Characteristic.ConfiguredName, inputSource.displayname);
-        inputService.setCharacteristic(this.Characteristic.Name, inputSource.displayname);
-
         let inputType = this.Characteristic.InputSourceType.OTHER;
         if (inputSource.sourcename === 'TV') {
           inputType = this.Characteristic.InputSourceType.TUNER;
@@ -278,8 +272,15 @@ export class HiSenseTVAccessory {
           inputType = this.Characteristic.InputSourceType.HDMI;
         }
 
-        inputService.setCharacteristic(this.Characteristic.InputSourceType, inputType);
+        const inputService = this.accessory.getService('input' + inputSource.sourceid)
+          || this.accessory.addService(this.Service.InputSource, 'input' + inputSource.sourceid, 'input' + inputSource.sourceid);
+
         inputService.setCharacteristic(this.Characteristic.Identifier, (index + 1));
+        inputService.setCharacteristic(this.Characteristic.IsConfigured, this.Characteristic.IsConfigured.CONFIGURED);
+        inputService.setCharacteristic(this.Characteristic.ConfiguredName, inputSource.displayname);
+        inputService.setCharacteristic(this.Characteristic.Name, inputSource.sourcename);
+        inputService.setCharacteristic(this.Characteristic.CurrentVisibilityState, this.Characteristic.CurrentVisibilityState.SHOWN);
+        inputService.setCharacteristic(this.Characteristic.InputSourceType, inputType);
 
         inputSource.service = inputService;
 
@@ -314,8 +315,10 @@ export class HiSenseTVAccessory {
     inputService
       .setCharacteristic(this.Characteristic.IsConfigured, this.Characteristic.IsConfigured.CONFIGURED)
       .setCharacteristic(this.Characteristic.ConfiguredName, 'Unknown')
+      .setCharacteristic(this.Characteristic.Name, 'Unknown')
       .setCharacteristic(this.Characteristic.InputSourceType, this.Characteristic.InputSourceType.OTHER)
-      .setCharacteristic(this.Characteristic.Identifier, 0);
+      .setCharacteristic(this.Characteristic.Identifier, 0)
+      .setCharacteristic(this.Characteristic.CurrentVisibilityState, this.Characteristic.CurrentVisibilityState.SHOWN);
 
     this.service.addLinkedService(inputService);
   }
