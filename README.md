@@ -19,7 +19,7 @@ This is a plugin for Homebridge that allows you to control your RemoteNow-enable
 - Python 3.8 with [paho-mqtt](https://pypi.org/project/paho-mqtt/) version 1.6.1 and [netifaces](https://pypi.org/project/netifaces/).
 - A Hisense TV that supports the RemoteNow app ([App Store](https://apps.apple.com/us/app/remotenow/id1301866548) or [Play Store](https://play.google.com/store/apps/details?id=com.universal.remote.ms&hl=en&gl=US)).
   - WakeOnLan (WOL) must be enabled on the TV to turn it on with this plugin.
-  - fixed to a static IP address or a static DHCP reservation.
+  - The TV must be configured with a static IP Address or a static DHCP reservation
 - *Starting with version 2.0.0, macOS is also supported as host*.
 
 ## Compatibility
