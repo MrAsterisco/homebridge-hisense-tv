@@ -14,8 +14,8 @@ This is a plugin for Homebridge that allows you to control your RemoteNow-enable
 
 ## Requirements
 
-- NodeJS 10 or later.
-- Homebridge 1.3.0 or later.
+- NodeJS 18 or later.
+- Homebridge 1.6.0 or later.
 - Python 3.8 with [paho-mqtt](https://pypi.org/project/paho-mqtt/) version 1.6.1 and [netifaces](https://pypi.org/project/netifaces/).
 - A Hisense TV that supports the RemoteNow app ([App Store](https://apps.apple.com/us/app/remotenow/id1301866548) or [Play Store](https://play.google.com/store/apps/details?id=com.universal.remote.ms&hl=en&gl=US)).
   - WakeOnLan (WOL) must be enabled on the TV to turn it on with this plugin.
@@ -190,7 +190,11 @@ This plugin has been developed and tested running Homebridge on Ubuntu Linux 20.
 
 **If you find anything that is not correct, please open an issue (or even better: a PR changing this file) explaining what you're doing differently to make this plugin work with different TV models and/or on different operating systems.**
 
-### Installation Issues
+### Known Issues
+- The input list might not be fetched correctly if the TV is turned off while adding the accessory or after restarting Homebridge. To fix this, force close your Home app and open it again.
+- Switching input to "TV" might not work properly. Home will not display any error, but the next TV state refresh will bring the input back to the previous one (which is also the one displayed on the TV).
+- Making changes to the TV state (turning on/off, changing input) while the Home app is opened will not trigger a live update. *This is theoretically supported by the plugin, but it seems to not work properly.*. Just switching to another app and then going back to Home will trigger a refresh.
+- Some newer TV models are always reported as turned on: this happens because they still respond to requests, even if they're "off". *As I don't have a such a model to test, I am unfortunately unable to provide a fix: if you have some experience with Python, TypeScript and have some free time, take a look at [this issue](https://github.com/MrAsterisco/homebridge-hisense-tv/issues/18).*
 
 #### Hoobs
 
@@ -207,13 +211,6 @@ pip3 install --upgrade setuptools
 sudo apk add python3-dev  # for apk
 sudo apt-get install python3-dev  # for apt
 ```
-
-
-### Known Bugs
-- The input list might not be fetched correctly if the TV is turned off while adding the accessory or after restarting Homebridge. To fix this, force close your Home app and open it again.
-- Switching input to "TV" might not work properly. Home will not display any error, but the next TV state refresh will bring the input back to the previous one (which is also the one displayed on the TV).
-- Making changes to the TV state (turning on/off, changing input) while the Home app is opened will not trigger a live update. *This is theoretically supported by the plugin, but it seems to not work properly.*. Just switching to another app and then going back to Home will trigger a refresh.
-- Some newer TV models are always reported as turned on: this happens because they still respond to requests, even if they're "off". *As I don't have a such a model to test, I am unfortunately unable to provide a fix: if you have some experience with Python, TypeScript and have some free time, take a look at [this issue](https://github.com/MrAsterisco/homebridge-hisense-tv/issues/18).*
 
 # Contributions
 All contributions to expand the library are welcome. Fork the repo, make the changes you want, and open a Pull Request.
