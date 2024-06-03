@@ -12,7 +12,7 @@ if(require.main === module) {
   });
 
 
-  const args = process.argv;
+  const args = process.argv.slice(2);
   const options = {
     'no-ssl': {
       type: 'boolean',
