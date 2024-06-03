@@ -40,7 +40,10 @@ if(require.main === module) {
   const hostname = values['hostname'] as string;
 
   const mqttHelper = new MqttHelper({sslmode: sslMode, ipaddress: hostname, sslcertificate: sslCertificate, sslprivatekey: sslPrivateKey}, ifname);
-  mqttHelper.callService('ui_service', 'gettvstate');
+
+  mqttHelper.mqttClient.on('connect', () => {
+    mqttHelper.callService('ui_service', 'gettvstate');
+  });
 
   (async () => {
     const code = await rl.question('Please enter the 4-digit code shown on tv: ');
