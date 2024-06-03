@@ -19,6 +19,8 @@ export class HiSenseTVAccessory {
   private service: Service;
   private speakerService: Service;
 
+  private firstCheckFinished = false;
+
   private deviceState = {
     isConnected: false, hasFetchedInputs: false, currentSourceName: '',
   };
@@ -81,8 +83,10 @@ export class HiSenseTVAccessory {
 
     // Setup an interval to periodically check the TV status.
     setInterval(() => {
-      this.checkTVStatus();
-    }, 10000);
+      if(this.firstCheckFinished) {
+        this.checkTVStatus();
+      }
+    }, 2000);
 
   }
 
@@ -280,6 +284,7 @@ export class HiSenseTVAccessory {
     } catch (error) {
       this.platform.log.error('An error occurred while fetching inputs: ' + error);
     }
+    this.firstCheckFinished = true;
   }
 
   /**
@@ -327,6 +332,7 @@ export class HiSenseTVAccessory {
       socket.destroy();
 
       if (!this.deviceState.hasFetchedInputs) {
+        this.firstCheckFinished = false;
         this.getSources();
       } else {
         this.getCurrentInput();
@@ -335,6 +341,7 @@ export class HiSenseTVAccessory {
 
     socket.on('timeout', () => {
       this.platform.log.debug('Connection to TV timed out.');
+      this.firstCheckFinished = true;
       this.deviceState.isConnected = false;
       this.service.updateCharacteristic(this.Characteristic.Active, this.deviceState.isConnected);
       socket.destroy();
@@ -342,6 +349,7 @@ export class HiSenseTVAccessory {
 
     socket.on('error', (err) => {
       this.platform.log.debug('An error occurred while connecting to TV: ' + err);
+      this.firstCheckFinished = true;
       this.deviceState.isConnected = false;
       this.service.updateCharacteristic(this.Characteristic.Active, this.deviceState.isConnected);
       socket.destroy();
