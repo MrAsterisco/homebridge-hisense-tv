@@ -3,6 +3,7 @@
 import {MqttHelper} from './mqtt-helper';
 import {parseArgs} from 'node:util';
 import * as readline from 'node:readline/promises';
+import path from 'path';
 
 
 if(require.main === module) {
@@ -43,7 +44,7 @@ if(require.main === module) {
 
   mqttHelper.mqttClient.on('connect', () => {
     mqttHelper.callService('ui_service', 'gettvstate');
-    mqttHelper.subscribe(mqttHelper._COMMUNICATION_TOPIC);
+    mqttHelper.subscribe(path.join(mqttHelper._COMMUNICATION_TOPIC, '#'));
   });
   mqttHelper.mqttClient.on('message', (topic, message) => {
     const data = JSON.parse(message.toString());
@@ -51,6 +52,7 @@ if(require.main === module) {
       if(data.result !== 1) {
         console.error('TV pairing failed - please try again');
       }
+      mqttHelper.mqttClient.end(true);
       process.exit(0);
     }
   });
