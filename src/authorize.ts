@@ -28,7 +28,7 @@ if(require.main === module) {
     keyfile: {
       type: 'string',
     },
-    ifname: {
+    mac: {
       type: 'string',
     },
   } as const;
@@ -37,10 +37,10 @@ if(require.main === module) {
   const sslMode = values['no-ssl'] ? 'disabled' : 'custom';
   const sslCertificate = (values['certfile'] ?? '') as string;
   const sslPrivateKey = (values['keyfile'] ?? '') as string;
-  const ifname = values['ifname'] as string;
+  const macaddress = values['mac'] as string;
   const hostname = values['hostname'] as string;
 
-  const mqttHelper = new MqttHelper({sslmode: sslMode, ipaddress: hostname, sslcertificate: sslCertificate, sslprivatekey: sslPrivateKey}, ifname);
+  const mqttHelper = new MqttHelper({sslmode: sslMode, ipaddress: hostname, sslcertificate: sslCertificate, sslprivatekey: sslPrivateKey}, macaddress);
 
   mqttHelper.mqttClient.on('connect', () => {
     mqttHelper.callService('ui_service', 'gettvstate');

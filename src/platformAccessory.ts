@@ -49,6 +49,10 @@ export class HiSenseTVAccessory {
   private inputSources: InputSource[] = [];
 
   constructor(private readonly platform: HiSenseTVPlatform, private readonly accessory: PlatformAccessory) {
+    if(accessory.context.macaddress == null || accessory.context.macaddress == ''){
+      throw new Error('Homebridge MAC address is required for the TV accessory.');
+    }
+
     this.Characteristic = platform.Characteristic;
     this.Service = platform.Service;
 
@@ -99,7 +103,7 @@ export class HiSenseTVAccessory {
     // Create "Unknown" source.
     this.createHomeSource();
 
-    this.mqttHelper = new MqttHelper(this.deviceConfig, this.platform.config.ifname);
+    this.mqttHelper = new MqttHelper(this.deviceConfig, this.platform.config.macaddress);
     this.setupMqtt();
 
     // set the counter threshold based on the polling interval

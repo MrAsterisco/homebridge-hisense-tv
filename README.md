@@ -16,7 +16,6 @@ This is a plugin for Homebridge that allows you to control your RemoteNow-enable
 
 - NodeJS 18 or later.
 - Homebridge 1.6.0 or later.
-- Python 3.8 with [paho-mqtt](https://pypi.org/project/paho-mqtt/) version 1.6.1 and [netifaces](https://pypi.org/project/netifaces/).
 - A Hisense TV that supports the RemoteNow app ([App Store](https://apps.apple.com/us/app/remotenow/id1301866548) or [Play Store](https://play.google.com/store/apps/details?id=com.universal.remote.ms&hl=en&gl=US)).
   - WakeOnLan (WOL) must be enabled on the TV to turn it on with this plugin.
   - The TV must be configured with a static IP Address or a static DHCP reservation
@@ -65,74 +64,51 @@ pip3 install paho-mqtt
 
 ## Setting up the TV
 
-First, identify the network interface your Homebridge machine uses to connect to the TV. Follow the instructions for your operating system below. Once you have the interface name, proceed to 'Continue the Setup'.
-### Generic Linux
-```
-ip a
-```
+First, identify the mac address of your network interface (on the machine where you are running homebridge). 
+On Linux, you can use the `ifconfig` command, while on Windows, you can use `ipconfig`. 
+Often you can also find this information in the network settings of your operating system.
 
-*The name of a network interface usually looks similar to this: `ens33`.*
-
-### macOS
-
-```
-networksetup -listallhardwareports
-```
-
-*The name of a network interface usually looks similar to this: `en0`.*
-
-### Windows
-
-Run a Python shell on your system (you should be able to do so by running python or python3 without any parameters) and then typing:
-
-```
-import netifaces
-netifaces.interfaces()
-```
-
-*The name of a network interface usually looks similar to this: `{00000000-0000-0000-0000-000000000000}`.*
-
-To find the correct interface, use the following command in a python shell, repeating it using each network interface name until a matching IP address for the Homebridge host system is identified:
-
-```
-netifaces.ifaddresses('{interface-name-here}')
-```
-
-In order for the plugin to execute properly within Homebridge and retrieve the input names and TV status, you must also change the Local System Account associated with the Homebridge service using the following steps:
-
-```
-Press the Windows Key + R
-services.msc
-Find the Homebridge Service and double-click
-Switch to the "Log On" tab
-Change "Local System Account" to "This Account" and enter your user name (usually .\username)
--OR- 
-click "Browse..." and search for your username
-Enter your login password in the Password fields
-Press "Apply" and "OK" and restart the service if prompted
-```
+The mac address is needed in the next step and needed in the config.json file.
 
 ### Continue the Setup
-For this plugin to work correctly, you need to configure your TV to use a static DHCP (or configure a static reservation on your router). You also need to find your TV's MAC Address: this is usually displayed under Settings > Network Information, but it might vary based on your model.
+For this plugin to work correctly, you need to configure your TV to use a static DHCP (or configure a static reservation on your router). 
 
-To connect to your TV, you need to pair the machine where you're running Homebridge with your TV. This is done in the command line, by manually running the bundled `hisensetv.py` script. To do this, [find the `node_modules` folder in your system](https://docs.npmjs.com/cli/v7/configuring-npm/folders) (on Linux, it is located in `/usr/local/lib/node_modules` and on Windows, `/users/(username)/AppData/Roaming/npm/node_modules`) and move to `homebridge-hisense-tv/bin`, then run:
+To connect to your TV, you need to pair the machine where you're running Homebridge with your TV. This is done in the command line, by manually running the bundled `hisense-tv-authorize` command. To do this, open the homebridge UI and go to Terminal.
+![terminal](images/terminal-location.png)
+    
+Then, run one of the following commands, replacing `<TV_IP_ADDRESS>` with the IP address of your TV and `<HOMEBRIDGE_MAC_ADDRESS>` with the mac address of the network interface you found out previously.
+If they fail, try the other commands.
 
+SSLMode: default (most common)
 ```bash
-python3.8 hisensetv.py <TV_IP_ADDRESS> --authorize --ifname <NETWORK_INTERFACE_NAME>
+hisense-tv-authorize --hostname <TV_IP_ADDRESS> --mac <HOMEBRIDGE_MAC_ADDRESS>
 ```
+
+SSLMode: disabled (no SSL)
+```bash
+hisense-tv-authorize --hostname <TV_IP_ADDRESS> --mac <HOMEBRIDGE_MAC_ADDRESS> --no-ssl
+```
+
+SSLMode: custom (use cert and key below)
+Replace `<CERTFILE>` and `<KEYFILE>` with the path to the certificate and key files you want to use.
+```bash
+hisense-tv-authorize --hostname <TV_IP_ADDRESS> --mac <HOMEBRIDGE_MAC_ADDRESS> --certfile <CERTFILE> --keyfile <KEYFILE>
+```
+
 
 Your TV, if compatible, will display a PIN code: insert it in the command line and confirm. Your device is now paired with your TV and they can communicate when the TV is on. Repeat this step for all the TVs you want to use via HomeKit.
 
-*If the command times-out after a while, make sure your TV is connected to the network and turned on. You can try to `telnet <TV_IP_ADDRESS> 36669` to make sure your Homebridge instance can reach your TV. If telnet works but this command doesn't, try to run a different command, such as `--get state` (just replace `authorize` with this in the command above): if this command succeeds, it means your TV and your machine are already paired.*
+*If the command times-out after a while, make sure your TV is connected to the network and turned on. You can try to `telnet <TV_IP_ADDRESS> 36669` to make sure your Homebridge instance can reach your TV. If telnet works but this command doesn't, try to run the plugin without this step, it could mean your TV and your machine are already paired.*
 
 ## Configure the plugin
 
-You can use the Homebridge UI to make changes to the plugin configuration. You must set the "Network interface name" to the name you found out previously and then configure your TVs (include the { } if configuring on Windows). Then, just add all the TVs you have authorized earlier:
+You can use the Homebridge UI to make changes to the plugin configuration. You must set the "Homebridge MAC Address" to the mac address you found out previously and then configure your TVs (include the { } if configuring on Windows). Then, just add all the TVs you have authorized earlier:
 
 - as ID, you can input your TV's S/N or your own identifier, as long as it's unique in your Home. You can also leave the default value, if you have just one TV. Whatever you input, will be displayed as the accessory "Serial Number" in Home.
 - as name, input the display name that the Home app will suggest when adding this TV to your Home.
 - as IP address, input the IP that you have assigned to your TV.
 - as MAC Address, input the MAC Address of your TV (if your TV is connected both via WiFi and Ethernet, make sure to configure the interface that your TV is using). 
+- as SSLMode, input the SSL mode that your TV requires that you previously found out during activation.
 
 Repeat the configuration for each TV you want to use, then restart Homebridge.
 
@@ -145,13 +121,14 @@ To change how the plugin connects to your TV, use the `sslmode` config key. See 
 *If your TV needs a specific encryption key and certificate, you can find the most common ones [here](https://github.com/MrAsterisco/hisensetv/tree/master/cert). Choose the appropriate one and download it onto the machine that executes Homebridge.*
 
 *When providing the certificate and its key, you'll need to store them outside of the plugin folder (i.e. outside of the `node_modules` directory). If you store them in the directory, they will be deleted when a new version of the plugin is installed. It is not important where you store them, as long as they are readable by the `homebridge` user.*
+On Linux, you can store them in `/etc/ssl/certs` and then provide the absolute path to the plugin.
 
 ### Config example
 
 ```json
 {
   "platform": "HiSenseTV",
-  "ifname": "ens33",
+  "macaddress": "Your Homebridge MAC Address",
   "devices": [
     {
       "id": "A unique identifier (such as your TV S/N)",

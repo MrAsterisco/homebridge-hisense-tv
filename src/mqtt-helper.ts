@@ -2,7 +2,6 @@ import * as mqtt from 'mqtt';
 import path from 'path';
 import {DeviceConfig} from './interfaces/device-config.interface';
 import fs from 'node:fs';
-import {networkInterfaces} from 'node:os';
 
 export class MqttHelper {
   public _BASE_TOPIC : string;
@@ -13,16 +12,10 @@ export class MqttHelper {
 
   public mqttClient: mqtt.MqttClient;
 
-  constructor(public deviceConfig: Pick<DeviceConfig, 'sslmode' | 'ipaddress' | 'sslcertificate' | 'sslprivatekey'>, ifname: string) {
+  constructor(public deviceConfig: Pick<DeviceConfig, 'sslmode' | 'ipaddress' | 'sslcertificate' | 'sslprivatekey'>, macaddress: string) {
     this._BASE_TOPIC = path.join('/', 'remoteapp', 'mobile');
     this._STATE_TOPIC = path.join(this._BASE_TOPIC, 'broadcast', 'ui_service', 'state');
-    const interfaces = networkInterfaces();
-    const interface_ = interfaces[ifname];
-    if(interface_ === undefined) {
-      throw new Error(`Interface ${ifname} not found`);
-    }
-
-    this._DEVICE_TOPIC = `${interface_[0].mac.toUpperCase()}$normal`;
+    this._DEVICE_TOPIC = `${macaddress.toUpperCase()}$normal`;
     this._COMMUNICATION_TOPIC = path.join(this._BASE_TOPIC, this._DEVICE_TOPIC, 'ui_service', 'data');
     this._SOURCE_LIST_TOPIC = path.join(this._COMMUNICATION_TOPIC, 'sourcelist');
 

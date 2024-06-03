@@ -6,9 +6,9 @@
   "schema": {
     "type": "object",
     "properties": {
-      "ifname": {
-        "title": "Network interface name",
-        "description": "This plugin must be able to authenticate with a valid MAC address to communicate with your TVs. Input a network interface name of your Homebridge machine.",
+      "macaddress": {
+        "title": "Homebridge MAC Address",
+        "description": "This plugin needs a MAC address to communicate with your TVs. Input the mac address of the network interface you're using to run Homebridge.",
         "type": "string",
         "required": true
       },
