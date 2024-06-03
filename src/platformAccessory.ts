@@ -19,8 +19,6 @@ export class HiSenseTVAccessory {
   private service: Service;
   private speakerService: Service;
 
-  private firstCheckFinished = false;
-
   private deviceState = {
     isConnected: false, hasFetchedInputs: false, currentSourceName: '',
   };
@@ -83,11 +81,8 @@ export class HiSenseTVAccessory {
 
     // Setup an interval to periodically check the TV status.
     setInterval(() => {
-      if(this.firstCheckFinished) {
-        this.checkTVStatus();
-      }
-    }, 2000);
-
+      this.checkTVStatus();
+    }, 10000);
   }
 
   async getOn(): Promise<CharacteristicValue> {
@@ -240,6 +235,7 @@ export class HiSenseTVAccessory {
     this.platform.log.debug('Fetching input sources...');
     if (!this.deviceState.isConnected) {
       this.platform.log.info('Unable to fetch input sources because the TV is off. Will retry as soon as the device comes back online.');
+      this.deviceState.hasFetchedInputs = false;
       return;
     }
 
@@ -283,8 +279,8 @@ export class HiSenseTVAccessory {
       this.getCurrentInput();
     } catch (error) {
       this.platform.log.error('An error occurred while fetching inputs: ' + error);
+      this.deviceState.hasFetchedInputs = false;
     }
-    this.firstCheckFinished = true;
   }
 
   /**
@@ -332,7 +328,7 @@ export class HiSenseTVAccessory {
       socket.destroy();
 
       if (!this.deviceState.hasFetchedInputs) {
-        this.firstCheckFinished = false;
+        this.deviceState.hasFetchedInputs = true;
         this.getSources();
       } else {
         this.getCurrentInput();
@@ -341,7 +337,6 @@ export class HiSenseTVAccessory {
 
     socket.on('timeout', () => {
       this.platform.log.debug('Connection to TV timed out.');
-      this.firstCheckFinished = true;
       this.deviceState.isConnected = false;
       this.service.updateCharacteristic(this.Characteristic.Active, this.deviceState.isConnected);
       socket.destroy();
@@ -349,7 +344,6 @@ export class HiSenseTVAccessory {
 
     socket.on('error', (err) => {
       this.platform.log.debug('An error occurred while connecting to TV: ' + err);
-      this.firstCheckFinished = true;
       this.deviceState.isConnected = false;
       this.service.updateCharacteristic(this.Characteristic.Active, this.deviceState.isConnected);
       socket.destroy();
