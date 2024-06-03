@@ -14,10 +14,12 @@ This is a plugin for Homebridge that allows you to control your RemoteNow-enable
 
 ## Requirements
 
-- NodeJS 10 or later.
-- Homebridge 1.3.0 or later.
+- NodeJS 18 or later.
+- Homebridge 1.6.0 or later.
 - Python 3.8 with [paho-mqtt](https://pypi.org/project/paho-mqtt/) version 1.6.1 and [netifaces](https://pypi.org/project/netifaces/).
 - A Hisense TV that supports the RemoteNow app ([App Store](https://apps.apple.com/us/app/remotenow/id1301866548) or [Play Store](https://play.google.com/store/apps/details?id=com.universal.remote.ms&hl=en&gl=US)).
+  - WakeOnLan (WOL) must be enabled on the TV to turn it on with this plugin.
+  - The TV must be configured with a static IP Address or a static DHCP reservation
 - *Starting with version 2.0.0, macOS is also supported as host*.
 
 ## Compatibility
@@ -32,11 +34,6 @@ In theory, any RemoteNOW enabled TV should work with this plugin. However, some 
 Some TV models have been reported as incompatible or are known to cause problems.
 
 - HU50A6800FUW (50" H8G 2020) - See [this issue](https://github.com/MrAsterisco/homebridge-hisense-tv/issues/37).
-
-### Homebridge Hosts
-This plugin has been developed and tested running Homebridge on Ubuntu Linux 20.04 and macOS Monterey with a Hisense 50AE7010F. If your configuration differs, the steps below may not be a 100% accurate: even if the general idea is the same *(pair the TV, add it to Home, use it)*, your mileage may vary.
-
-**If you find anything that is not correct, please open an issue (or even better: a PR changing this file) explaining what you're doing differently to make this plugin work with different TV models and/or on different operating systems.**
 
 # Installation
 
@@ -59,21 +56,6 @@ pip3 install netifaces
 pip3 install "paho-mqtt==1.6.1"
 ```
 
-#### Hoobs
-Generally, the commands shown above should work on [Hoobs](https://hoobs.com) too, however, please note that additional issues may arise when running on this machine, as I unfortunately don't have access to one and cannot test on it. 
-
-I am happy to provide help and support in fixing those issues: just open an issue on this repo and we'll try to figure it out together.
-
-The following [issue](https://github.com/MrAsterisco/homebridge-hisense-tv/issues/46#issuecomment-1515465450) contains additional steps that might be required in your setup with Hoobs.
-
-#### Error when installing Netifaces
-When you install `netifaces`, depending on your configuration, you may run into an error saying `fatal error: Python.h: No such file or directory`. The following commands should fix the issue by updating the setup tools to the latest version:
-```bash
-pip3 install --upgrade setuptools
-sudo apk add python3-dev  # for apk
-sudo apt-get install python3-dev  # for apt
-```
-
 ### macOS / Windows
 
 ```bash
@@ -83,8 +65,7 @@ pip3 install paho-mqtt
 
 ## Setting up the TV
 
-First, you need to get the name of the network interface that your Homebridge machine will use to connect to the TV. To get the list of all the network interfaces on your machine, follow the instructions below for the operating system where you're running Homebridge. Once you have the network interface name, go to "Continue the Setup".
-
+First, identify the network interface your Homebridge machine uses to connect to the TV. Follow the instructions for your operating system below. Once you have the interface name, proceed to 'Continue the Setup'.
 ### Generic Linux
 ```
 ip a
@@ -204,14 +185,32 @@ Take a note of the Setup Code and open your Home app on your iPhone, iPad or Mac
 
 **Done**! As always, you can repeat the steps above if you have multiple TVs to add. Please note that each TV will have a different Setup Code logged in Homebridge.
 
-# Status
-This plugin is **under active development**, but most of the features are ready to be used. There might edge cases that are not supported or not handled correctly, please see below.
+## Issues
+This plugin has been developed and tested running Homebridge on Ubuntu Linux 20.04 and macOS Monterey with a Hisense 50AE7010F. If your configuration differs, the steps below may not be a 100% accurate: even if the general idea is the same *(pair the TV, add it to Home, use it)*, your mileage may vary.
 
-## Known issues
+**If you find anything that is not correct, please open an issue (or even better: a PR changing this file) explaining what you're doing differently to make this plugin work with different TV models and/or on different operating systems.**
+
+### Known Issues
 - The input list might not be fetched correctly if the TV is turned off while adding the accessory or after restarting Homebridge. To fix this, force close your Home app and open it again.
 - Switching input to "TV" might not work properly. Home will not display any error, but the next TV state refresh will bring the input back to the previous one (which is also the one displayed on the TV).
 - Making changes to the TV state (turning on/off, changing input) while the Home app is opened will not trigger a live update. *This is theoretically supported by the plugin, but it seems to not work properly.*. Just switching to another app and then going back to Home will trigger a refresh.
 - Some newer TV models are always reported as turned on: this happens because they still respond to requests, even if they're "off". *As I don't have a such a model to test, I am unfortunately unable to provide a fix: if you have some experience with Python, TypeScript and have some free time, take a look at [this issue](https://github.com/MrAsterisco/homebridge-hisense-tv/issues/18).*
+
+#### Hoobs
+
+Generally, the installation commands should work on [Hoobs](https://hoobs.com) too, however, please note that additional issues may arise when running on this machine, as I unfortunately don't have access to one and cannot test on it.
+
+I am happy to provide help and support in fixing those issues: just open an issue on this repo and we'll try to figure it out together.
+
+The following [issue](https://github.com/MrAsterisco/homebridge-hisense-tv/issues/46#issuecomment-1515465450) contains additional steps that might be required in your setup with Hoobs.
+
+#### Error when installing Netifaces
+When you install `netifaces`, depending on your configuration, you may run into an error saying `fatal error: Python.h: No such file or directory`. The following commands should fix the issue by updating the setup tools to the latest version:
+```bash
+pip3 install --upgrade setuptools
+sudo apk add python3-dev  # for apk
+sudo apt-get install python3-dev  # for apt
+```
 
 # Contributions
 All contributions to expand the library are welcome. Fork the repo, make the changes you want, and open a Pull Request.
