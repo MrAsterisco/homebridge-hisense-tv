@@ -44,7 +44,6 @@ if(require.main === module) {
 
   mqttHelper.mqttClient.on('connect', () => {
     mqttHelper.callService('ui_service', 'gettvstate');
-    mqttHelper.subscribe(path.join(mqttHelper._COMMUNICATION_TOPIC, '#'));
   });
   mqttHelper.mqttClient.on('message', (topic, message) => {
     const data = JSON.parse(message.toString());
@@ -59,6 +58,7 @@ if(require.main === module) {
 
   (async () => {
     const code = await rl.question('Please enter the 4-digit code shown on tv: ');
+    mqttHelper.subscribe(path.join(mqttHelper._COMMUNICATION_TOPIC, '#'));
     mqttHelper.sendAuthCode(code);
   })();
 
