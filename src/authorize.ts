@@ -49,7 +49,7 @@ if(require.main === module) {
     const data = JSON.parse(message.toString());
     if(data != null && typeof data === 'object' && 'result' in data) {
       if(data.result !== 1) {
-        console.error('TV pairing failed - please try again');
+        rl.write('TV pairing failed - please try again');
       }
       mqttHelper.mqttClient.end(true);
       process.exit(0);

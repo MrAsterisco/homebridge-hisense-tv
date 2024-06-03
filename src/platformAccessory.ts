@@ -239,7 +239,7 @@ export class HiSenseTVAccessory {
     } else if (this.deviceState.hasFetchedInputs) {
       const inputSource = this.inputSources[(value as number) - 1];
 
-      if(this.deviceState.currentSourceName == inputSource.sourcename){
+      if(this.deviceState.currentSourceName === inputSource.sourcename){
         this.platform.log.debug(`Input ${inputSource.sourcename} is already selected.`);
       }else {
         this.mqttHelper.changeSource(inputSource.sourceid);
@@ -362,13 +362,13 @@ export class HiSenseTVAccessory {
       socket.destroy();
       this.platform.log.debug('Connected to TV!');
 
-      if(this.offCounter == -1){
+      if(this.offCounter === -1){
         this.onCounter++;
       }else {
         this.onCounter = 0;
       }
 
-      if(this.onCounter == this.counterThreshold){
+      if(this.onCounter === this.counterThreshold){
         this.offCounter = 0;
         this.onCounter = 0;
         this.deviceState.isConnected = true;
@@ -384,13 +384,13 @@ export class HiSenseTVAccessory {
       socket.destroy();
       this.platform.log.debug('Connection to TV timed out.');
 
-      if(this.onCounter == -1){
+      if(this.onCounter === -1){
         this.offCounter++;
       }else {
         this.offCounter = 0;
       }
 
-      if(this.offCounter == this.counterThreshold){
+      if(this.offCounter === this.counterThreshold){
         this.onCounter = 0;
         this.offCounter = 0;
         this.deviceState.isConnected = false;
@@ -406,13 +406,13 @@ export class HiSenseTVAccessory {
       socket.destroy();
       this.platform.log.debug('An error occurred while connecting to TV: ' + JSON.stringify(err));
 
-      if(this.onCounter == -1){
+      if(this.onCounter === -1){
         this.offCounter++;
       }else {
         this.offCounter = 0;
       }
 
-      if(this.offCounter == this.counterThreshold){
+      if(this.offCounter === this.counterThreshold){
         this.onCounter = 0;
         this.offCounter = 0;
         this.deviceState.isConnected = false;
@@ -467,7 +467,7 @@ export class HiSenseTVAccessory {
       inputSource.sourcename === this.deviceState.currentSourceName,
     );
 
-    // here we return 0 incase the input is not found in the list of inputs (-1 + 1 = 0)
+    // here we return 0 in case the input is not found in the list of inputs (-1 + 1 = 0)
     // otherwise we return the input index
     return index + 1;
   }
