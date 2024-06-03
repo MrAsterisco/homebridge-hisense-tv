@@ -83,7 +83,6 @@ export class HiSenseTVAccessory {
     setInterval(() => {
       this.checkTVStatus();
     }, 10000);
-
   }
 
   async getOn(): Promise<CharacteristicValue> {
@@ -236,6 +235,7 @@ export class HiSenseTVAccessory {
     this.platform.log.debug('Fetching input sources...');
     if (!this.deviceState.isConnected) {
       this.platform.log.info('Unable to fetch input sources because the TV is off. Will retry as soon as the device comes back online.');
+      this.deviceState.hasFetchedInputs = false;
       return;
     }
 
@@ -279,6 +279,7 @@ export class HiSenseTVAccessory {
       this.getCurrentInput();
     } catch (error) {
       this.platform.log.error('An error occurred while fetching inputs: ' + error);
+      this.deviceState.hasFetchedInputs = false;
     }
   }
 
@@ -327,6 +328,7 @@ export class HiSenseTVAccessory {
       socket.destroy();
 
       if (!this.deviceState.hasFetchedInputs) {
+        this.deviceState.hasFetchedInputs = true;
         this.getSources();
       } else {
         this.getCurrentInput();
