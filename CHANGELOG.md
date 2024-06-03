@@ -1,4 +1,4 @@
-# Changelog
+# 2.0.2
 
-## v1.0.0 -  2021-03-28
-- First public release
+- Fixed plugin to work with newer versions of homebridge.
+- Fixed order of Input Sources

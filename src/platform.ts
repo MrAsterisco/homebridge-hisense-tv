@@ -1,6 +1,6 @@
-import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
+import {API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic, Categories} from 'homebridge';
 
-import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
+import { PLUGIN_NAME } from './settings';
 import { HiSenseTVAccessory } from './platformAccessory';
 
 interface DeviceConfig {
@@ -28,6 +28,12 @@ export class HiSenseTVPlatform implements DynamicPlatformPlugin {
     public readonly api: API,
   ) {
     this.log.debug('Finished initializing platform:', this.config.platform);
+
+    // Homebridge 1.8.0 introduced a `log.success` method that can be used to log success messages
+    // For users that are on a version prior to 1.8.0, we need a 'polyfill' for this method
+    if (!log.success) {
+      log.success = log.info;
+    }
 
     // When this event is fired it means Homebridge has restored all cached accessories from disk.
     // Dynamic Platform plugins should only register new accessories after this event was fired,
@@ -57,9 +63,7 @@ export class HiSenseTVPlatform implements DynamicPlatformPlugin {
    * must not be registered again to prevent "duplicate UUID" errors.
    */
   discoverDevices() {
-
     const configDevices = this.config.devices as DeviceConfig[] || [];
-    
 
     // loop over the discovered devices and register each one if it has not already been registered
     for (const device of configDevices) {
@@ -75,32 +79,29 @@ export class HiSenseTVPlatform implements DynamicPlatformPlugin {
 
       if (existingAccessory) {
         // the accessory already exists
-        if (device) {
-          this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
+        this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
 
-          // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
-          // existingAccessory.context.device = device;
-          // this.api.updatePlatformAccessories([existingAccessory]);
+        // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
+        // existingAccessory.context.device = device;
+        // this.api.updatePlatformAccessories([existingAccessory]);
 
-          // create the accessory handler for the restored accessory
-          // this is imported from `platformAccessory.ts`
-          new HiSenseTVAccessory(this, existingAccessory);
-          
-          // update accessory cache with any changes to the accessory details and information
-          this.api.updatePlatformAccessories([existingAccessory]);
-        } else if (!device) {
-          // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
-          // remove platform accessories when no longer present
-          this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory]);
-          this.log.info('Removing existing accessory from cache:', existingAccessory.displayName);
-        }
+        // create the accessory handler for the restored accessory
+        // this is imported from `platformAccessory.ts`
+        new HiSenseTVAccessory(this, existingAccessory);
+
+        // update accessory cache with any changes to the accessory details and information
+        //this.api.updatePlatformAccessories([existingAccessory]);
+
+        // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
+        // remove platform accessories when no longer present
+        //this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory]);
+        //this.log.info('Removing existing accessory from cache:', existingAccessory.displayName);
       } else {
         // the accessory does not yet exist, so we need to create it
         this.log.info('Adding new accessory:', device.name);
 
         // create a new accessory
-        const accessory = new this.api.platformAccessory(device.name, uuid);
-        accessory.category = this.api.hap.Categories.TELEVISION;
+        const accessory = new this.api.platformAccessory(device.name, uuid, Categories.TELEVISION);
 
         // store a copy of the device object in the `accessory.context`
         // the `context` property can be used to store any data about the accessory you may need
