@@ -43,6 +43,16 @@ if(require.main === module) {
 
   mqttHelper.mqttClient.on('connect', () => {
     mqttHelper.callService('ui_service', 'gettvstate');
+    mqttHelper.subscribe(mqttHelper._STATE_TOPIC);
+  });
+  mqttHelper.mqttClient.on('message', (topic, message) => {
+    const data = JSON.parse(message.toString());
+    if('result' in data) {
+      if(data.result !== 1) {
+        console.error('TV pairing failed - please try again');
+      }
+      process.exit(0);
+    }
   });
 
   (async () => {

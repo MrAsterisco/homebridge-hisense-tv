@@ -8,6 +8,7 @@ export class MqttHelper {
   public _BASE_TOPIC : string;
   public _STATE_TOPIC: string;
   public _DEVICE_TOPIC: string;
+  public _COMMUNICATION_TOPIC: string;
   public _SOURCE_LIST_TOPIC : string;
 
   public mqttClient: mqtt.MqttClient;
@@ -22,7 +23,8 @@ export class MqttHelper {
     }
 
     this._DEVICE_TOPIC = `${interface_[0].mac.toUpperCase()}$normal`;
-    this._SOURCE_LIST_TOPIC = path.join(this._BASE_TOPIC, this._DEVICE_TOPIC, 'ui_service', 'data', 'sourcelist');
+    this._COMMUNICATION_TOPIC = path.join(this._BASE_TOPIC, this._DEVICE_TOPIC, 'ui_service', 'data');
+    this._SOURCE_LIST_TOPIC = path.join(this._COMMUNICATION_TOPIC, 'sourcelist');
 
     let key: Buffer|null = null;
     let cert: Buffer|null = null;
