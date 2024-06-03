@@ -8,6 +8,7 @@ import {DeviceConfig} from './interfaces/device-config.interface';
 import {TVState} from './interfaces/tv-state.interface';
 import {InputSource} from './interfaces/input-source.interface';
 import {MqttHelper} from './mqtt-helper';
+import equal from 'fast-deep-equal/es6';
 
 /**
  * Platform Accessory
@@ -252,23 +253,35 @@ export class HiSenseTVAccessory {
   /**
    * Fetch the available inputs from the TV.
    *
-   * This function calls `hisensetv --get sources` and registers new inputs
-   * with HomeKit. It will automatically get the display name from each input and
-   * use that as name in HomeKit.
-   *
-   * This function will be executed only once when registering a new device or
-   * starting up. It will be executed again if the TV is off the first time.
+   * This function takes the list of inputs from the TV and creates a HomeKit input.
+   * It will automatically get the display name from each input and use that as
+   * name in HomeKit.
    */
   setSources(sources: InputSource[]) {
-    // TODO implement correct comparison of sources
-    if(this.deviceState.hasFetchedInputs && this.inputSources == sources){
+    sources = sources.sort((a, b) => {
+      return parseInt(a.sourceid, 10) - parseInt(b.sourceid, 10);
+    });
+
+    const minSources = this.inputSources.map((inputSource) => {
+      return {
+        sourceid: inputSource.sourceid,
+        sourcename: inputSource.sourcename,
+        displayname: inputSource.displayname,
+      };
+    });
+    const minNewSources = sources.map((inputSource) => {
+      return {
+        sourceid: inputSource.sourceid,
+        sourcename: inputSource.sourcename,
+        displayname: inputSource.displayname,
+      };
+    });
+
+    if(this.deviceState.hasFetchedInputs && equal(minSources, minNewSources)){
       return;
     }
 
-    this.inputSources = sources
-      .sort((a, b) => {
-        return parseInt(a.sourceid, 10) - parseInt(b.sourceid, 10);
-      });
+    this.inputSources = sources;
 
     this.inputSources.forEach((inputSource, index) => {
       this.platform.log.debug('Adding input: ' + JSON.stringify(inputSource));
