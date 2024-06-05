@@ -198,7 +198,7 @@ export class HiSenseTVAccessory {
             this.platform.log.debug('Send Wake On Lan');
             setTimeout(() => {
               sendMagicPacket(attempt + 1);
-            }, 100);
+            }, 500);
           } catch (error) {
             this.platform.log.error('An error occurred while sending WoL: ' + error);
           }
