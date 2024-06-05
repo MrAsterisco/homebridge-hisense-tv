@@ -28,6 +28,42 @@
               "default": "HiSenseTV",
               "description": "A unique identifier of this device. You can use the device model, the S/N or any other random string. This will be displayed as Serial Number in Home."
             },
+            "alwaysOn": {
+              "title": "TV Type (Always On)",
+              "type": "boolean",
+              "required": true,
+              "default": "default",
+              "oneOf": [
+                { "title": "Default (not always on)", "enum": ["default"] },
+                { "title": "Fake Sleep", "enum": ["fakeSleep"] },
+                { "title": "Picture Settings", "enum": ["pictureSettings"] }
+              ],
+              "description": "Activate if your TV shows up as ON in the home app even when it's off. It means your TV is still reachable when it's off, and needs special handling. Polling is disabled when this option is enabled."
+            },
+            "pictureSettings": {
+              "title": "Always On Mode (Picture Settings)",
+              "type": "object",
+              "condition": {
+                "functionBody": "return model.devices[arrayIndices].alwaysOn === 'pictureSettings';"
+              },
+              "properties": {
+                "menuId": {
+                    "title": "Menu ID",
+                    "type": "number",
+                    "required": true,
+                    "default": "",
+                    "description": "The picture settings menu id of the the item that will be checked if the TV is Off/On."
+                    },
+                "menuFlag": {
+                    "title": "Menu Flag",
+                    "type": "number",
+                    "required": true,
+                    "default": "",
+                    "description": "The picture settings menu flag which indicates that the TV is OFF."
+                    }
+                }
+              }
+            },
             "name": {
               "title": "Name",
               "type": "string",

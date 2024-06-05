@@ -9,6 +9,7 @@ export class MqttHelper {
   public _DEVICE_TOPIC: string;
   public _COMMUNICATION_TOPIC: string;
   public _SOURCE_LIST_TOPIC : string;
+  public _PICTURE_SETTINGS_TOPIC : string;
 
   public mqttClient: mqtt.MqttClient;
 
@@ -18,6 +19,7 @@ export class MqttHelper {
     this._DEVICE_TOPIC = `${macaddress.toUpperCase()}$normal`;
     this._COMMUNICATION_TOPIC = path.join(this._BASE_TOPIC, this._DEVICE_TOPIC, 'ui_service', 'data');
     this._SOURCE_LIST_TOPIC = path.join(this._COMMUNICATION_TOPIC, 'sourcelist');
+    this._PICTURE_SETTINGS_TOPIC = path.join(this._BASE_TOPIC, 'broadcast', 'platform_service', 'data', 'picturesetting');
 
     let key: Buffer|null = null;
     let cert: Buffer|null = null;

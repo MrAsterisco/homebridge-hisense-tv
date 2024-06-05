@@ -9,6 +9,7 @@ import {TVState} from './interfaces/tv-state.interface';
 import {InputSource} from './interfaces/input-source.interface';
 import {MqttHelper} from './mqtt-helper';
 import equal from 'fast-deep-equal/es6';
+import {PictureSetting} from './interfaces/picturesetting.interface';
 
 /**
  * Platform Accessory
@@ -113,9 +114,11 @@ export class HiSenseTVAccessory {
       this.counterThreshold = 1;
     }
 
-    setInterval(() => {
-      this.checkTVStatus();
-    }, (this.deviceConfig.pollingInterval ?? 4) * 1000);
+    if(this.deviceConfig.alwaysOn === 'default'){
+      setInterval(() => {
+        this.checkTVStatus();
+      }, (this.deviceConfig.pollingInterval ?? 4) * 1000);
+    }
   }
 
   public setupMqtt() {
@@ -127,6 +130,9 @@ export class HiSenseTVAccessory {
 
       this.mqttHelper.subscribe(this.mqttHelper._SOURCE_LIST_TOPIC);
       this.mqttHelper.subscribe(this.mqttHelper._STATE_TOPIC);
+      if(this.deviceConfig.alwaysOn === 'pictureSettings'){
+        this.mqttHelper.subscribe(this.mqttHelper._PICTURE_SETTINGS_TOPIC);
+      }
 
       this.mqttHelper.callService('ui_service', 'sourcelist');
       this.mqttHelper.callService('ui_service', 'gettvstate');
@@ -135,10 +141,16 @@ export class HiSenseTVAccessory {
 
     this.mqttHelper.mqttClient.on('message', (topic, message) => {
       this.platform.log.debug(`Received message from TV (${topic}):` + message.toString());
+      const parsedMessage = JSON.parse(message.toString());
       if(topic === this.mqttHelper._STATE_TOPIC) {
-        this.setCurrentInput(JSON.parse(message.toString()));
+        this.setCurrentInput(parsedMessage);
+        if(this.deviceConfig.alwaysOn === 'fakeSleep'){
+          this.setAlwaysOnFakeSleepPowerState(parsedMessage);
+        }
       }else if(topic === this.mqttHelper._SOURCE_LIST_TOPIC){
-        this.setSources(JSON.parse(message.toString()));
+        this.setSources(parsedMessage);
+      }else if(topic === this.mqttHelper._PICTURE_SETTINGS_TOPIC){
+        this.setAlwaysOnPictureSettingsPowerState(parsedMessage);
       }
     });
 
@@ -175,7 +187,8 @@ export class HiSenseTVAccessory {
   async setOn(value: CharacteristicValue) {
     this.platform.log.debug('Set Characteristic On ->', value);
 
-    if (value === 1) {
+    // if its an always on TV we just send the power key to turn it on and off
+    if (value === 1 && this.deviceConfig.alwaysOn === 'default') {
       try {
         const result = await wol.wake(this.deviceConfig.macaddress, {address: this.deviceConfig.ipaddress});
         this.platform.log.debug('Wake on LAN result:', result);
@@ -188,6 +201,33 @@ export class HiSenseTVAccessory {
       this.offCounter = -1;
       this.onCounter = 0;
       this.mqttHelper.sendKey('KEY_POWER');
+    }
+  }
+
+  setAlwaysOnFakeSleepPowerState(tvState: TVState) {
+    if(tvState.statetype) {
+      if(tvState.statetype === 'fake_sleep_0'){
+        this.deviceState.isConnected = false;
+        this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
+      }else {
+        this.deviceState.isConnected = true;
+        this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.ACTIVE);
+      }
+    }
+  }
+
+  setAlwaysOnPictureSettingsPowerState(settings: PictureSetting) {
+    if(settings.menu_info){
+      const alwaysOnSetting = settings.menu_info.find((setting) => setting.menu_id === this.deviceConfig.pictureSettings?.menuId);
+      if(alwaysOnSetting){
+        if(alwaysOnSetting.menu_flag === this.deviceConfig.pictureSettings?.menuFlag){
+          this.deviceState.isConnected = false;
+          this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
+        }else {
+          this.deviceState.isConnected = true;
+          this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.ACTIVE);
+        }
+      }
     }
   }
 
