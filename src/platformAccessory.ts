@@ -52,7 +52,8 @@ export class HiSenseTVAccessory {
 
   constructor(private readonly platform: HiSenseTVPlatform, private readonly accessory: PlatformAccessory) {
     if(accessory.context.macaddress == null || accessory.context.macaddress == ''){
-      throw new Error('Homebridge MAC address is required for the TV accessory.');
+      this.platform.log.error('Homebridge MAC address is required for the TV accessory.');
+      process.exit(1);
     }
 
     this.Characteristic = platform.Characteristic;
