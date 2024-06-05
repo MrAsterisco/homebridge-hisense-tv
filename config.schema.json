@@ -10,6 +10,7 @@
         "title": "Homebridge MAC Address",
         "description": "This plugin needs a MAC address to communicate with your TVs. Input the mac address of the network interface you're using to run Homebridge.",
         "type": "string",
+        "placeholder": "00:XX:00:XX:00:XX",
         "required": true
       },
       "devices": {
@@ -30,7 +31,7 @@
             },
             "alwaysOn": {
               "title": "TV Type (Always On)",
-              "type": "boolean",
+              "type": "string",
               "required": true,
               "default": "default",
               "oneOf": [
