@@ -1,6 +1,6 @@
 export interface DeviceConfig {
   id: string;
-  alwaysOn: 'default' | 'fakeSleep' | 'pictureSettings';
+  tvType: 'default' | 'fakeSleep' | 'pictureSettings';
   pictureSettings?: {
     menuId: number;
     menuFlag: number;

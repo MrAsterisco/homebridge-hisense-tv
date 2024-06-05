@@ -36,7 +36,7 @@
               "default": "HiSense",
               "description": "The name of your TV. This will be used as default name in Home."
             },
-            "alwaysOn": {
+            "tvType": {
               "title": "TV Type (Always On)",
               "type": "string",
               "required": true,
@@ -52,7 +52,7 @@
               "title": "Always On Mode (Picture Settings)",
               "type": "object",
               "condition": {
-                "functionBody": "return model.devices[arrayIndices].alwaysOn === 'pictureSettings';"
+                "functionBody": "return model.devices[arrayIndices].tvType === 'pictureSettings';"
               },
               "properties": {
                 "menuId": {

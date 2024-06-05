@@ -115,7 +115,7 @@ export class HiSenseTVAccessory {
       this.counterThreshold = 1;
     }
 
-    if(this.deviceConfig.alwaysOn === 'default'){
+    if(this.deviceConfig.tvType === 'default'){
       setInterval(() => {
         this.checkTVStatus();
       }, (this.deviceConfig.pollingInterval ?? 4) * 1000);
@@ -131,7 +131,7 @@ export class HiSenseTVAccessory {
 
       this.mqttHelper.subscribe(this.mqttHelper._SOURCE_LIST_TOPIC);
       this.mqttHelper.subscribe(this.mqttHelper._STATE_TOPIC);
-      if(this.deviceConfig.alwaysOn === 'pictureSettings'){
+      if(this.deviceConfig.tvType === 'pictureSettings'){
         this.mqttHelper.subscribe(this.mqttHelper._PICTURE_SETTINGS_TOPIC);
       }
 
@@ -145,7 +145,7 @@ export class HiSenseTVAccessory {
       const parsedMessage = JSON.parse(message.toString());
       if(topic === this.mqttHelper._STATE_TOPIC) {
         this.setCurrentInput(parsedMessage);
-        if(this.deviceConfig.alwaysOn === 'fakeSleep'){
+        if(this.deviceConfig.tvType === 'fakeSleep'){
           this.setAlwaysOnFakeSleepPowerState(parsedMessage);
         }
       }else if(topic === this.mqttHelper._SOURCE_LIST_TOPIC){
@@ -189,15 +189,25 @@ export class HiSenseTVAccessory {
     this.platform.log.debug('Set Characteristic On ->', value);
 
     // if its an always on TV we just send the power key to turn it on and off
-    if (value === 1 && this.deviceConfig.alwaysOn === 'default') {
-      try {
-        const result = await wol.wake(this.deviceConfig.macaddress, {address: this.deviceConfig.ipaddress});
-        this.platform.log.debug('Wake on LAN result:', result);
-        this.onCounter = -1;
-        this.offCounter = 0;
-      } catch (error) {
-        this.platform.log.error('An error occurred while turning on the TV: ' + error);
-      }
+    if (value === 1 && this.deviceConfig.tvType === 'default') {
+
+      const sendMagicPacket = async (attempt) => {
+        if(attempt < 3){
+          try {
+            await wol.wake(this.deviceConfig.macaddress, {address: this.deviceConfig.ipaddress});
+            this.platform.log.debug('Send Wake On Lan');
+            setTimeout(() => {
+              sendMagicPacket(attempt + 1);
+            }, 100);
+          } catch (error) {
+            this.platform.log.error('An error occurred while sending WoL: ' + error);
+          }
+        }
+      };
+
+      sendMagicPacket(0);
+      this.onCounter = -1;
+      this.offCounter = 0;
     } else {
       this.offCounter = -1;
       this.onCounter = 0;
