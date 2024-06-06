@@ -42,9 +42,24 @@
               "required": true,
               "default": "default",
               "oneOf": [
-                { "title": "Default (not always on)", "enum": ["default"] },
-                { "title": "Fake Sleep (always on)", "enum": ["fakeSleep"] },
-                { "title": "Picture Settings (always on)", "enum": ["pictureSettings"] }
+                {
+                  "title": "Default (not always on)",
+                  "enum": [
+                    "default"
+                  ]
+                },
+                {
+                  "title": "Fake Sleep (always on)",
+                  "enum": [
+                    "fakeSleep"
+                  ]
+                },
+                {
+                  "title": "Picture Settings (always on)",
+                  "enum": [
+                    "pictureSettings"
+                  ]
+                }
               ],
               "description": "Change if your TV shows up as ON in the home app even when it's off. It means your TV is still reachable when it's off, and needs special handling. Polling is disabled when this option is enabled."
             },
@@ -118,9 +133,24 @@
               "type": "string",
               "default": "default",
               "oneOf": [
-                { "title": "Default", "enum": ["default"] },
-                { "title": "Disabled", "enum": ["disabled"] },
-                { "title": "Custom", "enum": ["custom"] }
+                {
+                  "title": "Default",
+                  "enum": [
+                    "default"
+                  ]
+                },
+                {
+                  "title": "Disabled",
+                  "enum": [
+                    "disabled"
+                  ]
+                },
+                {
+                  "title": "Custom",
+                  "enum": [
+                    "custom"
+                  ]
+                }
               ],
               "required": true,
               "description": "Depending on your TV model, you might need to change the SSL mode. The Default mode uses a normal SSL context and works with TVs that have a valid certificate onboard; if your TV does not have a valid certificate, you can try to disable it. Certain models need specific certificates and private keys: in this case, select Custom and specify the URL to them, making sure they are reachable from the machine that is running Homebridge."
@@ -145,32 +175,61 @@
     }
   },
   "form": [
-    {"key":  "macaddress"},
-    {"key":  "devices",
+    {
+      "key": "macaddress"
+    },
+    {
+      "key": "devices",
       "type": "tabarray",
       "add": "New",
       "remove": "Delete",
-      "style": { "remove": "btn-danger" },
+      "style": {
+        "remove": "btn-danger"
+      },
       "title": "{{ value.name || 'TV' }}",
       "items": [
-      {"key": "devices[].id"},
-      {"key": "devices[].name"},
-      {"key": "devices[].tvType"},
-      {"key": "devices[].pictureSettings.menuId",
-        "condition": {
-          "functionBody": "return model.devices[arrayIndices].tvType === 'pictureSettings';"
-        }
-      },
-      {"key": "devices[].pictureSettings.menuFlag",
-        "condition": {
-          "functionBody": "return model.devices[arrayIndices].tvType === 'pictureSettings';"
-        }
-      },
-      {"key": "devices[].ipaddress"},
-      {"key": "devices[].macaddress"},
-      {"key": "devices[].sslmode"},
-      {"key": "devices[].sslcertificate"},
-      {"key": "devices[].sslprivatekey"},
+        {
+          "key": "devices[].id"
+        },
+        {
+          "key": "devices[].name"
+        },
+        {
+          "key": "devices[].tvType"
+        },
+        {
+          "key": "devices[].pictureSettings.menuId",
+          "condition": {
+            "functionBody": "return model.devices[arrayIndices].tvType === 'pictureSettings';"
+          }
+        },
+        {
+          "key": "devices[].pictureSettings.menuFlag",
+          "condition": {
+            "functionBody": "return model.devices[arrayIndices].tvType === 'pictureSettings';"
+          }
+        },
+        {
+          "key": "devices[].ipaddress"
+        },
+        {
+          "key": "devices[].macaddress"
+        },
+        {
+          "key": "devices[].sslmode"
+        },
+        {
+          "key": "devices[].sslcertificate",
+          "condition": {
+            "functionBody": "return model.devices[arrayIndices].sslmode === 'custom';"
+          }
+        },
+        {
+          "key": "devices[].sslprivatekey",
+          "condition": {
+            "functionBody": "return model.devices[arrayIndices].sslmode === 'custom';"
+          }
+        },
         {
           "key": "devices[]",
           "title": "Advanced Settings",
@@ -178,12 +237,19 @@
           "type": "section",
           "expandable": true,
           "expanded": false,
-            "items": [
-              {"key": "devices[].pollingInterval"},
-              {"key": "devices[].wolInterval"},
-              {"key": "devices[].wolRetries"}
-            ]
+          "items": [
+            {
+              "key": "devices[].pollingInterval"
+            },
+            {
+              "key": "devices[].wolInterval"
+            },
+            {
+              "key": "devices[].wolRetries"
+            }
+          ]
         }
-    ]}
+      ]
+    }
   ]
 }
