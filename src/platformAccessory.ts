@@ -192,13 +192,13 @@ export class HiSenseTVAccessory {
     if (value === 1 && this.deviceConfig.tvType === 'default') {
 
       const sendMagicPacket = async (attempt) => {
-        if(attempt < 3){
+        if(attempt < (this.deviceConfig.wolRetries ?? 3)){
           try {
             await wol.wake(this.deviceConfig.macaddress, {address: this.deviceConfig.ipaddress});
             this.platform.log.debug('Send Wake On Lan');
             setTimeout(() => {
               sendMagicPacket(attempt + 1);
-            }, 500);
+            }, this.deviceConfig.wolInterval ?? 400);
           } catch (error) {
             this.platform.log.error('An error occurred while sending WoL: ' + error);
           }

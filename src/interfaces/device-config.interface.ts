@@ -7,6 +7,8 @@ export interface DeviceConfig {
   };
   name: string;
   pollingInterval: number;
+  wolInterval: number;
+  wolRetries: number;
   ipaddress: string;
   macaddress: string;
   sslmode: 'disabled' | 'custom';
