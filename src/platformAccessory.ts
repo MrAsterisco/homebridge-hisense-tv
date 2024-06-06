@@ -194,7 +194,7 @@ export class HiSenseTVAccessory {
       const sendMagicPacket = async (attempt) => {
         if(attempt < (this.deviceConfig.wolRetries ?? 3)){
           try {
-            await wol.wake(this.deviceConfig.macaddress, {address: this.deviceConfig.ipaddress});
+            await wol.wake(this.deviceConfig.macaddress);
             this.platform.log.debug('Send Wake On Lan');
             setTimeout(() => {
               sendMagicPacket(attempt + 1);
