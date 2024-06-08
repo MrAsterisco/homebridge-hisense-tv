@@ -67,6 +67,10 @@ export class HiSenseTVAccessory {
       this.log.error('Homebridge MAC address is required for the TV accessory.');
       process.exit(1);
     }
+    if(accessory.context.tvType == null || accessory.context.tvType == ''){
+      this.log.error('tvType needs to be configured in the config');
+      process.exit(1);
+    }
 
     this.Characteristic = platform.Characteristic;
     this.Service = platform.Service;

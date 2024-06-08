@@ -65,8 +65,8 @@ if(require.main === module) {
         const data = JSON.parse(message.toString());
         if(topic === mqttHelper._STATE_TOPIC) {
           mqttHelper.mqttClient.unsubscribe(mqttHelper._STATE_TOPIC);
-          if('statetype' in data && 'tv_state_type' in data['statetype']) {
-            rl.write('Possible Always On TV with Fake Sleep Detected: ' + data['statetype']['tv_state_type']);
+          if('statetype' in data && data['statetype'].startsWith('fake_sleep')) {
+            rl.write('Possible Always On TV with Fake Sleep Detected: ' + data['statetype']);
           }else{
             rl.write('First test didn\'t detect always on mode.');
             rl.write('Continuing with Picture Settings Test');

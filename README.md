@@ -9,6 +9,7 @@ This is a plugin for Homebridge that allows you to control your RemoteNow-enable
 - See the status of the TV (on/off, current input).
 - Turn on and off.
 - List inputs (using the display name set on the TV) and switch between them.
+- List apps and launch them.
 - Control the TV volume.
 - Remote control using the native iOS remote.
 
@@ -22,6 +23,7 @@ This is a plugin for Homebridge that allows you to control your RemoteNow-enable
 - *Starting with version 2.0.0, macOS is also supported as host*.
 
 ## Compatibility
+If you have any issues please check the [Known Issues](###Known Issues) section first, if your issue is not listed there, please open an issue on GitHub.
 
 ### TVs
 In theory, any RemoteNOW enabled TV should work with this plugin. However, some TVs have different behaviors, different SSL configurations and may not work completely or may require additional steps.
@@ -43,32 +45,13 @@ homebridge-hisense-tv-remotenow
 ```
 You also need some additional dependencies, if you haven't installed them already. Follow the instructions below for your operating system and then proceed to "Setting up the TV".
 
-### Linux (including Hoobs)
-
-```bash
-# for Linux distros with APT
-apt install python3-paho-mqtt python3-netifaces
-
-# for any Linux distro, including Hoobs:
-sudo su - homebridge
-pip3 install netifaces
-pip3 install "paho-mqtt==1.6.1"
-```
-
-### macOS / Windows
-
-```bash
-pip3 install netifaces
-pip3 install paho-mqtt
-```
-
 ## Setting up the TV
 
 First, identify the mac address of your network interface (on the machine where you are running homebridge). 
 On Linux, you can use the `ifconfig` command, while on Windows, you can use `ipconfig`. 
 Often you can also find this information in the network settings of your operating system.
 
-The mac address is needed in the next step and needed in the config.json file.
+The mac address is needed in the next step and in the config.json file.
 
 ### Continue the Setup
 For this plugin to work correctly, you need to configure your TV to use a static DHCP (or configure a static reservation on your router). 
@@ -78,7 +61,7 @@ To connect to your TV, you need to pair the machine where you're running Homebri
 ![terminal](images/terminal-location.png)
     
 Then **turn your TV on** and run one of the following commands, replacing `<TV_IP_ADDRESS>` with the IP address of your TV and `<HOMEBRIDGE_MAC_ADDRESS>` with the mac address of the network interface you found out previously.
-If they fail, try the other commands.
+If this one fails, try the other commands.
 
 SSLMode: default (most common)
 ```bash
@@ -133,6 +116,12 @@ On Linux, you can store them in `/etc/ssl/certs` and then provide the absolute p
     {
       "id": "A unique identifier (such as your TV S/N)",
       "name": "A name to display in the Home app",
+      "showApps": false,
+      "apps": [],
+      "tvType": "default",
+      "pollingInterval": 3,
+      "wolInterval": 400,
+      "wolRetries": 3,
       "ipaddress": "Your TV IP address",
       "macaddress": "Your TV MAC Address",
       "sslmode": "default (most common)|disabled (no SSL)|custom (use cert and key below)",
@@ -142,6 +131,62 @@ On Linux, you can store them in `/etc/ssl/certs` and then provide the absolute p
   ]
 }
 ```
+
+### Adding Apps as Input Sources
+In the config, **showApps** can be set to `true` to enable showing Apps as Input Sources.
+If you want all installed apps to be shown, you can leave the **apps** array empty. If you want to show only specific apps, you can list them in the **apps** array. The app names must match the names on the TV exactly.
+
+```json
+{
+  ...
+  "devices": [
+    {
+      ...
+      "showApps": true,
+      "apps": ["Netflix", "YouTube"],
+      ...
+    }
+  ]
+}
+```
+
+### Always On TVs (TVs that aren't fully turning off)
+Some TVs may be shown as "On" even when you turn them off. If you have a TV that is always on, you can change the `tvType`.
+
+**tvType** may be changed to either:
+
+- fakeSleep
+- pictureSettings
+
+This can be different for each TV, because the behavior is not consistent across all models. 
+To find out which one works for you, you can try running the `hisense-tv-always-on-test` command. (From the Homebridge Terminal)
+The script will guide you through the process of finding the correct `tvType` for your TV.
+If you find any issues with the script, please open an issue on GitHub, as I couldn't test that script with my TV.
+
+If the script suggest "Fake Sleep" you just have to change the `tvType` in the config file to `fakeSleep`:
+Otherwise if its suggesting something with "Picture Settings" you have some more steps to do:
+
+#### Picture Settings
+Picture Settings are literally the settings of the TV. Some always on TVs change specific settings when they are turned off.
+In the config you can set the `menuId` and `menuFlag` to the values that are changed when the TV is turned off, this plugin will then also consider the TV as off.
+For Example [this](https://github.com/MrAsterisco/homebridge-hisense-tv/issues/18#issuecomment-1247593321) User reported "HDMI Dynamic Range" (menu_id=23) gets set to **1** when the TV is turned off.
+Which would mean the config needs to look like this:
+
+```json
+{
+  ...
+  "devices": [
+    {
+      ...
+      "tvType": "pictureSettings",
+      "menuId": 23,
+      "menuFlag": 1,
+      ...
+    }
+  ]
+}
+```
+
 
 ## Add the TV to Home
 
@@ -168,26 +213,13 @@ This plugin has been developed and tested running Homebridge on Ubuntu Linux 20.
 **If you find anything that is not correct, please open an issue (or even better: a PR changing this file) explaining what you're doing differently to make this plugin work with different TV models and/or on different operating systems.**
 
 ### Known Issues
-- The input list might not be fetched correctly if the TV is turned off while adding the accessory or after restarting Homebridge. To fix this, force close your Home app and open it again.
-- Switching input to "TV" might not work properly. Home will not display any error, but the next TV state refresh will bring the input back to the previous one (which is also the one displayed on the TV).
-- Making changes to the TV state (turning on/off, changing input) while the Home app is opened will not trigger a live update. *This is theoretically supported by the plugin, but it seems to not work properly.*. Just switching to another app and then going back to Home will trigger a refresh.
-- Some newer TV models are always reported as turned on: this happens because they still respond to requests, even if they're "off". *As I don't have a such a model to test, I am unfortunately unable to provide a fix: if you have some experience with Python, TypeScript and have some free time, take a look at [this issue](https://github.com/MrAsterisco/homebridge-hisense-tv/issues/18).*
-
-#### Hoobs
-
-Generally, the installation commands should work on [Hoobs](https://hoobs.com) too, however, please note that additional issues may arise when running on this machine, as I unfortunately don't have access to one and cannot test on it.
-
-I am happy to provide help and support in fixing those issues: just open an issue on this repo and we'll try to figure it out together.
-
-The following [issue](https://github.com/MrAsterisco/homebridge-hisense-tv/issues/46#issuecomment-1515465450) contains additional steps that might be required in your setup with Hoobs.
-
-#### Error when installing Netifaces
-When you install `netifaces`, depending on your configuration, you may run into an error saying `fatal error: Python.h: No such file or directory`. The following commands should fix the issue by updating the setup tools to the latest version:
-```bash
-pip3 install --upgrade setuptools
-sudo apk add python3-dev  # for apk
-sudo apt-get install python3-dev  # for apt
-```
+- The input list might not be fetched correctly if the TV is turned off while adding the accessory or after restarting Homebridge. 
+  - FIX: force close your Home app and open it again. (try it a few times)
+- Your TV gets shown as "ON" even when it's off.
+  - FIX: read Section [Always On TVs (TVs that aren't fully turning off)](###Always On TVs (TVs that aren't fully turning off))
+- Some TVs have inconsistent data regarding apps
+  - Opening an app may work from homekit
+  - Due to the inconsistent data, the current selected app on the tv may not be shown correctly in homekit (will be "Unknown")
 
 # Contributions
 All contributions to expand the library are welcome. Fork the repo, make the changes you want, and open a Pull Request.
