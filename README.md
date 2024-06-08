@@ -47,7 +47,7 @@ You also need some additional dependencies, if you haven't installed them alread
 
 ## Setting up the TV
 
-First, identify the mac address of your network interface (on the machine where you are running homebridge). 
+On the machine where you are running homebridge identify the mac address of your network interface. 
 On Linux, you can use the `ifconfig` command, while on Windows, you can use `ipconfig`. 
 Often you can also find this information in the network settings of your operating system.
 
