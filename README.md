@@ -216,7 +216,7 @@ This plugin has been developed and tested running Homebridge on Ubuntu Linux 20.
 - The input list might not be fetched correctly if the TV is turned off while adding the accessory or after restarting Homebridge. 
   - FIX: force close your Home app and open it again. (try it a few times)
 - Your TV gets shown as "ON" even when it's off.
-  - FIX: read Section [Always On TVs (TVs that aren't fully turning off)](#Always-On-TVs-TVs-that–aren't-fully-turning-off)
+  - FIX: read Section [Always On TVs (TVs that aren't fully turning off)](#always-on-tvs-tvs-that-arent-fully-turning-off)
 - Some TVs have inconsistent data regarding apps
   - Opening an app may work from homekit
   - Due to the inconsistent data, the current selected app on the tv may not be shown correctly in homekit (will be "Unknown")
