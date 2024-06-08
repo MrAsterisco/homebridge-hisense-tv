@@ -1,7 +1,6 @@
-import {Characteristic, CharacteristicValue, PlatformAccessory, Service} from 'homebridge';
+import {Characteristic, CharacteristicValue, Logger, PlatformAccessory, Service} from 'homebridge';
 
 import {HiSenseTVPlatform} from './platform';
-import wol from 'wol';
 import net from 'net';
 
 import {DeviceConfig} from './interfaces/device-config.interface';
@@ -11,6 +10,9 @@ import {MqttHelper} from './mqtt-helper';
 import equal from 'fast-deep-equal/es6';
 import {PictureSetting} from './interfaces/picturesetting.interface';
 import {TVApp} from './interfaces/tv-app.interface';
+import {WoL} from './wol';
+import {sourcesAreEqual} from './utils/sourcesAreEqual.function';
+import {InputSourceSubPlatformAccessory} from './inputSourceSubPlatformAccessory';
 
 /**
  * Platform Accessory
@@ -20,6 +22,10 @@ import {TVApp} from './interfaces/tv-app.interface';
 export class HiSenseTVAccessory {
   private Characteristic: typeof Characteristic;
   private Service: typeof Service;
+  private log: Logger;
+
+  private wol: WoL;
+  private inputSourceSubPlatformAccessory: InputSourceSubPlatformAccessory;
 
   private service: Service;
   private speakerService: Service;
@@ -53,13 +59,18 @@ export class HiSenseTVAccessory {
   private availableApps: TVApp[] = [];
 
   constructor(private readonly platform: HiSenseTVPlatform, private readonly accessory: PlatformAccessory) {
-    if(accessory.context.macaddress == null || accessory.context.macaddress == ''){
-      this.platform.log.error('Homebridge MAC address is required for the TV accessory.');
+    this.log = platform.log;
+
+    if (accessory.context.macaddress == null || accessory.context.macaddress == '') {
+      this.log.error('Homebridge MAC address is required for the TV accessory.');
       process.exit(1);
     }
 
     this.Characteristic = platform.Characteristic;
     this.Service = platform.Service;
+
+    this.inputSourceSubPlatformAccessory = new InputSourceSubPlatformAccessory(this.Service, accessory, this.Characteristic);
+    this.wol = new WoL(this.log, accessory.context.device.macaddress, accessory.context.device.wolRetries ?? 3, accessory.context.device.wolInterval ?? 400);
 
     this.deviceConfig = accessory.context.device;
 
@@ -113,11 +124,11 @@ export class HiSenseTVAccessory {
 
     // set the counter threshold based on the polling interval
     this.counterThreshold = Math.round(8 / (this.deviceConfig.pollingInterval ?? 4));
-    if(this.counterThreshold < 1){
+    if (this.counterThreshold < 1) {
       this.counterThreshold = 1;
     }
 
-    if(this.deviceConfig.tvType === 'default'){
+    if (this.deviceConfig.tvType === 'default') {
       setInterval(() => {
         this.checkTVStatus();
       }, (this.deviceConfig.pollingInterval ?? 4) * 1000);
@@ -126,15 +137,14 @@ export class HiSenseTVAccessory {
 
   public setupMqtt() {
     this.mqttHelper.mqttClient.on('connect', () => {
-      this.platform.log.debug('Connected to MQTT service on TV.');
+      this.log.debug('Connected to MQTT service on TV.');
 
-      this.deviceState.isConnected = true;
-      this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.ACTIVE);
+      this.setTVPowerStateOn();
 
       this.mqttHelper.subscribe(this.mqttHelper._SOURCE_LIST_TOPIC);
       this.mqttHelper.subscribe(this.mqttHelper._APP_LIST_TOPIC);
       this.mqttHelper.subscribe(this.mqttHelper._STATE_TOPIC);
-      if(this.deviceConfig.tvType === 'pictureSettings'){
+      if (this.deviceConfig.tvType === 'pictureSettings') {
         this.mqttHelper.subscribe(this.mqttHelper._PICTURE_SETTINGS_TOPIC);
       }
 
@@ -145,14 +155,14 @@ export class HiSenseTVAccessory {
 
 
     this.mqttHelper.mqttClient.on('message', (topic, message) => {
-      this.platform.log.debug(`Received message from TV (${topic}):` + message.toString());
+      this.log.debug(`Received message from TV (${topic}):` + message.toString());
       const parsedMessage = JSON.parse(message.toString());
       switch (topic) {
         case this.mqttHelper._STATE_TOPIC:
-          if(this.deviceConfig.tvType === 'fakeSleep'){
+          if (this.deviceConfig.tvType === 'fakeSleep') {
             // setCurrentInput will be called in setAlwaysOnFakeSleepState
             this.setAlwaysOnFakeSleepState(parsedMessage);
-          }else {
+          } else {
             this.setCurrentInput(parsedMessage);
           }
           break;
@@ -166,62 +176,50 @@ export class HiSenseTVAccessory {
           this.setSources(this.inputSources, parsedMessage);
           break;
         default:
-          this.platform.log.debug('Received unknown message from TV. Topic: ' + topic + ' Message: ' + message.toString());
+          this.log.debug('Received unknown message from TV. Topic: ' + topic + ' Message: ' + message.toString());
           break;
       }
     });
 
-    this.mqttHelper.mqttClient.on('reconnect', () => {
-      this.platform.log.debug('Reconnecting to MQTT service on TV.');
-    });
-
     this.mqttHelper.mqttClient.on('close', () => {
-      this.platform.log.debug('Closed connection to MQTT service on TV.');
-      this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
-      this.deviceState.isConnected = false;
+      this.log.debug('Closed connection to MQTT service on TV.');
+      this.setTVPowerStateOff();
     });
 
     this.mqttHelper.mqttClient.on('end', () => {
-      this.platform.log.debug('Connection to MQTT service on TV ended.');
-      this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
-      this.deviceState.isConnected = false;
+      this.log.debug('Connection to MQTT service on TV ended.');
+      this.setTVPowerStateOff();
     });
 
     this.mqttHelper.mqttClient.on('disconnect', () => {
-      this.platform.log.debug('Disconnected from MQTT service on TV.');
-      this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
-      this.deviceState.isConnected = false;
+      this.log.debug('Disconnected from MQTT service on TV.');
+      this.setTVPowerStateOff();
     });
 
 
     this.mqttHelper.mqttClient.on('error', (err) => {
-      this.platform.log.error('An error occurred while connecting to MQTT service: ' + JSON.stringify(err));
-      this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
-      this.deviceState.isConnected = false;
+      this.log.error('An error occurred while connecting to MQTT service: ' + JSON.stringify(err));
+      this.setTVPowerStateOff();
     });
   }
 
+  setTVPowerStateOff() {
+    this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
+    this.deviceState.isConnected = false;
+  }
+
+  setTVPowerStateOn() {
+    this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.ACTIVE);
+    this.deviceState.isConnected = true;
+  }
+
   async setOn(value: CharacteristicValue) {
-    this.platform.log.debug('Set Characteristic On ->', value);
+    this.log.debug('Set Characteristic On ->', value);
 
     // if its an always on TV we just send the power key to turn it on and off
     if (value === 1 && this.deviceConfig.tvType === 'default') {
 
-      const sendMagicPacket = async (attempt) => {
-        if(attempt < (this.deviceConfig.wolRetries ?? 3)){
-          try {
-            await wol.wake(this.deviceConfig.macaddress);
-            this.platform.log.debug('Send Wake On Lan');
-            setTimeout(() => {
-              sendMagicPacket(attempt + 1);
-            }, this.deviceConfig.wolInterval ?? 400);
-          } catch (error) {
-            this.platform.log.error('An error occurred while sending WoL: ' + error);
-          }
-        }
-      };
-
-      sendMagicPacket(0);
+      this.wol.sendMagicPacket();
       this.onCounter = -1;
       this.offCounter = 0;
     } else {
@@ -232,15 +230,13 @@ export class HiSenseTVAccessory {
   }
 
   setAlwaysOnPictureSettingsPowerState(settings: PictureSetting) {
-    if(settings.menu_info){
+    if (settings.menu_info) {
       const alwaysOnSetting = settings.menu_info.find((setting) => setting.menu_id === this.deviceConfig.pictureSettings?.menuId);
-      if(alwaysOnSetting){
-        if(alwaysOnSetting.menu_flag === this.deviceConfig.pictureSettings?.menuFlag){
-          this.deviceState.isConnected = false;
-          this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
-        }else {
-          this.deviceState.isConnected = true;
-          this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.ACTIVE);
+      if (alwaysOnSetting) {
+        if (alwaysOnSetting.menu_flag === this.deviceConfig.pictureSettings?.menuFlag) {
+          this.setTVPowerStateOff();
+        } else {
+          this.setTVPowerStateOn();
         }
       }
     }
@@ -268,16 +264,16 @@ export class HiSenseTVAccessory {
 
     keyName = keyDict[newValue as number];
 
-    if(keyName){
+    if (keyName) {
       this.mqttHelper.sendKey(keyName);
     } else {
-      this.platform.log.debug(`Key ${newValue} not supported.`);
+      this.log.debug(`Key ${newValue} not supported.`);
     }
 
   }
 
   async setVolume(value: CharacteristicValue) {
-    this.platform.log.debug('setVolume called with: ' + value);
+    this.log.debug('setVolume called with: ' + value);
 
     if (value === 0) {
       this.mqttHelper.sendKey('KEY_VOLUMEUP');
@@ -287,63 +283,38 @@ export class HiSenseTVAccessory {
   }
 
   async setCurrentApplication(value: CharacteristicValue) {
-    this.platform.log.debug('setCurrentApplication() invoked to ->', value);
+    this.log.debug('setCurrentApplication() invoked to ->', value);
 
     if (value === 0) {
-      this.platform.log.debug('Switching to the Other input is unsupported. This input is only used when the plugin is unable to identify the current input on the TV (i.e. you are using an app).');
-    } else if(this.inputSources.length >= (value as number)) {
-      if(!this.deviceState.hasFetchedInputs){
-        this.platform.log.debug('Cannot switch input because the input list has not been fetched yet.');
+      this.log.debug('Switching to the Other input is unsupported. This input is only used when the plugin is unable to identify the current input on the TV (i.e. you are using an app).');
+    } else if (this.inputSources.length >= (value as number)) {
+      if (!this.deviceState.hasFetchedInputs) {
+        this.log.debug('Cannot switch input because the input list has not been fetched yet.');
         return;
       }
 
       // input is a source
       const inputSource = this.inputSources[(value as number) - 1];
-      if(this.deviceState.currentSourceName === inputSource.sourcename){
-        this.platform.log.debug(`Input ${inputSource.sourcename} is already selected.`);
-      }else {
+      if (this.deviceState.currentSourceName === inputSource.sourcename) {
+        this.log.debug(`Input ${inputSource.sourcename} is already selected.`);
+      } else {
         this.mqttHelper.changeSource(inputSource.sourceid);
       }
     } else {
       // input is an app
       value = (value as number) - this.inputSources.length - 1;
-      if(value >= this.availableApps.length){
-        this.platform.log.debug('Cannot switch input as apps have not been fetched yet.');
+      if (value >= this.availableApps.length) {
+        this.log.debug('Cannot switch input as apps have not been fetched yet.');
         return;
       }
 
       const app = this.availableApps[value];
-      if(this.deviceState.currentSourceName === app.name){
-        this.platform.log.debug(`App ${app.name} is already selected.`);
-      }else {
+      if (this.deviceState.currentSourceName === app.name) {
+        this.log.debug(`App ${app.name} is already selected.`);
+      } else {
         this.mqttHelper.changeApp(app.name, app.id, app.url, app.urlType ?? '', app.storeType);
       }
     }
-  }
-
-  /**
-   * Check if the current list of inputs is equal to the new list of inputs.
-   * inputs are considered equal if the sourceid, sourcename and displayname are the same.
-   * New objects get created as there could be additional properties in the input source object.
-   * @param newSources
-   */
-  checkIfSourcesAreEqual(newSources: InputSource[]) {
-    const minSources = this.inputSources.map((inputSource) => {
-      return {
-        sourceid: inputSource.sourceid,
-        sourcename: inputSource.sourcename,
-        displayname: inputSource.displayname,
-      };
-    });
-    const minNewSources = newSources.map((inputSource) => {
-      return {
-        sourceid: inputSource.sourceid,
-        sourcename: inputSource.sourcename,
-        displayname: inputSource.displayname,
-      };
-    });
-
-    return equal(minSources, minNewSources);
   }
 
   /**
@@ -361,36 +332,16 @@ export class HiSenseTVAccessory {
       return a.name.localeCompare(b.name);
     });
 
-    const sourcesChanged = !this.checkIfSourcesAreEqual(sources);
+    const sourcesChanged = !sourcesAreEqual(sources, this.inputSources);
     const appsChanged = !equal(this.availableApps, apps);
 
-    if(sourcesChanged){
+    if (sourcesChanged) {
       this.inputSources = sources;
 
       this.inputSources.forEach((inputSource, index) => {
-        this.platform.log.debug('Adding input: ' + JSON.stringify(inputSource));
+        this.log.debug('Adding input: ' + JSON.stringify(inputSource));
 
-        let inputType = this.Characteristic.InputSourceType.OTHER;
-        if (inputSource.sourcename === 'TV') {
-          inputType = this.Characteristic.InputSourceType.TUNER;
-        } else if (inputSource.sourcename === 'AV') {
-          inputType = this.Characteristic.InputSourceType.COMPOSITE_VIDEO;
-        } else if (inputSource.sourcename.startsWith('HDMI')) {
-          inputType = this.Characteristic.InputSourceType.HDMI;
-        }
-
-        const inputService = this.accessory.getService('input' + inputSource.sourceid)
-          || this.accessory.addService(this.Service.InputSource, 'input' + inputSource.sourceid, 'input' + inputSource.sourceid);
-
-        inputService
-          .setCharacteristic(this.Characteristic.Identifier, (index + 1))
-          .setCharacteristic(this.Characteristic.IsConfigured, this.Characteristic.IsConfigured.CONFIGURED)
-          .setCharacteristic(this.Characteristic.ConfiguredName, inputSource.displayname)
-          .setCharacteristic(this.Characteristic.Name, inputSource.sourcename)
-          .setCharacteristic(this.Characteristic.CurrentVisibilityState, this.Characteristic.CurrentVisibilityState.SHOWN)
-          .setCharacteristic(this.Characteristic.InputSourceType, inputType);
-
-        inputSource.service = inputService;
+        const inputService = this.inputSourceSubPlatformAccessory.addTVInputSource(inputSource, index + 1);
 
         this.service.addLinkedService(inputService);
       });
@@ -398,36 +349,24 @@ export class HiSenseTVAccessory {
       this.deviceState.hasFetchedInputs = true;
     }
 
-    if(sourcesChanged || appsChanged){
+    if (sourcesChanged || appsChanged) {
       // we always need to run both these snippets if source changed
       // as the app identifier is based on the input source length
       this.availableApps = apps;
       const startIndex = this.inputSources.length;
       this.availableApps.forEach((app, index) => {
-        this.platform.log.debug('Adding app: ' + JSON.stringify(app));
+        this.log.debug('Adding app: ' + JSON.stringify(app));
 
-        const inputService = this.accessory.getService('input' + app.name)
-          || this.accessory.addService(this.Service.InputSource, 'input' + app.name, 'input' + app.name);
-
-        inputService
-          .setCharacteristic(this.Characteristic.Identifier, (startIndex + index + 1))
-          .setCharacteristic(this.Characteristic.IsConfigured, this.Characteristic.IsConfigured.CONFIGURED)
-          .setCharacteristic(this.Characteristic.ConfiguredName, app.name)
-          .setCharacteristic(this.Characteristic.Name, app.name)
-          .setCharacteristic(this.Characteristic.CurrentVisibilityState, this.Characteristic.CurrentVisibilityState.SHOWN)
-          .setCharacteristic(this.Characteristic.InputSourceType, this.Characteristic.InputSourceType.APPLICATION);
-
-        app.service = inputService;
+        const inputService = this.inputSourceSubPlatformAccessory.addAppInputSource(app, startIndex + index + 1);
 
         this.service.addLinkedService(inputService);
       });
 
-
-      const displayOrder = [0].concat(this.inputSources.map((_, index) => index+1)).concat(this.availableApps.map((_, index) => index + this.inputSources.length + 1));
+      const displayOrder = [0].concat(this.inputSources.map((_, index) => index + 1)).concat(this.availableApps.map((_, index) => index + this.inputSources.length + 1));
 
       this.service.setCharacteristic(this.platform.api.hap.Characteristic.DisplayOrder, this.platform.api.hap.encode(1, displayOrder).toString('base64'));
 
-      // run incase the current input is not set after fetching the sources
+      // run in case the current input is not set after fetching the sources
       this.service.setCharacteristic(this.Characteristic.ActiveIdentifier, this.getCurrentInputIndex());
     }
   }
@@ -442,18 +381,8 @@ export class HiSenseTVAccessory {
    * Switching to this input is unsupported.
    */
   createHomeSource() {
-    this.platform.log.debug('Adding unknown source...');
-
-    const inputService = this.accessory.getService('inputhome') || this.accessory.addService(this.Service.InputSource, 'inputhome', 'inputhome');
-
-    inputService
-      .setCharacteristic(this.Characteristic.Identifier, 0)
-      .setCharacteristic(this.Characteristic.IsConfigured, this.Characteristic.IsConfigured.CONFIGURED)
-      .setCharacteristic(this.Characteristic.ConfiguredName, 'Unknown')
-      .setCharacteristic(this.Characteristic.Name, 'Unknown')
-      .setCharacteristic(this.Characteristic.InputSourceType, this.Characteristic.InputSourceType.OTHER)
-      .setCharacteristic(this.Characteristic.CurrentVisibilityState, this.Characteristic.CurrentVisibilityState.SHOWN);
-
+    this.log.debug('Adding unknown source...');
+    const inputService = this.inputSourceSubPlatformAccessory.createUnknownSource();
     this.service.addLinkedService(inputService);
   }
 
@@ -468,73 +397,60 @@ export class HiSenseTVAccessory {
    * Otherwise, it'll just check for the current visible input, by calling `getCurrentInput`.
    */
   checkTVStatus() {
-    this.platform.log.debug('Checking state for TV at IP: ' + this.deviceConfig.ipaddress);
+    this.log.debug('Checking state for TV at IP: ' + this.deviceConfig.ipaddress);
 
     const socket = net.createConnection({host: this.deviceConfig.ipaddress, port: 36669, timeout: 500});
     socket.on('connect', () => {
       socket.destroy();
-      this.platform.log.debug('Connected to TV!');
+      this.log.debug('Connected to TV!');
 
-      if(this.offCounter === -1){
+      if (this.offCounter === -1) {
         this.onCounter++;
-      }else {
+      } else {
         this.onCounter = 0;
       }
 
-      if(this.onCounter === this.counterThreshold){
+      if (this.onCounter === this.counterThreshold) {
         this.offCounter = 0;
         this.onCounter = 0;
-        this.deviceState.isConnected = true;
-        this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.ACTIVE);
+        this.setTVPowerStateOn();
       }
 
-      if(!this.mqttHelper.mqttClient.connected){
+      if (!this.mqttHelper.mqttClient.connected) {
         this.mqttHelper.mqttClient.reconnect();
       }
     });
 
-    socket.on('timeout', () => {
-      socket.destroy();
-      this.platform.log.debug('Connection to TV timed out.');
-
-      if(this.onCounter === -1){
+    const tvOffCallback = () => {
+      if (this.onCounter === -1) {
         this.offCounter++;
-      }else {
+      } else {
         this.offCounter = 0;
       }
 
-      if(this.offCounter === this.counterThreshold){
+      if (this.offCounter === this.counterThreshold) {
         this.onCounter = 0;
         this.offCounter = 0;
-        this.deviceState.isConnected = false;
-        this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
+        this.setTVPowerStateOff();
       }
 
-      if(!this.mqttHelper.mqttClient.disconnected){
+      if (!this.mqttHelper.mqttClient.disconnected) {
         this.mqttHelper.mqttClient.end(true);
       }
+    };
+
+    socket.on('timeout', () => {
+      socket.destroy();
+      this.log.debug('Connection to TV timed out.');
+
+      tvOffCallback();
     });
 
     socket.on('error', (err) => {
       socket.destroy();
-      this.platform.log.debug('An error occurred while connecting to TV: ' + JSON.stringify(err));
+      this.log.debug('An error occurred while connecting to TV: ' + JSON.stringify(err));
 
-      if(this.onCounter === -1){
-        this.offCounter++;
-      }else {
-        this.offCounter = 0;
-      }
-
-      if(this.offCounter === this.counterThreshold){
-        this.onCounter = 0;
-        this.offCounter = 0;
-        this.deviceState.isConnected = false;
-        this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
-      }
-
-      if(!this.mqttHelper.mqttClient.disconnected){
-        this.mqttHelper.mqttClient.end(true);
-      }
+      tvOffCallback();
     });
   }
 
@@ -549,20 +465,20 @@ export class HiSenseTVAccessory {
    * Any other state will be matched as the "Other" input.
    */
   setCurrentInput(input: TVState) {
-    this.platform.log.debug('Received state from TV: ' + JSON.stringify(input));
+    this.log.debug('Received state from TV: ' + JSON.stringify(input));
 
     if (input.statetype === 'sourceswitch') {
       this.deviceState.currentSourceName = input.sourcename;
-      this.platform.log.debug('Current input is: ' + this.deviceState.currentSourceName);
+      this.log.debug('Current input is: ' + this.deviceState.currentSourceName);
     } else if (input.statetype === 'livetv') {
       this.deviceState.currentSourceName = 'TV';
-      this.platform.log.debug('Current input is: ' + this.deviceState.currentSourceName);
-    } else if(input.statetype === 'app') {
+      this.log.debug('Current input is: ' + this.deviceState.currentSourceName);
+    } else if (input.statetype === 'app') {
       this.deviceState.currentSourceName = input.name;
-      this.platform.log.debug('Current input is: ' + this.deviceState.currentSourceName);
+      this.log.debug('Current input is: ' + this.deviceState.currentSourceName);
     } else {
       this.deviceState.currentSourceName = '';
-      this.platform.log.debug('Current input is unsupported.');
+      this.log.debug('Current input is unsupported.');
     }
 
     this.service.updateCharacteristic(this.Characteristic.ActiveIdentifier, this.getCurrentInputIndex());
@@ -581,20 +497,16 @@ export class HiSenseTVAccessory {
       return 0;
     }
 
-    let index = this.inputSources.findIndex((inputSource) =>
-      inputSource.sourcename === this.deviceState.currentSourceName,
-    );
+    let index = this.inputSources.findIndex((inputSource) => inputSource.sourcename === this.deviceState.currentSourceName);
 
-    if(index !== -1){
+    if (index !== -1) {
       return index + 1;
     }
 
     // if not found in the input sources, check the apps
-    index = this.availableApps.findIndex((app) =>
-      app.name === this.deviceState.currentSourceName,
-    );
+    index = this.availableApps.findIndex((app) => app.name === this.deviceState.currentSourceName);
 
-    if(index === -1){
+    if (index === -1) {
       return 0;
     }
 
@@ -602,7 +514,7 @@ export class HiSenseTVAccessory {
   }
 
   getFilteredApps(apps: TVApp[]) {
-    if(!(this.deviceConfig.showApps ?? false)) {
+    if (!(this.deviceConfig.showApps ?? false)) {
       return [];
     }
 
@@ -612,16 +524,14 @@ export class HiSenseTVAccessory {
   }
 
   private setAlwaysOnFakeSleepState(tvState: TVState) {
-    if(tvState.statetype.startsWith('fake_sleep') && this.deviceState.isConnected) {
+    if (tvState.statetype.startsWith('fake_sleep') && this.deviceState.isConnected) {
       // Disconnect
-      this.deviceState.isConnected = false;
-      this.service.setCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
-    }else if (!tvState.statetype.startsWith('fake_sleep')) {
+      this.setTVPowerStateOff();
+    } else if (!tvState.statetype.startsWith('fake_sleep')) {
       this.setCurrentInput(tvState);
-      if(!this.deviceState.isConnected){
+      if (!this.deviceState.isConnected) {
         // Connect
-        this.deviceState.isConnected = true;
-        this.service.setCharacteristic(this.Characteristic.Active, this.Characteristic.Active.ACTIVE);
+        this.setTVPowerStateOn();
       }
     }
   }
