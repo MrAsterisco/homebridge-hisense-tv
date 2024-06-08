@@ -15,5 +15,5 @@ export interface DeviceConfig {
   sslcertificate: string;
   sslprivatekey: string;
   showApps: boolean;
-  apps: Array<string>;
+  apps?: Array<string>;
 }

@@ -132,7 +132,7 @@ export class HiSenseTVAccessory {
       this.service.updateCharacteristic(this.Characteristic.Active, this.Characteristic.Active.ACTIVE);
 
       this.mqttHelper.subscribe(this.mqttHelper._SOURCE_LIST_TOPIC);
-      this.mqttHelper.subscribe(this.mqttHelper._STATE_TOPIC);
+      this.mqttHelper.subscribe(this.mqttHelper._APP_LIST_TOPIC);
       this.mqttHelper.subscribe(this.mqttHelper._STATE_TOPIC);
       if(this.deviceConfig.tvType === 'pictureSettings'){
         this.mqttHelper.subscribe(this.mqttHelper._PICTURE_SETTINGS_TOPIC);
@@ -606,7 +606,9 @@ export class HiSenseTVAccessory {
       return [];
     }
 
-    return apps.filter((app) => !app.isunInstalled && ((this.deviceConfig.apps ?? []).length === 0 || this.deviceConfig.apps.includes(app.name)));
+    const visibleAppNames = this.deviceConfig.apps ?? [];
+
+    return apps.filter((app) => !app.isunInstalled && (visibleAppNames.length === 0 || visibleAppNames.includes(app.name)));
   }
 
   private setAlwaysOnFakeSleepState(tvState: TVState) {
