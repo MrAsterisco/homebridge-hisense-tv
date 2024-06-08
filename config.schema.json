@@ -215,6 +215,12 @@
         },
         {
           "key": "devices[].apps",
+          "type": "array",
+          "items": {
+            "title": "App Name",
+            "description": "Name must match exactly the name like the tv sends it over mqtt.",
+            "type": "string"
+          },
           "condition": {
             "functionBody": "return model.devices[arrayIndices].showApps;"
           }
