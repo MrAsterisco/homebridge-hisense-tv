@@ -23,7 +23,7 @@ This is a plugin for Homebridge that allows you to control your RemoteNow-enable
 - *Starting with version 2.0.0, macOS is also supported as host*.
 
 ## Compatibility
-If you have any issues please check the [Known Issues](###Known Issues) section first, if your issue is not listed there, please open an issue on GitHub.
+If you have any issues please check the [Known Issues](#Known Issues) section first, if your issue is not listed there, please open an issue on GitHub.
 
 ### TVs
 In theory, any RemoteNOW enabled TV should work with this plugin. However, some TVs have different behaviors, different SSL configurations and may not work completely or may require additional steps.
