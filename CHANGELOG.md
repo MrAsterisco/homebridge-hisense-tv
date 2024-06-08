@@ -7,3 +7,5 @@
     - Time to wait between polling the tv for the on/off state
 - WoL Packet is now sent multiple times
   - configurable with the new config option wolRetries/wolInterval
+- Support for showing apps as Input Sources
+  - showApps and apps config options
