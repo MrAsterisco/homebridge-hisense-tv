@@ -14,4 +14,6 @@ export interface DeviceConfig {
   sslmode: 'disabled' | 'custom';
   sslcertificate: string;
   sslprivatekey: string;
+  showApps: boolean;
+  apps: Array<string>;
 }

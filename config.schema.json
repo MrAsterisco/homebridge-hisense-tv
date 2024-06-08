@@ -36,6 +36,22 @@
               "default": "HiSense",
               "description": "The name of your TV. This will be used as default name in Home."
             },
+            "showApps": {
+              "title": "Show Apps",
+              "type": "boolean",
+              "required": true,
+              "default": false,
+              "description": "Show the apps installed on the TV in the Home app as source input."
+            },
+            "apps": {
+              "title": "Visible Apps",
+              "description": "If none are entered all installed apps are shown. Name must match exactly the name like the tv sends it over mqtt.",
+              "type": "array",
+              "items": {
+                "title": "App Name",
+                "type": "string"
+              }
+            },
             "tvType": {
               "title": "TV Type (Always On)",
               "type": "string",
@@ -193,6 +209,15 @@
         },
         {
           "key": "devices[].name"
+        },
+        {
+          "key": "devices[].showApps"
+        },
+        {
+          "key": "devices[].apps",
+          "condition": {
+            "functionBody": "return model.devices[arrayIndices].showApps;"
+          }
         },
         {
           "key": "devices[].tvType"
