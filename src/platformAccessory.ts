@@ -316,7 +316,7 @@ export class HiSenseTVAccessory {
       if(this.deviceState.currentSourceName === app.name){
         this.platform.log.debug(`App ${app.name} is already selected.`);
       }else {
-        this.mqttHelper.changeApp(app.name, app.url, app.urlType, app.storeType);
+        this.mqttHelper.changeApp(app.name, app.url, app.urlType ?? '', app.storeType);
       }
     }
   }
