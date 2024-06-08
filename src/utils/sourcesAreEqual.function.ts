@@ -6,6 +6,7 @@ import equal from 'fast-deep-equal/es6';
  * inputs are considered equal if the sourceid, sourcename and displayname are the same.
  * New objects get created as there could be additional properties in the input source object.
  * @param newSources
+ * @param oldSources
  */
 export function sourcesAreEqual(newSources: InputSource[], oldSources: InputSource[]) {
   const minSources = oldSources.map((inputSource) => {

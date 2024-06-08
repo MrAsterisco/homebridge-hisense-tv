@@ -3,6 +3,12 @@ import path from 'path';
 import {DeviceConfig} from './interfaces/device-config.interface';
 import fs from 'node:fs';
 
+/**
+ * MqttHelper
+ * This class is used to interact with the MQTT server on the TV
+ * We also store all useful topics in this class
+ *
+ */
 export class MqttHelper {
   public _BASE_TOPIC : string;
   public _STATE_TOPIC: string;
@@ -53,6 +59,10 @@ export class MqttHelper {
     this.callService('ui_service', 'changesource', JSON.stringify({'sourceid': sourceId}));
   }
 
+  /**
+   * Send a command to the TV to open an app
+   * Different TVs need different parameters (appId is mandatory for some for others it is not)
+   */
   public changeApp(name: string, appId: string, url: string, urlType: number|string, storeType: number) {
     this.callService('ui_service', 'launchapp', JSON.stringify({'name': name, 'appId': appId, 'url': url, 'urlType': urlType, 'storeType': storeType}));
   }

@@ -47,8 +47,10 @@ export class HiSenseTVAccessory {
   private offCounter = 0;
   private onCounter = 0;
 
-  // Counter threshold to determine if the TV is on or off.
-  // 8 seconds seems reasonable, as the TV should respond faster.
+  /**
+   * Counter threshold to determine if the TV is on or off.
+   * 8 seconds seems reasonable, as the TV should respond faster.
+   */
   private counterThreshold = 8;
 
   private deviceState = {
@@ -69,10 +71,11 @@ export class HiSenseTVAccessory {
     this.Characteristic = platform.Characteristic;
     this.Service = platform.Service;
 
+    this.deviceConfig = accessory.context.device;
+
+    // create useful subclasses
     this.inputSourceSubPlatformAccessory = new InputSourceSubPlatformAccessory(this.Service, accessory, this.Characteristic);
     this.wol = new WoL(this.log, accessory.context.device.macaddress, accessory.context.device.wolRetries ?? 3, accessory.context.device.wolInterval ?? 400);
-
-    this.deviceConfig = accessory.context.device;
 
     // Configure the TV details.
     this.accessory.getService(this.Service.AccessoryInformation)!
@@ -86,7 +89,8 @@ export class HiSenseTVAccessory {
     // Configure the service.
     this.service
       .setCharacteristic(this.Characteristic.ConfiguredName, accessory.context.device.name)
-      .setCharacteristic(this.Characteristic.SleepDiscoveryMode, this.Characteristic.SleepDiscoveryMode.NOT_DISCOVERABLE);
+      .setCharacteristic(this.Characteristic.SleepDiscoveryMode, this.Characteristic.SleepDiscoveryMode.NOT_DISCOVERABLE)
+      .setCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
 
     // Bind to events.
     this.service.getCharacteristic(this.Characteristic.Active)
@@ -94,8 +98,6 @@ export class HiSenseTVAccessory {
 
     this.service.getCharacteristic(this.Characteristic.RemoteKey)
       .onSet(this.setRemoteKey.bind(this));
-
-    this.service.setCharacteristic(this.Characteristic.ActiveIdentifier, 0);
 
     this.service.getCharacteristic(this.Characteristic.ActiveIdentifier)
       .onSet(this.setCurrentApplication.bind(this));
@@ -151,17 +153,20 @@ export class HiSenseTVAccessory {
         this.mqttHelper.subscribe(this.mqttHelper._PICTURE_SETTINGS_TOPIC);
       }
 
+      // always fetch data when connection is established
       this.mqttHelper.callService('ui_service', 'sourcelist');
       this.mqttHelper.callService('ui_service', 'gettvstate');
       this.mqttHelper.callService('ui_service', 'applist');
     });
 
 
+    //
     this.mqttHelper.mqttClient.on('message', (topic, message) => {
       this.log.debug(`Received message from TV (${topic}):` + message.toString());
       const parsedMessage = JSON.parse(message.toString());
       switch (topic) {
         case this.mqttHelper._STATE_TOPIC:
+          // handle tvType fakeSleep differently as it has a different state
           if (this.deviceConfig.tvType === 'fakeSleep') {
             // setCurrentInput will be called in setAlwaysOnFakeSleepState
             this.setAlwaysOnFakeSleepState(parsedMessage);
@@ -170,13 +175,13 @@ export class HiSenseTVAccessory {
           }
           break;
         case this.mqttHelper._SOURCE_LIST_TOPIC:
-          this.setSources(parsedMessage, this.availableApps);
+          this.createSources(parsedMessage, this.availableApps);
           break;
         case this.mqttHelper._PICTURE_SETTINGS_TOPIC:
           this.setAlwaysOnPictureSettingsPowerState(parsedMessage);
           break;
         case this.mqttHelper._APP_LIST_TOPIC:
-          this.setSources(this.inputSources, parsedMessage);
+          this.createSources(this.inputSources, parsedMessage);
           break;
         default:
           this.log.debug('Received unknown message from TV. Topic: ' + topic + ' Message: ' + message.toString());
@@ -219,7 +224,7 @@ export class HiSenseTVAccessory {
   async setOn(value: CharacteristicValue) {
     this.log.debug('Set Characteristic On ->', value);
 
-    // if its an always on TV we just send the power key to turn it on and off
+    // only send wol if the TV is a normal TV and not an always on TV
     if (value === 1 && this.deviceConfig.tvType === 'default') {
 
       this.wol.sendMagicPacket();
@@ -232,6 +237,12 @@ export class HiSenseTVAccessory {
     }
   }
 
+  /**
+   * Sets the power state of the TV based on the always on picture settings of the tv.
+   * These must be configured beforehand in the Homebridge config.
+   * There is an attached script to help with this.
+   * @param settings
+   */
   setAlwaysOnPictureSettingsPowerState(settings: PictureSetting) {
     if (settings.menu_info) {
       const alwaysOnSetting = settings.menu_info.find((setting) => setting.menu_id === this.deviceConfig.pictureSettings?.menuId);
@@ -325,12 +336,12 @@ export class HiSenseTVAccessory {
   }
 
   /**
-   * Sets the list of inputs for the TV.
+   * Save the list of inputs for the TV.
    *
    * This function takes the list of inputs from the TV and a list of apps and creates a HomeKit input.
    * It will automatically get the display name from each input and use that as name in HomeKit.
    */
-  setSources(sources: InputSource[], apps: TVApp[]) {
+  createSources(sources: InputSource[], apps: TVApp[]) {
     sources = sources.sort((a, b) => {
       return parseInt(a.sourceid, 10) - parseInt(b.sourceid, 10);
     });
@@ -369,6 +380,7 @@ export class HiSenseTVAccessory {
         this.service.addLinkedService(inputService);
       });
 
+      // display order is based on the identifier of the input source
       const displayOrder = [0].concat(this.inputSources.map((_, index) => index + 1)).concat(this.availableApps.map((_, index) => index + this.inputSources.length + 1));
 
       this.service.setCharacteristic(this.platform.api.hap.Characteristic.DisplayOrder, this.platform.api.hap.encode(1, displayOrder).toString('base64'));
@@ -394,14 +406,14 @@ export class HiSenseTVAccessory {
   }
 
   /**
-   * Check the current TV status by attempting to telnet the MQTT service directly.
+   * Check the current TV status by attempting to connect to the mqtt port.
    *
-   * Instead of trying to send a command to the TV, it is way faster and lighter to just
-   * try to connect to the MQTT service via telnet and then disconnect immediately.
-   * If the telnet connection succeds, the TV will be displayed as Active, otherwise it will appear as turned off.
+   * Instead of trying to reconnect the mqtt client every few seconds, it is way faster and lighter to just
+   * try to connect to the MQTT Socket and then disconnect immediately.
+   * If the connection succeeds, the mqtt connection will be reestablished, otherwise it will be closed.
    *
-   * After checking the status, if the inputs have not already been fetched, this function will invoke `getSources`.
-   * Otherwise, it'll just check for the current visible input, by calling `getCurrentInput`.
+   * There is also a counter to prevent false positives/negatives when checking the TV state.
+   * Check the documentation of the counter for more information.
    */
   checkTVStatus() {
     this.log.debug('Checking state for TV at IP: ' + this.deviceConfig.ipaddress);
@@ -462,14 +474,14 @@ export class HiSenseTVAccessory {
   }
 
   /**
-   * Get the currently visible input and updates HomeKit.
+   * Sets the current input based on the state received from the TV.
    *
-   * This function will call `hisensetv --get state` and will try to match
-   * the reported state to an input. At the moment, only the following states are supported:
+   * At the moment, only the following states are supported:
    * - `sourceswitch`: any external input (i.e. HDMIs, AV).
    * - `livetv`: the tuner.
+   * - `app`: any app running on the TV.
    *
-   * Any other state will be matched as the "Other" input.
+   * Any other state will be matched as the "Unknown" input.
    */
   setCurrentInput(input: TVState) {
     this.log.debug('Received state from TV: ' + JSON.stringify(input));
@@ -520,6 +532,12 @@ export class HiSenseTVAccessory {
     return index + this.inputSources.length + 1;
   }
 
+  /**
+   * Get the list of apps that should be displayed in HomeKit.
+   * showApps needs to be enabled in the config for this to work.
+   * If no apps are specified, all apps will be displayed.
+   * @param apps
+   */
   getFilteredApps(apps: TVApp[]) {
     if (!(this.deviceConfig.showApps ?? false)) {
       return [];
@@ -530,11 +548,20 @@ export class HiSenseTVAccessory {
     return apps.filter((app) => !app.isunInstalled && (visibleAppNames.length === 0 || visibleAppNames.includes(app.name)));
   }
 
+  /**
+   * Special case for always on TVs with the tvType fakeSleep.
+   * This will set the TV to the correct state based on the state received from the TV.
+   * @param tvState
+   * @private
+   */
   private setAlwaysOnFakeSleepState(tvState: TVState) {
-    if (tvState.statetype.startsWith('fake_sleep') && this.deviceState.isConnected) {
+    const tvStateIsOff = tvState.statetype.startsWith('fake_sleep');
+
+    if (tvStateIsOff && this.deviceState.isConnected) {
       // Disconnect
       this.setTVPowerStateOff();
-    } else if (!tvState.statetype.startsWith('fake_sleep')) {
+    } else if (!tvStateIsOff) {
+      // is on
       this.setCurrentInput(tvState);
       if (!this.deviceState.isConnected) {
         // Connect

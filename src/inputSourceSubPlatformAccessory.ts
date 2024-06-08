@@ -2,6 +2,11 @@ import {Characteristic, CharacteristicValue, PlatformAccessory, Service} from 'h
 import {InputSource} from './interfaces/input-source.interface';
 import {TVApp} from './interfaces/tv-app.interface';
 
+/**
+ * InputSourceSubPlatformAccessory
+ * Manages the creation of input sources for the TV accessory.
+ * These can be HDMI inputs or apps.
+ */
 export class InputSourceSubPlatformAccessory {
   constructor(public service: typeof Service, public accessory: PlatformAccessory, public characteristic: typeof Characteristic ) {
   }
@@ -11,6 +16,9 @@ export class InputSourceSubPlatformAccessory {
       || this.accessory.addService(this.service.InputSource, identifier, identifier);
   }
 
+  /**
+   * Is for creating a single input source that is unknown.
+   */
   public createUnknownSource(){
     const inputService = this.createInputService('inputhome');
 
