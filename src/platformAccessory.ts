@@ -602,7 +602,7 @@ export class HiSenseTVAccessory {
   }
 
   getFilteredApps(apps: TVApp[]) {
-    if(this.deviceConfig.showApps ?? false) {
+    if(!(this.deviceConfig.showApps ?? false)) {
       return [];
     }
 
