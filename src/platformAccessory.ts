@@ -108,6 +108,9 @@ export class HiSenseTVAccessory {
       .setCharacteristic(this.Characteristic.Active, 1)
       .setCharacteristic(this.Characteristic.VolumeControlType, this.Characteristic.VolumeControlType.RELATIVE);
 
+    this.speakerService.getCharacteristic(this.Characteristic.Mute)
+      .onSet(this.setMute.bind(this));
+
     // Bind to TV speaker events.
     this.speakerService
       .getCharacteristic(this.Characteristic.VolumeSelector)
@@ -270,6 +273,10 @@ export class HiSenseTVAccessory {
       this.log.debug(`Key ${newValue} not supported.`);
     }
 
+  }
+
+  async setMute() {
+    this.mqttHelper.sendKey('KEY_MUTE');
   }
 
   async setVolume(value: CharacteristicValue) {
