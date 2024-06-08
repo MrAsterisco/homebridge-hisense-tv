@@ -291,7 +291,6 @@ export class HiSenseTVAccessory {
 
     if (value === 0) {
       this.platform.log.debug('Switching to the Other input is unsupported. This input is only used when the plugin is unable to identify the current input on the TV (i.e. you are using an app).');
-      this.service.updateCharacteristic(this.Characteristic.ActiveIdentifier, this.getCurrentInputIndex());
     } else if(this.inputSources.length >= (value as number)) {
       if(!this.deviceState.hasFetchedInputs){
         this.platform.log.debug('Cannot switch input because the input list has not been fetched yet.');
