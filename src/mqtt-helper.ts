@@ -53,7 +53,7 @@ export class MqttHelper {
     this.callService('ui_service', 'changesource', JSON.stringify({'sourceid': sourceId}));
   }
 
-  public changeApp(name: string, url: string, urlType: number, storeType: number) {
+  public changeApp(name: string, url: string, urlType: number|string, storeType: number) {
     this.callService('ui_service', 'launchapp', JSON.stringify({'name': name, 'url': url, 'urlType': urlType, 'storeType': storeType}));
   }
 
