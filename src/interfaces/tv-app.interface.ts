@@ -4,7 +4,7 @@ export interface TVApp {
   url: string;
   isunInstalled: boolean;
   name: string;
-  urlType?: number;
+  urlType?: number|string;
   storeType: number;
   service?: Service;
 }
