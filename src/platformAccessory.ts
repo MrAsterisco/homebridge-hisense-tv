@@ -404,6 +404,8 @@ export class HiSenseTVAccessory {
       this.availableApps = apps;
       const startIndex = this.inputSources.length;
       this.availableApps.forEach((app, index) => {
+        this.platform.log.debug('Adding app: ' + JSON.stringify(app));
+
         const inputService = this.accessory.getService('input' + app.name)
           || this.accessory.addService(this.Service.InputSource, 'input' + app.name, 'input' + app.name);
 
