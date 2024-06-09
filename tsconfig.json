@@ -1,23 +1,22 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "ES2022",
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
     "lib": [
       "DOM",
       "es2022"
     ],
-    "allowSyntheticDefaultImports": true,
-    "declaration": true,
-    "declarationMap": true,
-    "forceConsistentCasingInFileNames": true,
-    "sourceMap": true,
+    "module": "ES2022",
     "moduleResolution":"node",
-    "outDir": "./dist",
-    "rootDir": "./src",
+    "sourceMap": true,
     "strict": true,
-    "esModuleInterop": true,
     "noImplicitAny": false,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "target": "ES2022"
   },
   "include": [
     "src/"
