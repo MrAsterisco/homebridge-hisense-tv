@@ -6,7 +6,7 @@ import net from 'net';
 import {DeviceConfig} from './interfaces/device-config.interface';
 import {TVState} from './interfaces/tv-state.interface';
 import {InputSource} from './interfaces/input-source.interface';
-import {MqttHelper} from './mqtt-helper';
+import {HisenseMQTTClient} from './hisenseMQTTClient';
 import equal from 'fast-deep-equal/es6';
 import {PictureSetting} from './interfaces/picturesetting.interface';
 import {TVApp} from './interfaces/tv-app.interface';
@@ -30,7 +30,7 @@ export class HiSenseTVAccessory {
   private service: Service;
   private speakerService: Service;
 
-  private mqttHelper: MqttHelper;
+  private mqttHelper: HisenseMQTTClient;
   private deviceConfig: DeviceConfig;
 
   /**
@@ -130,7 +130,7 @@ export class HiSenseTVAccessory {
     // Create "Unknown" source.
     this.createHomeSource();
 
-    this.mqttHelper = new MqttHelper(this.deviceConfig, accessory.context.macaddress);
+    this.mqttHelper = new HisenseMQTTClient(this.deviceConfig, accessory.context.macaddress);
     this.setupMqtt();
 
     // set the counter threshold based on the polling interval

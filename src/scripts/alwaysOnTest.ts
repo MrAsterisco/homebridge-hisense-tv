@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import {MqttHelper} from '../mqtt-helper';
+import {HisenseMQTTClient} from '../hisenseMQTTClient';
 import {parseArgs} from 'node:util';
 import * as readline from 'node:readline/promises';
 import {PictureSetting} from '../interfaces/picturesetting.interface';
@@ -47,7 +47,7 @@ if(require.main === module) {
     rl.write('Running first test to determine if TV is always on or off');
     await rl.question('Turn your TV off now and press enter when ready: ');
     rl.write('Wait for a few seconds...');
-    const mqttHelper = new MqttHelper({sslmode: sslMode, ipaddress: hostname, sslcertificate: sslCertificate, sslprivatekey: sslPrivateKey}, macaddress);
+    const mqttHelper = new HisenseMQTTClient({sslmode: sslMode, ipaddress: hostname, sslcertificate: sslCertificate, sslprivatekey: sslPrivateKey}, macaddress);
     const timeout = setTimeout(() => {
       mqttHelper.mqttClient.end(true);
       rl.write('Could not detect always on TV');

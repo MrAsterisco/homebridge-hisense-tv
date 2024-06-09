@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import {MqttHelper} from '../mqtt-helper';
+import {HisenseMQTTClient} from '../hisenseMQTTClient';
 import {parseArgs} from 'node:util';
 import * as readline from 'node:readline/promises';
 import path from 'path';
@@ -40,7 +40,7 @@ if(require.main === module) {
   const macaddress = values['mac'] as string;
   const hostname = values['hostname'] as string;
 
-  const mqttHelper = new MqttHelper({sslmode: sslMode, ipaddress: hostname, sslcertificate: sslCertificate, sslprivatekey: sslPrivateKey}, macaddress);
+  const mqttHelper = new HisenseMQTTClient({sslmode: sslMode, ipaddress: hostname, sslcertificate: sslCertificate, sslprivatekey: sslPrivateKey}, macaddress);
 
   mqttHelper.mqttClient.on('connect', () => {
     mqttHelper.callService('ui_service', 'gettvstate');

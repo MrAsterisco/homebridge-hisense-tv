@@ -4,12 +4,12 @@ import {DeviceConfig} from './interfaces/device-config.interface';
 import fs from 'node:fs';
 
 /**
- * MqttHelper
+ * HisenseMQTTClient
  * This class is used to interact with the MQTT server on the TV
  * We also store all useful topics in this class
  *
  */
-export class MqttHelper {
+export class HisenseMQTTClient {
   public _BASE_TOPIC : string;
   public _STATE_TOPIC: string;
   public _DEVICE_TOPIC: string;
