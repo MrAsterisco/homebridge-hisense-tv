@@ -10,7 +10,7 @@ import {HisenseMQTTClient} from './hisenseMQTTClient.js';
 import equal from 'fast-deep-equal';
 import {PictureSetting} from './interfaces/picturesetting.interface.js';
 import {TVApp} from './interfaces/tv-app.interface.js';
-import {WoL} from './wol';
+import {WoL} from './wol.js';
 import {sourcesAreEqual} from './utils/sourcesAreEqual.function.js';
 import {InputSourceSubPlatformAccessory} from './inputSourceSubPlatformAccessory.js';
 
