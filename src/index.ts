@@ -1,7 +1,7 @@
 import { API } from 'homebridge';
 
-import { PLATFORM_NAME } from './settings';
-import { HiSenseTVPlatform } from './platform';
+import { PLATFORM_NAME } from './settings.js';
+import { HiSenseTVPlatform } from './platform.js';
 
 /**
  * This method registers the platform with Homebridge
