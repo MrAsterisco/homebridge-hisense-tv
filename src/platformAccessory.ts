@@ -7,7 +7,7 @@ import {DeviceConfig} from './interfaces/device-config.interface.js';
 import {TVState} from './interfaces/tv-state.interface.js';
 import {InputSource} from './interfaces/input-source.interface.js';
 import {HisenseMQTTClient} from './hisenseMQTTClient.js';
-import equal from 'fast-deep-equal/es6';
+import equal from 'fast-deep-equal';
 import {PictureSetting} from './interfaces/picturesetting.interface.js';
 import {TVApp} from './interfaces/tv-app.interface.js';
 import {WoL} from './wol';
