@@ -54,7 +54,7 @@ Often you can also find this information in the network settings of your operati
 The mac address is needed in the next step and in the config.json file.
 
 ### Continue the Setup
-For this plugin to work correctly, you need to configure your TV to use a static DHCP (or configure a static reservation on your router). 
+For this plugin to work correctly, you need to configure your TV to use a static ip address (or configure a static DHCP reservation on your router). 
 
 To connect to your TV, you need to pair the machine where you're running Homebridge with your TV. This is done in the command line, by manually running the bundled `hisense-tv-authorize` command. To do this, open the homebridge UI and go to Terminal.
 
@@ -75,6 +75,7 @@ hisense-tv-authorize --hostname <TV_IP_ADDRESS> --mac <HOMEBRIDGE_MAC_ADDRESS> -
 
 SSLMode: custom (use cert and key below)
 Replace `<CERTFILE>` and `<KEYFILE>` with the path to the certificate and key files you want to use.
+The certificate and key files most used can be found [here](https://github.com/MrAsterisco/hisensetv/tree/master/cert)
 ```bash
 hisense-tv-authorize --hostname <TV_IP_ADDRESS> --mac <HOMEBRIDGE_MAC_ADDRESS> --certfile <CERTFILE> --keyfile <KEYFILE>
 ```
@@ -85,13 +86,24 @@ Your TV, if compatible, will display a PIN code: insert it in the command line a
 
 ## Configure the plugin
 
-You can use the Homebridge UI to make changes to the plugin configuration. You must set the "Homebridge MAC Address" to the mac address you found out previously and then configure your TVs (include the { } if configuring on Windows). Then, just add all the TVs you have authorized earlier:
+You can use the Homebridge UI to make changes to the plugin configuration. You must set the "Homebridge MAC Address" to the mac address you found out previously and then configure your TVs. Then, just add all the TVs you have authorized earlier:
 
 - as ID, you can input your TV's S/N or your own identifier, as long as it's unique in your Home. You can also leave the default value, if you have just one TV. Whatever you input, will be displayed as the accessory "Serial Number" in Home.
 - as name, input the display name that the Home app will suggest when adding this TV to your Home.
+- as Visible Apps, input `true` if you want to show your TV apps as input sources.
+- as Apps, input the list of apps you want to show as input sources. If you leave this empty, all apps will be shown.
+- as TV Type, input the type of TV you have. If your TV is always on, you can change this to `fakeSleep` or `pictureSettings`. Please check out [Always On TVs (TVs that aren't fully turning off)](#always-on-tvs-tvs-that-arent-fully-turning-off).
+  - if `tvType` is `pictureSettings` the following properties are required
+    - `menuId` - the picture setting to check for sleep
+    - `menuFlag` - the value of the picture settings to check for sleep 
 - as IP address, input the IP that you have assigned to your TV.
 - as MAC Address, input the MAC Address of your TV (if your TV is connected both via WiFi and Ethernet, make sure to configure the interface that your TV is using). 
 - as SSLMode, input the SSL mode that your TV requires that you previously found out during activation.
+
+For each TV there are advanced settings that can be configured if tvType is `Default`:
+- `pollingInterval` (default: 4) - seconds to wait between polling the tv for the on/off state
+- `wolInterval` (default: 400) - milliseconds to wait between sending WoL packets
+- `wolRetries` (default: 3) - number of times to send WoL packets to account for packet loss
 
 Repeat the configuration for each TV you want to use, then restart Homebridge.
 
@@ -214,11 +226,10 @@ This plugin has been developed and tested running Homebridge on Ubuntu Linux 20.
 
 ### Known Issues
 - The input list might not be fetched correctly if the TV is turned off while adding the accessory or after restarting Homebridge. 
-  - FIX: force close your Home app and open it again. (try it a few times)
+  - FIX: force close your Home app and open it again a few times.
 - Your TV gets shown as "ON" even when it's off.
   - FIX: read Section [Always On TVs (TVs that aren't fully turning off)](#always-on-tvs-tvs-that-arent-fully-turning-off)
 - Some TVs have inconsistent data regarding apps
-  - Opening an app may work from homekit
   - Due to the inconsistent data, the current selected app on the tv may not be shown correctly in homekit (will be "Unknown")
 
 # Contributions
@@ -227,7 +238,8 @@ All contributions to expand the library are welcome. Fork the repo, make the cha
 If you make changes to the codebase, I am not enforcing a coding style, but I may ask you to make changes based on how the rest of the library is made.
 
 # Credits
-This plugin makes use of a modified version of the [hisensetv](https://github.com/newAM/hisensetv) Python script, originally written by [Alex](https://github.com/newAM) and distributed as open-source software [here](https://github.com/MrAsterisco/hisensetv).
+This plugin made use of a modified version of the [hisensetv](https://github.com/newAM/hisensetv) Python script, originally written by [Alex](https://github.com/newAM) and distributed as open-source software [here](https://github.com/MrAsterisco/hisensetv).
+Since version 3.0.0 the plugin uses a typescript native mqtt client.
 
 The code structure and style is heavily inspired by the [homebridge-smartglass plugin](https://github.com/unknownskl/homebridge-smartglass), written by [UnknownSKL](https://github.com/unknownskl).
 
