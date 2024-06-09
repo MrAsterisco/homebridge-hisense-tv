@@ -1,16 +1,17 @@
 {
   "compilerOptions": {
-    "target": "ES2018", // ~node10
-    "module": "commonjs",
+    "target": "ES2022",
+    "module": "ES2022",
     "lib": [
-      "es2015",
-      "es2016",
-      "es2017",
-      "es2018"
+      "DOM",
+      "es2022"
     ],
+    "allowSyntheticDefaultImports": true,
     "declaration": true,
     "declarationMap": true,
+    "forceConsistentCasingInFileNames": true,
     "sourceMap": true,
+    "moduleResolution":"node",
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
