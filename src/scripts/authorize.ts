@@ -62,6 +62,6 @@ try {
     mqttHelper.sendAuthCode(code);
   })();
 } catch (e) {
-  rl.write('Connection failed - please check your configuration and try again');
+  rl.write('Connection failed - please check your configuration and try again\n');
   process.exit(1);
 }

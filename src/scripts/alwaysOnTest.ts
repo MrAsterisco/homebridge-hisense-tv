@@ -106,6 +106,7 @@ let pictureSettingsOff: null|PictureSetting = null;
       mqttHelper.callService('ui_service', 'gettvstate');
     });
   } catch (e) {
-    rl.write('Connection failed - please check your configuration and try again');
+    rl.write('Connection failed - please check your configuration and try again\n');
+    process.exit(1);
   }
 })();
