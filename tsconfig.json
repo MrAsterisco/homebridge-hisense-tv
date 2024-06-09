@@ -8,7 +8,7 @@
     "rootDir": "./src",
     "lib": [
       "DOM",
-      "es2022"
+      "ES2022"
     ],
     "module": "ES2022",
     "moduleResolution":"node",
