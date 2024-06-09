@@ -55,9 +55,8 @@ export class HiSenseTVPlatform implements DynamicPlatformPlugin {
   }
 
   /**
-   * This is an example method showing how to register discovered accessories.
-   * Accessories must only be registered once, previously created accessories
-   * must not be registered again to prevent "duplicate UUID" errors.
+   * As we are only publishing external accessories, they don't get stored in the cache.
+   * So only the else is important here.
    */
   discoverDevices() {
     const configDevices = this.config.devices as DeviceConfig[] || [];
