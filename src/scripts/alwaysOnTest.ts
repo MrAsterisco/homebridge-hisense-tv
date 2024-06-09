@@ -46,62 +46,66 @@ let pictureSettingsOff: null|PictureSetting = null;
   rl.write('Running first test to determine if TV is always on or off');
   await rl.question('Turn your TV off now and press enter when ready: ');
   rl.write('Wait for a few seconds...');
-  const mqttHelper = new HisenseMQTTClient({sslmode: sslMode, ipaddress: hostname, sslcertificate: sslCertificate, sslprivatekey: sslPrivateKey}, macaddress);
-  const timeout = setTimeout(() => {
-    mqttHelper.mqttClient.end(true);
-    rl.write('Could not detect always on TV');
-    process.exit(0);
-  }, 5000);
+  try {
+    const mqttHelper = new HisenseMQTTClient({sslmode: sslMode, ipaddress: hostname, sslcertificate: sslCertificate, sslprivatekey: sslPrivateKey}, macaddress);
+    const timeout = setTimeout(() => {
+      mqttHelper.mqttClient.end(true);
+      rl.write('Could not detect always on TV');
+      process.exit(0);
+    }, 5000);
 
-  mqttHelper.mqttClient.on('connect', () => {
-    clearTimeout(timeout);
-    rl.write('Always on TV detected');
+    mqttHelper.mqttClient.on('connect', () => {
+      clearTimeout(timeout);
+      rl.write('Always on TV detected');
 
-    rl.write('Running second test to determine if Always On TV has Fake Sleep Mode');
-    rl.write('Wait for a few seconds...');
+      rl.write('Running second test to determine if Always On TV has Fake Sleep Mode');
+      rl.write('Wait for a few seconds...');
 
-    mqttHelper.mqttClient.on('message', async (topic, message) => {
-      const data = JSON.parse(message.toString());
-      if(topic === mqttHelper._STATE_TOPIC) {
-        mqttHelper.mqttClient.unsubscribe(mqttHelper._STATE_TOPIC);
-        if('statetype' in data && data['statetype'].startsWith('fake_sleep')) {
-          rl.write('Possible Always On TV with Fake Sleep Detected: ' + data['statetype']);
-        }else{
-          rl.write('First test didn\'t detect always on mode.');
-          rl.write('Continuing with Picture Settings Test');
-          mqttHelper.subscribe(mqttHelper._PICTURE_SETTINGS_TOPIC);
-          mqttHelper.callService('platform_service', 'picturesetting');
-        }
-      }else if(topic === mqttHelper._PICTURE_SETTINGS_TOPIC) {
-        const pictureSettings = data as PictureSetting;
-        if(pictureSettingsOff == null) {
-          pictureSettingsOff = pictureSettings;
-          mqttHelper.mqttClient.unsubscribe(mqttHelper._PICTURE_SETTINGS_TOPIC);
-          await rl.question('Turn your TV on now and press enter when ready:');
-          mqttHelper.subscribe(mqttHelper._PICTURE_SETTINGS_TOPIC);
-          mqttHelper.callService('platform_service', 'picturesetting');
-        }else {
-          // find different objects in picture settings
-          mqttHelper.mqttClient.end(true);
-          const diff = pictureSettings.menu_info.filter((menu) => {
-            const offMenu = pictureSettingsOff?.menu_info.find((offMenu) => offMenu.menu_id === menu.menu_id);
-            return menu.menu_flag !== offMenu?.menu_flag;
-          });
-
-          if(diff.length > 0){
-            rl.write('Picture Settings Always On Mode possible.');
+      mqttHelper.mqttClient.on('message', async (topic, message) => {
+        const data = JSON.parse(message.toString());
+        if(topic === mqttHelper._STATE_TOPIC) {
+          mqttHelper.mqttClient.unsubscribe(mqttHelper._STATE_TOPIC);
+          if('statetype' in data && data['statetype'].startsWith('fake_sleep')) {
+            rl.write('Possible Always On TV with Fake Sleep Detected: ' + data['statetype']);
+          }else{
+            rl.write('First test didn\'t detect always on mode.');
+            rl.write('Continuing with Picture Settings Test');
+            mqttHelper.subscribe(mqttHelper._PICTURE_SETTINGS_TOPIC);
+            mqttHelper.callService('platform_service', 'picturesetting');
           }
+        }else if(topic === mqttHelper._PICTURE_SETTINGS_TOPIC) {
+          const pictureSettings = data as PictureSetting;
+          if(pictureSettingsOff == null) {
+            pictureSettingsOff = pictureSettings;
+            mqttHelper.mqttClient.unsubscribe(mqttHelper._PICTURE_SETTINGS_TOPIC);
+            await rl.question('Turn your TV on now and press enter when ready:');
+            mqttHelper.subscribe(mqttHelper._PICTURE_SETTINGS_TOPIC);
+            mqttHelper.callService('platform_service', 'picturesetting');
+          }else {
+            // find different objects in picture settings
+            mqttHelper.mqttClient.end(true);
+            const diff = pictureSettings.menu_info.filter((menu) => {
+              const offMenu = pictureSettingsOff?.menu_info.find((offMenu) => offMenu.menu_id === menu.menu_id);
+              return menu.menu_flag !== offMenu?.menu_flag;
+            });
 
-          diff.forEach(menu => {
-            const oldMenu = pictureSettingsOff?.menu_info.find((offMenu) => offMenu.menu_id === menu.menu_id);
+            if(diff.length > 0){
+              rl.write('Picture Settings Always On Mode possible.');
+            }
 
-            rl.write(`Menu: ${menu.menu_name} with id ${menu.menu_id} has changed from ${oldMenu?.menu_flag} to ${menu.menu_flag}`);
-          });
-          process.exit(0);
+            diff.forEach(menu => {
+              const oldMenu = pictureSettingsOff?.menu_info.find((offMenu) => offMenu.menu_id === menu.menu_id);
+
+              rl.write(`Menu: ${menu.menu_name} with id ${menu.menu_id} has changed from ${oldMenu?.menu_flag} to ${menu.menu_flag}`);
+            });
+            process.exit(0);
+          }
         }
-      }
+      });
+      mqttHelper.subscribe(mqttHelper._STATE_TOPIC);
+      mqttHelper.callService('ui_service', 'gettvstate');
     });
-    mqttHelper.subscribe(mqttHelper._STATE_TOPIC);
-    mqttHelper.callService('ui_service', 'gettvstate');
-  });
+  } catch (e) {
+    rl.write('Connection failed - please check your configuration and try again');
+  }
 })();
