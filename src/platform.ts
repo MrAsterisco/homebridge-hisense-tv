@@ -1,8 +1,8 @@
 import {API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic, Categories} from 'homebridge';
 
-import { PLUGIN_NAME } from './settings';
-import { HiSenseTVAccessory } from './platformAccessory';
-import {DeviceConfig} from './interfaces/device-config.interface';
+import { PLUGIN_NAME } from './settings.js';
+import { HiSenseTVAccessory } from './platformAccessory.js';
+import {DeviceConfig} from './interfaces/device-config.interface.js';
 
 /**
  * HomebridgePlatform

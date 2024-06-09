@@ -1,6 +1,6 @@
 import {Characteristic, CharacteristicValue, PlatformAccessory, Service} from 'homebridge';
-import {InputSource} from './interfaces/input-source.interface';
-import {TVApp} from './interfaces/tv-app.interface';
+import {InputSource} from './interfaces/input-source.interface.js';
+import {TVApp} from './interfaces/tv-app.interface.js';
 
 /**
  * InputSourceSubPlatformAccessory

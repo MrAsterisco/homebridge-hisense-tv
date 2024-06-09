@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import {HisenseMQTTClient} from '../hisenseMQTTClient';
+import {HisenseMQTTClient} from '../hisenseMQTTClient.js';
 import {parseArgs} from 'node:util';
 import * as readline from 'node:readline/promises';
 import path from 'path';

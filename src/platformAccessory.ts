@@ -1,18 +1,18 @@
 import {Characteristic, CharacteristicValue, Logger, PlatformAccessory, Service} from 'homebridge';
 
-import {HiSenseTVPlatform} from './platform';
+import {HiSenseTVPlatform} from './platform.js';
 import net from 'net';
 
-import {DeviceConfig} from './interfaces/device-config.interface';
-import {TVState} from './interfaces/tv-state.interface';
-import {InputSource} from './interfaces/input-source.interface';
-import {HisenseMQTTClient} from './hisenseMQTTClient';
+import {DeviceConfig} from './interfaces/device-config.interface.js';
+import {TVState} from './interfaces/tv-state.interface.js';
+import {InputSource} from './interfaces/input-source.interface.js';
+import {HisenseMQTTClient} from './hisenseMQTTClient.js';
 import equal from 'fast-deep-equal/es6';
-import {PictureSetting} from './interfaces/picturesetting.interface';
-import {TVApp} from './interfaces/tv-app.interface';
+import {PictureSetting} from './interfaces/picturesetting.interface.js';
+import {TVApp} from './interfaces/tv-app.interface.js';
 import {WoL} from './wol';
-import {sourcesAreEqual} from './utils/sourcesAreEqual.function';
-import {InputSourceSubPlatformAccessory} from './inputSourceSubPlatformAccessory';
+import {sourcesAreEqual} from './utils/sourcesAreEqual.function.js';
+import {InputSourceSubPlatformAccessory} from './inputSourceSubPlatformAccessory.js';
 
 /**
  * Platform Accessory

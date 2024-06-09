@@ -1,6 +1,6 @@
 import * as mqtt from 'mqtt';
 import path from 'path';
-import {DeviceConfig} from './interfaces/device-config.interface';
+import {DeviceConfig} from './interfaces/device-config.interface.js';
 import fs from 'node:fs';
 
 /**

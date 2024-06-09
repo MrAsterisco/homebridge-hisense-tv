@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import {HisenseMQTTClient} from '../hisenseMQTTClient';
+import {HisenseMQTTClient} from '../hisenseMQTTClient.js';
 import {parseArgs} from 'node:util';
 import * as readline from 'node:readline/promises';
-import {PictureSetting} from '../interfaces/picturesetting.interface';
+import {PictureSetting} from '../interfaces/picturesetting.interface.js';
 
 
 if(require.main === module) {
