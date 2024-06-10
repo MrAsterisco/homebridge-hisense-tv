@@ -13,6 +13,7 @@ import {TVApp} from './interfaces/tv-app.interface.js';
 import {WoL} from './wol.js';
 import {sourcesAreEqual} from './utils/sourcesAreEqual.function.js';
 import {InputSourceSubPlatformAccessory} from './inputSourceSubPlatformAccessory.js';
+import {validateDeviceConfig} from './utils/validateDeviceConfig.function.js';
 
 /**
  * Platform Accessory
@@ -64,6 +65,8 @@ export class HiSenseTVAccessory {
     this.log = platform.log;
 
     if (accessory.context.macaddress == null || accessory.context.macaddress == '') {
+      this.log.warn('Config not up to date, please check the README on https://github.com/MrAsterisco/homebridge-hisense-tv' +
+        ' for the latest configuration options or use the homebridge UI to update the configuration.');
       this.log.error('Homebridge MAC address is required for the TV accessory.');
       process.exit(1);
     }
@@ -71,30 +74,24 @@ export class HiSenseTVAccessory {
     this.Characteristic = platform.Characteristic;
     this.Service = platform.Service;
 
-    this.deviceConfig = accessory.context.device;
-
-    // do device config checks here
-    if(this.deviceConfig.tvType == null){
-      this.log.error('tvType needs to be configured in the config');
-      process.exit(1);
-    }
+    this.deviceConfig = validateDeviceConfig(accessory.context.device);
 
     // create useful subclasses
     this.inputSourceSubPlatformAccessory = new InputSourceSubPlatformAccessory(this.Service, accessory, this.Characteristic);
-    this.wol = new WoL(this.log, accessory.context.device.macaddress, accessory.context.device.wolRetries ?? 3, accessory.context.device.wolInterval ?? 400);
+    this.wol = new WoL(this.log, this.deviceConfig.macaddress, this.deviceConfig.wolRetries, this.deviceConfig.wolInterval);
 
     // Configure the TV details.
     this.accessory.getService(this.Service.AccessoryInformation)!
       .setCharacteristic(this.Characteristic.Manufacturer, 'HiSense')
       .setCharacteristic(this.Characteristic.Model, 'TV')
-      .setCharacteristic(this.Characteristic.SerialNumber, accessory.context.device.id);
+      .setCharacteristic(this.Characteristic.SerialNumber, this.deviceConfig.id);
 
     // Create the service.
     this.service = this.accessory.getService(this.Service.Television) || this.accessory.addService(this.Service.Television);
 
     // Configure the service.
     this.service
-      .setCharacteristic(this.Characteristic.ConfiguredName, accessory.context.device.name)
+      .setCharacteristic(this.Characteristic.ConfiguredName, this.deviceConfig.name)
       .setCharacteristic(this.Characteristic.SleepDiscoveryMode, this.Characteristic.SleepDiscoveryMode.NOT_DISCOVERABLE)
       .setCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
 
@@ -134,7 +131,7 @@ export class HiSenseTVAccessory {
     this.setupMqtt();
 
     // set the counter threshold based on the polling interval
-    this.counterThreshold = Math.round(8 / (this.deviceConfig.pollingInterval ?? 4));
+    this.counterThreshold = Math.round(8 / this.deviceConfig.pollingInterval);
     if (this.counterThreshold < 1) {
       this.counterThreshold = 1;
     }
@@ -142,7 +139,7 @@ export class HiSenseTVAccessory {
     if (this.deviceConfig.tvType === 'default') {
       setInterval(() => {
         this.checkTVStatus();
-      }, (this.deviceConfig.pollingInterval ?? 4) * 1000);
+      }, this.deviceConfig.pollingInterval * 1000);
     }
   }
 
@@ -545,7 +542,7 @@ export class HiSenseTVAccessory {
    * @param apps
    */
   getFilteredApps(apps: TVApp[]) {
-    if (!(this.deviceConfig.showApps ?? false)) {
+    if (!this.deviceConfig.showApps) {
       return [];
     }
 
