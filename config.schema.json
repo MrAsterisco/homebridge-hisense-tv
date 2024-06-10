@@ -6,10 +6,11 @@
   "schema": {
     "type": "object",
     "properties": {
-      "ifname": {
-        "title": "Network interface name",
-        "description": "This plugin must be able to authenticate with a valid MAC address to communicate with your TVs. Input a network interface name of your Homebridge machine.",
+      "macaddress": {
+        "title": "Homebridge MAC Address",
+        "description": "This plugin needs a MAC address to communicate with your TVs. Input the mac address of the network interface you're using to run Homebridge.",
         "type": "string",
+        "placeholder": "00:XX:00:XX:00:XX",
         "required": true
       },
       "devices": {
@@ -35,6 +36,99 @@
               "default": "HiSense",
               "description": "The name of your TV. This will be used as default name in Home."
             },
+            "showApps": {
+              "title": "Show Apps",
+              "type": "boolean",
+              "required": true,
+              "default": false,
+              "description": "Show the apps installed on the TV in the Home app as source input."
+            },
+            "apps": {
+              "title": "Visible Apps",
+              "description": "If none are entered all installed apps are shown. Name must match exactly the name like the tv sends it over mqtt.",
+              "type": "array",
+              "items": {
+                "title": "App Name",
+                "type": "string"
+              }
+            },
+            "tvType": {
+              "title": "TV Type (Always On)",
+              "type": "string",
+              "required": true,
+              "default": "default",
+              "oneOf": [
+                {
+                  "title": "Default (not always on)",
+                  "enum": [
+                    "default"
+                  ]
+                },
+                {
+                  "title": "Fake Sleep (always on)",
+                  "enum": [
+                    "fakeSleep"
+                  ]
+                },
+                {
+                  "title": "Picture Settings (always on)",
+                  "enum": [
+                    "pictureSettings"
+                  ]
+                }
+              ],
+              "description": "Change if your TV shows up as ON in the home app even when it's off. It means your TV is still reachable when it's off, and needs special handling. Polling is disabled when this option is enabled."
+            },
+            "pictureSettings": {
+              "title": "Always On Mode (Picture Settings)",
+              "type": "object",
+              "condition": {
+                "functionBody": "return model.devices[arrayIndices].tvType === 'pictureSettings';"
+              },
+              "properties": {
+                "menuId": {
+                  "title": "Menu ID",
+                  "type": "integer",
+                  "required": true,
+                  "default": "",
+                  "description": "The picture settings menu id of the the item that will be checked if the TV is Off/On."
+                },
+                "menuFlag": {
+                  "title": "Menu Flag",
+                  "type": "integer",
+                  "required": true,
+                  "default": "",
+                  "description": "The picture settings menu flag which indicates that the TV is OFF."
+                }
+              }
+            },
+            "pollingInterval": {
+              "title": "Polling Interval",
+              "type": "integer",
+              "required": true,
+              "default": 4,
+              "minimum": 1,
+              "maximum": 10,
+              "description": "The interval in seconds between each state check (state needs to be polled). The default value is 4 second. Increase this value if you want to reduce the network traffic."
+            },
+            "wolInterval": {
+              "title": "WOL Interval",
+              "type": "integer",
+              "required": true,
+              "default": 400,
+              "minimum": 100,
+              "maximum": 1000,
+              "description": "The interval in seconds between each WOL packet sent. The default value is 400 milliseconds."
+            },
+            "wolRetries": {
+              "title": "WOL Retries",
+              "type": "integer",
+              "required": true,
+              "default": 3,
+              "minimum": 1,
+              "maximum": 10,
+              "description": "The number of WOL packets sent continuously to wake up the tv to account for packet loss."
+            },
             "ipaddress": {
               "title": "IP Address",
               "type": "string",
@@ -55,9 +149,24 @@
               "type": "string",
               "default": "default",
               "oneOf": [
-                { "title": "Default", "enum": ["default"] },
-                { "title": "Disabled", "enum": ["disabled"] },
-                { "title": "Custom", "enum": ["custom"] }
+                {
+                  "title": "Default",
+                  "enum": [
+                    "default"
+                  ]
+                },
+                {
+                  "title": "Disabled",
+                  "enum": [
+                    "disabled"
+                  ]
+                },
+                {
+                  "title": "Custom",
+                  "enum": [
+                    "custom"
+                  ]
+                }
               ],
               "required": true,
               "description": "Depending on your TV model, you might need to change the SSL mode. The Default mode uses a normal SSL context and works with TVs that have a valid certificate onboard; if your TV does not have a valid certificate, you can try to disable it. Certain models need specific certificates and private keys: in this case, select Custom and specify the URL to them, making sure they are reachable from the machine that is running Homebridge."
@@ -80,5 +189,101 @@
         }
       }
     }
-  }
+  },
+  "form": [
+    {
+      "key": "macaddress"
+    },
+    {
+      "key": "devices",
+      "type": "tabarray",
+      "add": "New",
+      "remove": "Delete",
+      "style": {
+        "remove": "btn-danger"
+      },
+      "title": "{{ value.name || 'TV' }}",
+      "items": [
+        {
+          "key": "devices[].id"
+        },
+        {
+          "key": "devices[].name"
+        },
+        {
+          "key": "devices[].showApps"
+        },
+        {
+          "key": "devices[].apps",
+          "type": "array",
+          "items": {
+            "title": "App Name",
+            "description": "Name must match exactly the name like the tv sends it over mqtt.",
+            "type": "string"
+          },
+          "condition": {
+            "functionBody": "return model.devices[arrayIndices].showApps;"
+          }
+        },
+        {
+          "key": "devices[].tvType"
+        },
+        {
+          "key": "devices[].pictureSettings.menuId",
+          "condition": {
+            "functionBody": "return model.devices[arrayIndices].tvType === 'pictureSettings';"
+          }
+        },
+        {
+          "key": "devices[].pictureSettings.menuFlag",
+          "condition": {
+            "functionBody": "return model.devices[arrayIndices].tvType === 'pictureSettings';"
+          }
+        },
+        {
+          "key": "devices[].ipaddress"
+        },
+        {
+          "key": "devices[].macaddress"
+        },
+        {
+          "key": "devices[].sslmode"
+        },
+        {
+          "key": "devices[].sslcertificate",
+          "condition": {
+            "functionBody": "return model.devices[arrayIndices].sslmode === 'custom';"
+          }
+        },
+        {
+          "key": "devices[].sslprivatekey",
+          "condition": {
+            "functionBody": "return model.devices[arrayIndices].sslmode === 'custom';"
+          }
+        },
+        {
+          "key": "devices[]",
+          "title": "Advanced Settings",
+          "orderable": false,
+          "type": "section",
+          "expandable": true,
+          "expanded": false,
+          "condition": {
+            "functionBody": "return model.devices[arrayIndices].tvType === 'default';"
+          },
+          "items": [
+            {
+              "key": "devices[].pollingInterval"
+            },
+            {
+              "key": "devices[].wolInterval"
+            },
+            {
+              "key": "devices[].wolRetries"
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }
