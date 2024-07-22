@@ -1,4 +1,4 @@
-import {Characteristic, CharacteristicValue, Logger, PlatformAccessory, Service} from 'homebridge';
+import {Characteristic, CharacteristicValue, Logging, PlatformAccessory, Service} from 'homebridge';
 
 import {HiSenseTVPlatform} from './platform.js';
 import net from 'net';
@@ -23,7 +23,7 @@ import {validateDeviceConfig} from './utils/validateDeviceConfig.function.js';
 export class HiSenseTVAccessory {
   private Characteristic: typeof Characteristic;
   private Service: typeof Service;
-  private log: Logger;
+  private log: Logging;
 
   private wol: WoL;
   private inputSourceSubPlatformAccessory: InputSourceSubPlatformAccessory;

@@ -1,4 +1,4 @@
-import {Logger} from 'homebridge';
+import {Logging} from 'homebridge';
 import wol from 'wol';
 
 /**
@@ -11,7 +11,7 @@ export class WoL {
    * @param retries Number of retries to send the magic packet
    * @param interval Interval between retries in milliseconds
    */
-  constructor(private log: Logger, private macAddress: string, private retries: number, private interval: number){
+  constructor(private log: Logging, private macAddress: string, private retries: number, private interval: number){
   }
 
 

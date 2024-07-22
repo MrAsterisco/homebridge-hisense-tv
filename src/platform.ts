@@ -1,4 +1,4 @@
-import {API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic, Categories} from 'homebridge';
+import {API, DynamicPlatformPlugin, PlatformAccessory, PlatformConfig, Service, Characteristic, Categories, Logging} from 'homebridge';
 
 import { PLUGIN_NAME } from './settings.js';
 import { HiSenseTVAccessory } from './platformAccessory.js';
@@ -17,7 +17,7 @@ export class HiSenseTVPlatform implements DynamicPlatformPlugin {
   public readonly accessories: PlatformAccessory[] = [];
 
   constructor(
-    public readonly log: Logger,
+    public readonly log: Logging,
     public readonly config: PlatformConfig,
     public readonly api: API,
   ) {
