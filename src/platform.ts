@@ -1,14 +1,8 @@
-import {API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic, Categories} from 'homebridge';
+import {API, DynamicPlatformPlugin, PlatformAccessory, PlatformConfig, Service, Characteristic, Categories, Logging} from 'homebridge';
 
-import { PLUGIN_NAME } from './settings';
-import { HiSenseTVAccessory } from './platformAccessory';
-
-interface DeviceConfig {
-  id: string;
-  name: string;
-  ipaddress: string;
-  macaddress: string;
-}
+import { PLUGIN_NAME } from './settings.js';
+import { HiSenseTVAccessory } from './platformAccessory.js';
+import {DeviceConfig} from './interfaces/device-config.interface.js';
 
 /**
  * HomebridgePlatform
@@ -16,17 +10,20 @@ interface DeviceConfig {
  * parse the user config and discover/register accessories with Homebridge.
  */
 export class HiSenseTVPlatform implements DynamicPlatformPlugin {
-  public readonly Service: typeof Service = this.api.hap.Service;
-  public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
+  public readonly Service: typeof Service;
+  public readonly Characteristic: typeof Characteristic;
 
   // this is used to track restored cached accessories
   public readonly accessories: PlatformAccessory[] = [];
 
   constructor(
-    public readonly log: Logger,
+    public readonly log: Logging,
     public readonly config: PlatformConfig,
     public readonly api: API,
   ) {
+    this.Service = this.api.hap.Service;
+    this.Characteristic = this.api.hap.Characteristic;
+
     this.log.debug('Finished initializing platform:', this.config.platform);
 
     // Homebridge 1.8.0 introduced a `log.success` method that can be used to log success messages
@@ -58,9 +55,8 @@ export class HiSenseTVPlatform implements DynamicPlatformPlugin {
   }
 
   /**
-   * This is an example method showing how to register discovered accessories.
-   * Accessories must only be registered once, previously created accessories
-   * must not be registered again to prevent "duplicate UUID" errors.
+   * As we are only publishing external accessories, they don't get stored in the cache.
+   * So only the else is important here.
    */
   discoverDevices() {
     const configDevices = this.config.devices as DeviceConfig[] || [];
@@ -106,6 +102,7 @@ export class HiSenseTVPlatform implements DynamicPlatformPlugin {
         // store a copy of the device object in the `accessory.context`
         // the `context` property can be used to store any data about the accessory you may need
         accessory.context.device = device;
+        accessory.context.macaddress = this.config.macaddress;
 
         // create the accessory handler for the newly create accessory
         // this is imported from `platformAccessory.ts`
