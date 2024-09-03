@@ -21,7 +21,8 @@ assignees: ''
 **Logs:**
 
 ```
-Show the Homebridge logs here, remove any sensitive information.
+Show the Homebridge logs/protocol here, remove any sensitive information.
+In case of a crash or error, please try enabling debug mode and provide the full log output.
 ```
 
 **Plugin Config:**

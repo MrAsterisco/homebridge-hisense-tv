@@ -1,3 +1,11 @@
+# 3.0.1
+
+Please checkout the 3.0.0 release notes for the changes in this major version.
+
+### Fixed
+- Fixed an issue where the plugin crashes if malformed mqtt data is send
+- Disabled sending mqtt data if the mqtt connection is down
+
 # 3.0.0
 
 This release has **braking changes**. 

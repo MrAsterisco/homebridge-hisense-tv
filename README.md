@@ -218,10 +218,13 @@ Take a note of the Setup Code and open your Home app on your iPhone, iPad or Mac
 
 **Done**! As always, you can repeat the steps above if you have multiple TVs to add. Please note that each TV will have a different Setup Code logged in Homebridge.
 
-## Issues
+## Issues/Bugs
 This plugin has been developed and tested running Homebridge on Ubuntu Linux 20.04 and macOS Monterey with a Hisense 50AE7010F. If your configuration differs, the steps below may not be a 100% accurate: even if the general idea is the same *(pair the TV, add it to Home, use it)*, your mileage may vary.
 
 **If you find anything that is not correct, please open an issue (or even better: a PR changing this file) explaining what you're doing differently to make this plugin work with different TV models and/or on different operating systems.**
+
+**Also check your Homebridge protocol/log if there are any errors and add them to the issue.**
+
 
 ### Known Issues
 - The input list might not be fetched correctly if the TV is turned off while adding the accessory or after restarting Homebridge. 
