@@ -39,8 +39,12 @@ const sslPrivateKey = (values['keyfile'] ?? '') as string;
 const macaddress = values['mac'] as string;
 const hostname = values['hostname'] as string;
 
+const logger = {
+  error: rl.write,
+};
+
 try {
-  const mqttHelper = new HisenseMQTTClient({sslmode: sslMode, ipaddress: hostname, sslcertificate: sslCertificate, sslprivatekey: sslPrivateKey}, macaddress, console);
+  const mqttHelper = new HisenseMQTTClient({sslmode: sslMode, ipaddress: hostname, sslcertificate: sslCertificate, sslprivatekey: sslPrivateKey}, macaddress, logger);
 
   mqttHelper.mqttClient.on('connect', () => {
     mqttHelper.callService('ui_service', 'gettvstate');

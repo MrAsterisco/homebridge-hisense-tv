@@ -41,13 +41,16 @@ const hostname = values['hostname'] as string;
 
 let pictureSettingsOff: null|PictureSetting = null;
 
+const logger = {
+  error: rl.write,
+};
 
 (async () => {
   rl.write('Running first test to determine if TV is always on or off');
   await rl.question('Turn your TV off now and press enter when ready: ');
   rl.write('Wait for a few seconds...');
   try {
-    const mqttHelper = new HisenseMQTTClient({sslmode: sslMode, ipaddress: hostname, sslcertificate: sslCertificate, sslprivatekey: sslPrivateKey}, macaddress, console);
+    const mqttHelper = new HisenseMQTTClient({sslmode: sslMode, ipaddress: hostname, sslcertificate: sslCertificate, sslprivatekey: sslPrivateKey}, macaddress, logger);
     const timeout = setTimeout(() => {
       mqttHelper.mqttClient.end(true);
       rl.write('Could not detect always on TV');

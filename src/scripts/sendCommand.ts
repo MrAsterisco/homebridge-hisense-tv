@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import {parseArgs} from 'node:util';
-import {HisenseMQTTClient} from '../hisenseMQTTClient';
+import {HisenseMQTTClient} from '../hisenseMQTTClient.js';
 import readline from 'node:readline/promises';
 
 const args = process.argv.slice(2);
@@ -52,8 +52,12 @@ if(!(action in getCommands)) {
   process.exit(1);
 }
 
+const logger = {
+  error: rl.write,
+};
+
 try{
-  const mqttHelper = new HisenseMQTTClient({sslmode: sslMode, ipaddress: hostname, sslcertificate: sslCertificate, sslprivatekey: sslPrivateKey}, macaddress);
+  const mqttHelper = new HisenseMQTTClient({sslmode: sslMode, ipaddress: hostname, sslcertificate: sslCertificate, sslprivatekey: sslPrivateKey}, macaddress, logger);
 
   mqttHelper.mqttClient.on('connect', () => {
 
