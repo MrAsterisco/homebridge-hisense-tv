@@ -47,7 +47,7 @@ let pictureSettingsOff: null|PictureSetting = null;
   await rl.question('Turn your TV off now and press enter when ready: ');
   rl.write('Wait for a few seconds...');
   try {
-    const mqttHelper = new HisenseMQTTClient({sslmode: sslMode, ipaddress: hostname, sslcertificate: sslCertificate, sslprivatekey: sslPrivateKey}, macaddress);
+    const mqttHelper = new HisenseMQTTClient({sslmode: sslMode, ipaddress: hostname, sslcertificate: sslCertificate, sslprivatekey: sslPrivateKey}, macaddress, console);
     const timeout = setTimeout(() => {
       mqttHelper.mqttClient.end(true);
       rl.write('Could not detect always on TV');

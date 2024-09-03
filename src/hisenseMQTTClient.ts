@@ -20,7 +20,7 @@ export class HisenseMQTTClient {
 
   public mqttClient: mqtt.MqttClient;
 
-  constructor(public deviceConfig: Pick<DeviceConfig, 'sslmode' | 'ipaddress' | 'sslcertificate' | 'sslprivatekey'>, macaddress: string) {
+  constructor(public deviceConfig: Pick<DeviceConfig, 'sslmode' | 'ipaddress' | 'sslcertificate' | 'sslprivatekey'>, macaddress: string, private log: {error: (message: string) => void}) {
     this._BASE_TOPIC = path.join('/', 'remoteapp', 'mobile');
     this._STATE_TOPIC = path.join(this._BASE_TOPIC, 'broadcast', 'ui_service', 'state');
     this._DEVICE_TOPIC = `${macaddress.toUpperCase()}$normal`;
@@ -52,7 +52,13 @@ export class HisenseMQTTClient {
 
   public callService(service: string, action: string, payload?: string) {
     const topic = path.join('/', 'remoteapp', 'tv', service, this._DEVICE_TOPIC, 'actions', action);
-    this.mqttClient.publish(topic, payload ?? '');
+    if(this.mqttClient.disconnected || this.mqttClient.disconnecting) {
+      this.log.error('Sending message to TV failed - MQTT client is disconnected');
+      this.log.error(Error().stack ?? '');
+      return;
+    }else {
+      this.mqttClient.publish(topic, payload ?? '');
+    }
   }
 
   public changeSource(sourceId: string) {

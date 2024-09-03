@@ -127,7 +127,7 @@ export class HiSenseTVAccessory {
     // Create "Unknown" source.
     this.createHomeSource();
 
-    this.mqttHelper = new HisenseMQTTClient(this.deviceConfig, accessory.context.macaddress);
+    this.mqttHelper = new HisenseMQTTClient(this.deviceConfig, accessory.context.macaddress, this.log);
     this.setupMqtt();
 
     // set the counter threshold based on the polling interval
