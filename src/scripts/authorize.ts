@@ -50,6 +50,7 @@ try {
     if(data != null && typeof data === 'object' && 'result' in data) {
       if(data.result !== 1) {
         rl.write('TV pairing failed - please try again');
+        rl.write(message.toString());
       }
       mqttHelper.mqttClient.end(true);
       process.exit(0);
@@ -62,6 +63,11 @@ try {
     mqttHelper.sendAuthCode(code);
   })();
 } catch (e) {
-  rl.write('Connection failed - please check your configuration and try again\n');
+  rl.write('Connection failed\n');
+  rl.write('Please check if the TV is on and connected to the same network\n');
+  rl.write('In case the TV doesn\t need a ssl connection, use the --no-ssl flag\n');
+  rl.write('In case the TV needs a custom ssl connection, use the --certfile and --keyfile flags\n');
+  rl.write('Error message: ' + (e as Error).message);
+
   process.exit(1);
 }
