@@ -214,6 +214,7 @@ export class HiSenseTVAccessory {
 
     this.mqttHelper.mqttClient.on('error', (err) => {
       this.log.error('An error occurred while connecting to MQTT service: ' + JSON.stringify(err));
+      this.log.error('This usually means the TV is off/the IP address is incorrect or you configured the wrong ssl options.');
       this.setTVPowerStateOff();
     });
   }
