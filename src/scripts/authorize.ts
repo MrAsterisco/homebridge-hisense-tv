@@ -40,7 +40,7 @@ const macaddress = values['mac'] as string;
 const hostname = values['hostname'] as string;
 
 try {
-  const mqttHelper = new HisenseMQTTClient({sslmode: sslMode, ipaddress: hostname, sslcertificate: sslCertificate, sslprivatekey: sslPrivateKey}, macaddress);
+  const mqttHelper = new HisenseMQTTClient({sslmode: sslMode, ipaddress: hostname, sslcertificate: sslCertificate, sslprivatekey: sslPrivateKey}, macaddress, console);
 
   mqttHelper.mqttClient.on('connect', () => {
     mqttHelper.callService('ui_service', 'gettvstate');
