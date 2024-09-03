@@ -22,7 +22,8 @@
   },
   "bin": {
     "hisense-tv-authorize": "dist/scripts/authorize.js",
-    "hisense-tv-always-on-test": "dist/scripts/alwaysOnTest.js"
+    "hisense-tv-always-on-test": "dist/scripts/alwaysOnTest.js",
+    "hisense-tv": "dist/scripts/sendCommand.js"
   },
   "scripts": {
     "lint": "eslint src/**.ts --max-warnings=5 --fix",
