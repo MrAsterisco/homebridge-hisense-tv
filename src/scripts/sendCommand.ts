@@ -3,6 +3,7 @@
 import {parseArgs} from 'node:util';
 import {HisenseMQTTClient} from '../hisenseMQTTClient.js';
 import readline from 'node:readline/promises';
+import {SSLMode} from '../types/ssl-mode.type';
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -33,12 +34,24 @@ const options = {
 } as const;
 const {values} = parseArgs({args, options});
 
-const sslMode = values['no-ssl'] ? 'disabled' : 'custom';
+let sslMode: SSLMode = values['no-ssl'] ? 'disabled' : 'custom';
 const sslCertificate = (values['certfile'] ?? '') as string;
 const sslPrivateKey = (values['keyfile'] ?? '') as string;
 const macaddress = values['mac'];
 const hostname = values['hostname'];
 const action = values['get'] as string;
+
+if(sslCertificate != '' && sslPrivateKey == '') {
+  rl.write('Please provide a private key file\n');
+  process.exit(1);
+}
+if(sslPrivateKey != '' && sslCertificate == '') {
+  rl.write('Please provide a certificate file\n');
+  process.exit(1);
+}
+if(sslPrivateKey == '' && sslCertificate == '') {
+  sslMode = 'default';
+}
 
 if(values['help'] || macaddress == null || hostname == null) {
 
@@ -69,7 +82,9 @@ if(!(action in getCommands)) {
 }
 
 const logger = {
-  error: rl.write,
+  error: (message: string) => {
+    rl.write(message + '\n');
+  },
 };
 
 try{

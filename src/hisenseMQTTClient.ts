@@ -33,8 +33,13 @@ export class HisenseMQTTClient {
     let cert: Buffer|null = null;
 
     if(this.deviceConfig.sslmode === 'custom') {
-      key = fs.readFileSync(this.deviceConfig.sslprivatekey);
-      cert = fs.readFileSync(this.deviceConfig.sslcertificate);
+      try{
+        key = fs.readFileSync(this.deviceConfig.sslprivatekey);
+        cert = fs.readFileSync(this.deviceConfig.sslcertificate);
+      }catch (e){
+        this.log.error('Could not read certificate or key file');
+        this.log.error('Continuing with SSL but no certificate or key');
+      }
     }
 
     this.mqttClient = mqtt.connect({
