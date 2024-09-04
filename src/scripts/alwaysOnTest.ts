@@ -30,14 +30,35 @@ const options = {
   mac: {
     type: 'string',
   },
+  help: {
+    type: 'boolean',
+    default: false,
+  },
 } as const;
 const {values} = parseArgs({args, options});
 
 const sslMode = values['no-ssl'] ? 'disabled' : 'custom';
 const sslCertificate = (values['certfile'] ?? '') as string;
 const sslPrivateKey = (values['keyfile'] ?? '') as string;
-const macaddress = values['mac'] as string;
-const hostname = values['hostname'] as string;
+const macaddress = values['mac'];
+const hostname = values['hostname'];
+
+
+if(values['help'] || macaddress == null || hostname == null) {
+
+  rl.write('Usage: hisense-tv-always-on-test --hostname <hostname> --mac <macaddress> [--no-ssl] [--certfile <certfile>] [--keyfile <keyfile>]\n');
+  rl.write('Options:\n');
+  rl.write('  --hostname <hostname>  IP address of the TV\n');
+  rl.write('  --mac <macaddress>     MAC address of the Homebridge instance (the same one used for the authenticate script)\n');
+  rl.write('  --no-ssl               Disable SSL connection\n');
+  rl.write('  --certfile <certfile>  Path to the certificate file\n');
+  rl.write('  --keyfile <keyfile>    Path to the private key file\n');
+  rl.write('  --help                 Display this help message\n');
+    
+
+  process.exit(0);
+}
+
 
 let pictureSettingsOff: null|PictureSetting = null;
 
@@ -114,6 +135,8 @@ const logger = {
     rl.write('In case the TV doesn\t need a ssl connection, use the --no-ssl flag\n');
     rl.write('In case the TV needs a custom ssl connection, use the --certfile and --keyfile flags\n');
     rl.write('Error message: ' + (e as Error).message);
+    rl.write('Error stack: ' + (e as Error).stack);
+
     process.exit(1);
   }
 })();
