@@ -86,7 +86,7 @@ try{
 }catch (e) {
   rl.write('Connection failed\n');
   rl.write('Please check if the TV is on and connected to the same network\n');
-  rl.write('In case the TV doesn\t need a ssl connection, use the --no-ssl flag\n');
+  rl.write('In case the TV doesn\'t need a ssl connection, use the --no-ssl flag\n');
   rl.write('In case the TV needs a custom ssl connection, use the --certfile and --keyfile flags\n');
   rl.write('Error message: ' + (e as Error).message + '\n');
   rl.write('Error stack: ' + (e as Error).stack);
