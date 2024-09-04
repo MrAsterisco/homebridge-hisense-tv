@@ -67,33 +67,33 @@ const logger = {
 };
 
 (async () => {
-  rl.write('Running first test to determine if TV is always on or off');
+  rl.write('Running first test to determine if TV is always on or off\n');
   await rl.question('Turn your TV off now and press enter when ready: ');
-  rl.write('Wait for a few seconds...');
+  rl.write('\nWait for a few seconds...\n');
   try {
     const mqttHelper = new HisenseMQTTClient({sslmode: sslMode, ipaddress: hostname, sslcertificate: sslCertificate, sslprivatekey: sslPrivateKey}, macaddress, logger);
     const timeout = setTimeout(() => {
       mqttHelper.mqttClient.end(true);
-      rl.write('Could not detect always on TV');
+      rl.write('Could not detect always on TV\n');
       process.exit(0);
     }, 5000);
 
     mqttHelper.mqttClient.on('connect', () => {
       clearTimeout(timeout);
-      rl.write('Always on TV detected');
+      rl.write('Always on TV detected\n');
 
-      rl.write('Running second test to determine if Always On TV has Fake Sleep Mode');
-      rl.write('Wait for a few seconds...');
+      rl.write('Running second test to determine if Always On TV has Fake Sleep Mode\n');
+      rl.write('Wait for a few seconds...\n');
 
       mqttHelper.mqttClient.on('message', async (topic, message) => {
         const data = JSON.parse(message.toString());
         if(topic === mqttHelper._STATE_TOPIC) {
           mqttHelper.mqttClient.unsubscribe(mqttHelper._STATE_TOPIC);
           if('statetype' in data && data['statetype'].startsWith('fake_sleep')) {
-            rl.write('Possible Always On TV with Fake Sleep Detected: ' + data['statetype']);
+            rl.write('Possible Always On TV with Fake Sleep Detected: ' + data['statetype'] + '\n');
           }else{
-            rl.write('First test didn\'t detect always on mode.');
-            rl.write('Continuing with Picture Settings Test');
+            rl.write('First test didn\'t detect always on mode.\n');
+            rl.write('Continuing with Picture Settings Test\n');
             mqttHelper.subscribe(mqttHelper._PICTURE_SETTINGS_TOPIC);
             mqttHelper.callService('platform_service', 'picturesetting');
           }
@@ -114,13 +114,13 @@ const logger = {
             });
 
             if(diff.length > 0){
-              rl.write('Picture Settings Always On Mode possible.');
+              rl.write('\nPicture Settings Always On Mode possible.\n');
             }
 
             diff.forEach(menu => {
               const oldMenu = pictureSettingsOff?.menu_info.find((offMenu) => offMenu.menu_id === menu.menu_id);
 
-              rl.write(`Menu: ${menu.menu_name} with id ${menu.menu_id} has changed from ${oldMenu?.menu_flag} to ${menu.menu_flag}`);
+              rl.write(`\nMenu: ${menu.menu_name} with id ${menu.menu_id} has changed from ${oldMenu?.menu_flag} to ${menu.menu_flag}`);
             });
             process.exit(0);
           }
@@ -134,7 +134,7 @@ const logger = {
     rl.write('Please check if the TV is on and connected to the same network\n');
     rl.write('In case the TV doesn\t need a ssl connection, use the --no-ssl flag\n');
     rl.write('In case the TV needs a custom ssl connection, use the --certfile and --keyfile flags\n');
-    rl.write('Error message: ' + (e as Error).message);
+    rl.write('Error message: ' + (e as Error).message + '\n');
     rl.write('Error stack: ' + (e as Error).stack);
 
     process.exit(1);
