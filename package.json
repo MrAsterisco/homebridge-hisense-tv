@@ -21,14 +21,12 @@
     "url": "https://github.com/MrAsterisco/homebridge-hisense-tv/issues"
   },
   "bin": {
-    "hisense-tv-authorize": "dist/scripts/authorize.js",
-    "hisense-tv-always-on-test": "dist/scripts/alwaysOnTest.js",
-    "hisense-tv": "dist/scripts/sendCommand.js"
+    "hisense-tv": "dist/scripts/hisenseTV.js"
   },
   "scripts": {
     "lint": "eslint src/**.ts --max-warnings=5 --fix",
     "watch": "npm run build && npm link && nodemon",
-    "build": "rimraf ./dist && tsc && chmod +x dist/scripts/authorize.js && chmod +x dist/scripts/alwaysOnTest.js",
+    "build": "rimraf ./dist && tsc && chmod +x dist/scripts/hisenseTV.js",
     "prepublishOnly": "npm run lint && npm run build",
     "prepare": "husky"
   },

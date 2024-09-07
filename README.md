@@ -55,7 +55,7 @@ The mac address is needed in the next step and in the config.json file.
 ### Continue the Setup
 For this plugin to work correctly, you need to configure your TV to use a static ip address (or configure a static DHCP reservation on your router). 
 
-To connect to your TV, you need to pair the machine where you're running Homebridge with your TV. This is done in the command line, by manually running the bundled `hisense-tv-authorize` command. To do this, open the homebridge UI and go to Terminal.
+To connect to your TV, you need to pair the machine where you're running Homebridge with your TV. This is done in the command line, by manually running the bundled `hisense-tv authorize` command. To do this, open the homebridge UI and go to Terminal.
 
 ![terminal](images/terminal-location.png)
     
@@ -64,19 +64,19 @@ If this one fails, try the other commands.
 
 SSLMode: default (most common)
 ```bash
-hisense-tv-authorize --hostname <TV_IP_ADDRESS> --mac <HOMEBRIDGE_MAC_ADDRESS>
+hisense-tv authorize --hostname <TV_IP_ADDRESS> --mac <HOMEBRIDGE_MAC_ADDRESS>
 ```
 
 SSLMode: disabled (no SSL)
 ```bash
-hisense-tv-authorize --hostname <TV_IP_ADDRESS> --mac <HOMEBRIDGE_MAC_ADDRESS> --no-ssl
+hisense-tv authorize --hostname <TV_IP_ADDRESS> --mac <HOMEBRIDGE_MAC_ADDRESS> --no-ssl
 ```
 
 SSLMode: custom (use cert and key below)
 Replace `<CERTFILE>` and `<KEYFILE>` with the path to the certificate and key files you want to use.
 The certificate and key files most used can be found [here](https://github.com/MrAsterisco/hisensetv/tree/master/cert)
 ```bash
-hisense-tv-authorize --hostname <TV_IP_ADDRESS> --mac <HOMEBRIDGE_MAC_ADDRESS> --certfile <CERTFILE> --keyfile <KEYFILE>
+hisense-tv authorize --hostname <TV_IP_ADDRESS> --mac <HOMEBRIDGE_MAC_ADDRESS> --certfile <CERTFILE> --keyfile <KEYFILE>
 ```
 
 Your TV, if compatible, will display a PIN code: insert it in the command line and confirm. Your device is now paired with your TV and they can communicate when the TV is on. Repeat this step for all the TVs you want to use via HomeKit.
@@ -170,7 +170,7 @@ Some TVs may be shown as "On" even when you turn them off. If you have a TV that
 - pictureSettings
 
 This can be different for each TV, because the behavior is not consistent across all models. 
-To find out which one works for you, you can try running the `hisense-tv-always-on-test` command. (From the Homebridge Terminal)
+To find out which one works for you, you can try running the `hisense-tv always-on-test` command. (From the Homebridge Terminal)
 The script will guide you through the process of finding the correct `tvType` for your TV.
 If you find any issues with the script, please open an issue on GitHub, as I couldn't test that script with my TV.
 
