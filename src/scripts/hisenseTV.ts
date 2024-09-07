@@ -62,14 +62,6 @@ if(sslPrivateKey === '' && sslCertificate === '') {
 }
 
 if(positionals.length === 0 || !subscripts.includes(positionals[0])) {
-  rl.write('Please provide a valid script argument\n');
-  rl.write(`Usage: hisense-tv {${subscripts.join(',')}}\n`);
-  process.exit(0);
-}
-
-
-const script = positionals[0];
-if(values['help'] && script == null) {
   rl.write(`Usage: hisense-tv {${subscripts.join(',')}}\n`);
   rl.write('\nPositional arguments:\n');
   rl.write(`  {${subscripts.join(',')}}\n`);
@@ -82,6 +74,8 @@ if(values['help'] && script == null) {
 
   process.exit(0);
 }
+
+const script = positionals[0];
 
 if(values['help'] || macaddress == null || hostname == null) {
   terminateWithHelpMessage(rl, script);
