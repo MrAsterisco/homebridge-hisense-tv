@@ -102,7 +102,7 @@ try{
     case 'always-on-test':
       (async () => {
         rl.write('Running first test to determine if TV is always on or off\n');
-        await rl.question('Turn your TV off now and press enter when ready: ');
+        await rl.question('Turn your TV OFF now and press enter when ready: ');
         rl.write('\nWait for a few seconds...\n');
         try {
           const mqttHelper = createMQTTClient(sslMode, hostname, sslCertificate, sslPrivateKey, macaddress, logger);
