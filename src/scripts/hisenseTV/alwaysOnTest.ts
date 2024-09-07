@@ -13,7 +13,8 @@ export function alwaysOnTest(rl: readline.Interface, mqttHelper: HisenseMQTTClie
 
   const timeout = setTimeout(() => {
     mqttHelper.mqttClient.end(true);
-    rl.write('Could not detect always on TV\n');
+    rl.write('\n\nCould not detect always on TV\n');
+    rl.write('Use type: Default\n');
     process.exit(0);
   }, 5000);
 
@@ -23,6 +24,7 @@ export function alwaysOnTest(rl: readline.Interface, mqttHelper: HisenseMQTTClie
 
     rl.write('Running second test to determine if Always On TV has Fake Sleep Mode\n');
     rl.write('Wait for a few seconds...\n');
+    let pictureSettingsTimeout: NodeJS.Timeout|undefined;
 
     mqttHelper.mqttClient.on('message', async (topic, message) => {
       const data = JSON.parse(message.toString());
@@ -33,10 +35,24 @@ export function alwaysOnTest(rl: readline.Interface, mqttHelper: HisenseMQTTClie
         }else{
           rl.write('First test didn\'t detect always on mode.\n');
           rl.write('Continuing with Picture Settings Test\n');
+          rl.write('Wait a few seconds...\n');
           mqttHelper.subscribe(mqttHelper._PICTURE_SETTINGS_TOPIC);
           mqttHelper.callService('platform_service', 'picturesetting');
+          if(pictureSettingsTimeout == null) {
+            pictureSettingsTimeout = setTimeout(() => {
+              mqttHelper.mqttClient.end(true);
+              rl.write('\n\nCould not detect always on TV\n');
+              rl.write('This could be a issue with this script\n');
+              rl.write('If your TV is currently turned off and you can read this message, please open a new issue on github\n');
+              rl.write('If your TV is currently ON, try type: Default\n');
+              process.exit(0);
+            }, 5000);
+          }
         }
       }else if(topic === mqttHelper._PICTURE_SETTINGS_TOPIC) {
+        if(pictureSettingsTimeout != null) {
+          clearTimeout(pictureSettingsTimeout);
+        }
         const pictureSettings = data as PictureSetting;
         if(pictureSettingsOff == null) {
           pictureSettingsOff = pictureSettings;

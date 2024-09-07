@@ -20,7 +20,9 @@ export class HisenseMQTTClient {
 
   public mqttClient: mqtt.MqttClient;
 
-  constructor(public deviceConfig: Pick<DeviceConfig, 'sslmode' | 'ipaddress' | 'sslcertificate' | 'sslprivatekey'>, macaddress: string, private log: {error: (message: string) => void}) {
+  constructor(public deviceConfig: Pick<DeviceConfig, 'sslmode' | 'ipaddress' | 'sslcertificate' | 'sslprivatekey'>,
+    macaddress: string, private log: {error: (message: string) => void}, connectionTimeout?: number) {
+
     this._BASE_TOPIC = path.join('/', 'remoteapp', 'mobile');
     this._STATE_TOPIC = path.join(this._BASE_TOPIC, 'broadcast', 'ui_service', 'state');
     this._DEVICE_TOPIC = `${macaddress.toUpperCase()}$normal`;
@@ -49,6 +51,7 @@ export class HisenseMQTTClient {
       cert: cert,
       username: 'hisenseservice',
       password: 'multimqttservice',
+      connectTimeout: connectionTimeout,
       rejectUnauthorized: false,
       queueQoSZero: false,
       protocol: this.deviceConfig.sslmode === 'disabled' ? 'mqtt' : 'mqtts',

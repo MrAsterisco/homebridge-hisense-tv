@@ -14,7 +14,6 @@ export function listenToMqtt(rl: readline.Interface, mqttClient: HisenseMQTTClie
     rl.write('Disconnected from MQTT server\n');
   });
 
-
   return 0;
 }
 

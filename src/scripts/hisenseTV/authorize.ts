@@ -2,8 +2,10 @@ import {HisenseMQTTClient} from '../../hisenseMQTTClient.js';
 import {SubscriptExitCode} from './subscriptShutdownHandler.type.js';
 import readline from 'node:readline/promises';
 import path from 'path';
+import {clearTimeout} from 'node:timers';
 
 export function authorize(rl: readline.Interface, mqttHelper: HisenseMQTTClient): SubscriptExitCode {
+  let timeout: NodeJS.Timeout|undefined;
   mqttHelper.mqttClient.on('connect', () => {
     mqttHelper.callService('ui_service', 'gettvstate');
   });
@@ -15,6 +17,9 @@ export function authorize(rl: readline.Interface, mqttHelper: HisenseMQTTClient)
     }
     const data = JSON.parse(strMessage);
     if(data != null && typeof data === 'object' && 'result' in data) {
+      if(timeout != null) {
+        clearTimeout(timeout);
+      }
       mqttHelper.mqttClient.end(true);
       if(data.result !== 1) {
         rl.write('TV pairing failed - please try again');
@@ -31,6 +36,10 @@ export function authorize(rl: readline.Interface, mqttHelper: HisenseMQTTClient)
   (async () => {
     const code = await rl.question('Please enter the 4-digit code shown on tv: ');
     mqttHelper.subscribe(path.join(mqttHelper._COMMUNICATION_TOPIC, '#'));
+    timeout = setTimeout(() => {
+      rl.write('Timeout\n');
+      process.exit(1);
+    }, 5000);
     mqttHelper.sendAuthCode(code);
   })();
 

@@ -6,7 +6,7 @@ import {SSLMode} from '../types/ssl-mode.type.js';
 import {listenToMqtt} from './hisenseTV/listenToMqtt.js';
 import {authorize} from './hisenseTV/authorize.js';
 import {alwaysOnTest} from './hisenseTV/alwaysOnTest.js';
-import {createMQTTClient, enableAuthorizationWatcher} from './mqttClientHelper.js';
+import {createMQTTClient, enableAuthorizationWatcher, registerExitHandler, registerMQTTErrorHandler} from './mqttClientHelper.js';
 import {terminateWithError, terminateWithHelpMessage} from './terminationHelper.js';
 import {sendCommand} from './hisenseTV/sendCommand.js';
 
@@ -17,6 +17,8 @@ const rl = readline.createInterface({
 
 
 const args = process.argv.slice(2);
+const subscript = args.slice(0, 1);
+const subscriptArgs = args.slice(1);
 
 const subscripts = ['authorize', 'always-on-test', 'send-mqtt-command', 'listen-to-mqtt'];
 const options = {
@@ -41,7 +43,8 @@ const options = {
     default: false,
   },
 } as const;
-const {values, positionals} = parseArgs({args, options, allowPositionals: true});
+const values = parseArgs({args: subscriptArgs, options}).values;
+const positionals = parseArgs({args: subscript, options, allowPositionals: true}).positionals;
 
 let sslMode: SSLMode = values['no-ssl'] ? 'disabled' : 'custom';
 const sslCertificate = (values['certfile'] ?? '') as string;
@@ -90,9 +93,20 @@ const logger = {
 
 try{
   switch(script) {
-    case 'authorize':
-      authorize(rl, createMQTTClient(sslMode, hostname, sslCertificate, sslPrivateKey, macaddress, logger));
+    case 'authorize':{
+      (async () => {
+        await rl.question('Please turn on your TV and press enter when ready: ');
+        try{
+          const mqttHelper = createMQTTClient(sslMode, hostname, sslCertificate, sslPrivateKey, macaddress, logger);
+          registerExitHandler(rl, mqttHelper);
+          registerMQTTErrorHandler(mqttHelper, rl);
+          authorize(rl, mqttHelper);
+        }catch (e){
+          terminateWithError(rl, e as Error);
+        }
+      })();
       break;
+    }
     case 'always-on-test':
       (async () => {
         rl.write('Running first test to determine if TV is always on or off\n');
@@ -110,8 +124,11 @@ try{
     case 'send-mqtt-command': {
       const mqttHelper = createMQTTClient(sslMode, hostname, sslCertificate, sslPrivateKey, macaddress, logger);
       enableAuthorizationWatcher(mqttHelper, rl);
-
-      const getValues = parseArgs({args, options: {get: {type: 'string'}}, allowPositionals: true}).values;
+      registerExitHandler(rl, mqttHelper);
+      registerMQTTErrorHandler(mqttHelper, rl);
+      // add get argument to options
+      options['get'] = {type: 'string'};
+      const getValues = parseArgs({args: subscriptArgs, options}).values;
 
       const get = getValues['get'];
 
@@ -126,10 +143,14 @@ try{
     case 'listen-to-mqtt': {
       const mqttHelper = createMQTTClient(sslMode, hostname, sslCertificate, sslPrivateKey, macaddress, logger);
       enableAuthorizationWatcher(mqttHelper, rl);
-      const pathValues = parseArgs({args, options: {path: {type: 'string'}}, allowPositionals: true}).values;
+      registerExitHandler(rl, mqttHelper);
+      registerMQTTErrorHandler(mqttHelper, rl);
+      // add path argument to options
+      options['path'] = {type: 'string', default: '#'};
+      const pathValues = parseArgs({args: subscriptArgs, options}).values;
 
       const path = pathValues['path'];
-      listenToMqtt(rl, mqttHelper, path ?? '#');
+      listenToMqtt(rl, mqttHelper, (path ?? '#'));
       break;
     }
   }
