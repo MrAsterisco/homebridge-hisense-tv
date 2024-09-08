@@ -4,10 +4,14 @@ import readline from 'node:readline/promises';
 
 export function listenToMqtt(rl: readline.Interface, mqttClient: HisenseMQTTClient, path: string): SubscriptExitCode {
   mqttClient.mqttClient.on('connect', () => {
-    mqttClient.mqttClient.on('message', (topic, message) => {
-      rl.write(`Received message on topic ${topic}: ${message.toString()}\n`);
-    });
+    rl.write('Connected to MQTT server\n');
+
+    rl.write(`Subscribing to ${path}\n`);
     mqttClient.subscribe(path);
+  });
+
+  mqttClient.mqttClient.on('message', (topic, message) => {
+    rl.write(`Received message on topic ${topic}: ${message.toString()}\n`);
   });
 
   mqttClient.mqttClient.on('disconnect', () => {

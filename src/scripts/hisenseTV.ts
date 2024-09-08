@@ -138,7 +138,7 @@ try{
       registerExitHandler(rl, mqttHelper);
       registerMQTTErrorHandler(mqttHelper, rl);
 
-      const get = options['get'];
+      const get = values['get'];
 
       if(get == null) {
         terminateWithHelpMessage(rl, script);
@@ -154,7 +154,7 @@ try{
       registerExitHandler(rl, mqttHelper);
       registerMQTTErrorHandler(mqttHelper, rl);
 
-      const path = options['path'];
+      const path = values['path'];
       listenToMqtt(rl, mqttHelper, (path ?? '#'));
       break;
     }
