@@ -17,6 +17,7 @@ export class HisenseMQTTClient {
   public _SOURCE_LIST_TOPIC : string;
   public _APP_LIST_TOPIC : string;
   public _PICTURE_SETTINGS_TOPIC : string;
+  public _DEVICE_PICTURE_SETTINGS_TOPIC : string;
 
   public mqttClient: mqtt.MqttClient;
 
@@ -30,6 +31,7 @@ export class HisenseMQTTClient {
     this._APP_LIST_TOPIC = path.join(this._COMMUNICATION_TOPIC, 'applist');
     this._SOURCE_LIST_TOPIC = path.join(this._COMMUNICATION_TOPIC, 'sourcelist');
     this._PICTURE_SETTINGS_TOPIC = path.join(this._BASE_TOPIC, 'broadcast', 'platform_service', 'data', 'picturesetting');
+    this._DEVICE_PICTURE_SETTINGS_TOPIC = path.join(this._BASE_TOPIC, this._DEVICE_TOPIC, 'platform_service', 'data', 'picturesetting');
 
     let key: Buffer|null = null;
     let cert: Buffer|null = null;
