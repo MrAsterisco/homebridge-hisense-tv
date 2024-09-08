@@ -31,13 +31,13 @@ export function alwaysOnTest(rl: readline.Interface, mqttHelper: HisenseMQTTClie
       if(topic === mqttHelper._STATE_TOPIC) {
         mqttHelper.mqttClient.unsubscribe(mqttHelper._STATE_TOPIC);
         if('statetype' in data && data['statetype'].startsWith('fake_sleep')) {
-          rl.write('Possible Always On TV with Fake Sleep Detected: ' + data['statetype'] + '\n');
+          rl.write('\nPossible Always On TV with Fake Sleep Detected: ' + data['statetype'] + '\n');
         }else{
           rl.write('First test didn\'t detect always on mode.\n');
           rl.write('Continuing with Picture Settings Test\n');
           rl.write('Wait a few seconds...\n');
           mqttHelper.subscribe(mqttHelper._PICTURE_SETTINGS_TOPIC);
-          mqttHelper.callService('platform_service', 'picturesetting');
+          mqttHelper.callService('platform_service', 'picturesetting', JSON.stringify({ 'action': 'get_menu_info' }));
           if(pictureSettingsTimeout == null) {
             pictureSettingsTimeout = setTimeout(() => {
               mqttHelper.mqttClient.end(true);
@@ -59,7 +59,7 @@ export function alwaysOnTest(rl: readline.Interface, mqttHelper: HisenseMQTTClie
           mqttHelper.mqttClient.unsubscribe(mqttHelper._PICTURE_SETTINGS_TOPIC);
           await rl.question('Turn your TV on now and press enter when ready:');
           mqttHelper.subscribe(mqttHelper._PICTURE_SETTINGS_TOPIC);
-          mqttHelper.callService('platform_service', 'picturesetting');
+          mqttHelper.callService('platform_service', 'picturesetting', JSON.stringify({ 'action': 'get_menu_info' }));
         }else {
           // find different objects in picture settings
           mqttHelper.mqttClient.end(true);
