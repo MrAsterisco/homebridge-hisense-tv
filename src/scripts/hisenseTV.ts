@@ -21,6 +21,24 @@ const subscript = args.slice(0, 1);
 const subscriptArgs = args.slice(1);
 
 const subscripts = ['authorize', 'always-on-test', 'send-mqtt-command', 'listen-to-mqtt'];
+const positionals = parseArgs({args: subscript, allowPositionals: true, strict: false}).positionals;
+
+if(positionals.length === 0 || !subscripts.includes(positionals[0])) {
+  rl.write(`Usage: hisense-tv {${subscripts.join(',')}}\n`);
+  rl.write('\nPositional arguments:\n');
+  rl.write(`  {${subscripts.join(',')}}\n`);
+  rl.write('  authorize     authorizes specific mac address to connect to TV\n');
+  rl.write('  always-on-test     tests if TV is a always on TV or not\n');
+  rl.write('  send-mqtt-command     sends a command to the TV\n');
+  rl.write('  listen-to-mqtt     listens to mqtt messages\n');
+
+  rl.write(`\nUse: hisense-tv {${subscripts.join(',')}} --help for more information\n`);
+
+  process.exit(0);
+}
+
+const script = positionals[0];
+
 const options = {
   'no-ssl': {
     type: 'boolean',
@@ -43,8 +61,17 @@ const options = {
     default: false,
   },
 } as const;
+
+switch (script) {
+  case 'send-mqtt-command':
+    options['get'] = {type: 'string'};
+    break;
+  case 'listen-to-mqtt':
+    options['path'] = {type: 'string', default: '#'};
+    break;
+}
+
 const values = parseArgs({args: subscriptArgs, options}).values;
-const positionals = parseArgs({args: subscript, options, allowPositionals: true}).positionals;
 
 let sslMode: SSLMode = values['no-ssl'] ? 'disabled' : 'custom';
 const sslCertificate = (values['certfile'] ?? '') as string;
@@ -63,22 +90,6 @@ if(sslPrivateKey !== '' && sslCertificate === '') {
 if(sslPrivateKey === '' && sslCertificate === '') {
   sslMode = 'default';
 }
-
-if(positionals.length === 0 || !subscripts.includes(positionals[0])) {
-  rl.write(`Usage: hisense-tv {${subscripts.join(',')}}\n`);
-  rl.write('\nPositional arguments:\n');
-  rl.write(`  {${subscripts.join(',')}}\n`);
-  rl.write('  authorize     authorizes specific mac address to connect to TV\n');
-  rl.write('  always-on-test     tests if TV is a always on TV or not\n');
-  rl.write('  send-mqtt-command     sends a command to the TV\n');
-  rl.write('  listen-to-mqtt     listens to mqtt messages\n');
-
-  rl.write(`\nUse: hisense-tv {${subscripts.join(',')}} --help for more information\n`);
-
-  process.exit(0);
-}
-
-const script = positionals[0];
 
 if(values['help'] || macaddress == null || hostname == null) {
   terminateWithHelpMessage(rl, script);
@@ -126,11 +137,8 @@ try{
       enableAuthorizationWatcher(mqttHelper, rl);
       registerExitHandler(rl, mqttHelper);
       registerMQTTErrorHandler(mqttHelper, rl);
-      // add get argument to options
-      options['get'] = {type: 'string'};
-      const getValues = parseArgs({args: subscriptArgs, options}).values;
 
-      const get = getValues['get'];
+      const get = options['get'];
 
       if(get == null) {
         terminateWithHelpMessage(rl, script);
@@ -145,11 +153,8 @@ try{
       enableAuthorizationWatcher(mqttHelper, rl);
       registerExitHandler(rl, mqttHelper);
       registerMQTTErrorHandler(mqttHelper, rl);
-      // add path argument to options
-      options['path'] = {type: 'string', default: '#'};
-      const pathValues = parseArgs({args: subscriptArgs, options}).values;
 
-      const path = pathValues['path'];
+      const path = options['path'];
       listenToMqtt(rl, mqttHelper, (path ?? '#'));
       break;
     }
