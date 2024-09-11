@@ -74,6 +74,8 @@ export function alwaysOnTest(rl: readline.Interface, mqttHelper: HisenseMQTTClie
 
         if(diff.length > 0){
           rl.write('\nPicture Settings Always On Mode possible.\n');
+        }else {
+          rl.write('\nNo Picture Settings changes detected.\n');
         }
 
         diff.forEach(menu => {
