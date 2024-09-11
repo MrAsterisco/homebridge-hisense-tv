@@ -1,7 +1,7 @@
 {
   "displayName": "HiSense TV",
   "name": "homebridge-hisense-tv-remotenow",
-  "version": "3.0.2-beta.1",
+  "version": "3.0.2-beta.2",
   "description": "Control RemoteNow-enabled HiSense TVs.",
   "main": "dist/index.js",
   "license": "MIT",

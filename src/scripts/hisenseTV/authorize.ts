@@ -8,8 +8,9 @@ export function authorize(rl: readline.Interface, mqttHelper: HisenseMQTTClient)
   const aborter = new AbortController();
   let timeout: NodeJS.Timeout|undefined;
   mqttHelper.mqttClient.on('connect', () => {
-    mqttHelper.callService('ui_service', 'sourcelist');
     mqttHelper.callService('ui_service', 'gettvstate');
+    mqttHelper.subscribe(path.join(mqttHelper._COMMUNICATION_TOPIC, '#'));
+    mqttHelper.callService('ui_service', 'sourcelist');
   });
   mqttHelper.mqttClient.on('message', (topic, message) => {
     const strMessage = message.toString();
@@ -41,7 +42,6 @@ export function authorize(rl: readline.Interface, mqttHelper: HisenseMQTTClient)
 
   (async () => {
     const code = await rl.question('Please enter the 4-digit code shown on tv: ', { signal: aborter.signal });
-    mqttHelper.subscribe(path.join(mqttHelper._COMMUNICATION_TOPIC, '#'));
     timeout = setTimeout(() => {
       rl.write('Timeout\n');
       process.exit(1);
