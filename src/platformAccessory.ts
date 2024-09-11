@@ -14,6 +14,7 @@ import {WoL} from './wol.js';
 import {sourcesAreEqual} from './utils/sourcesAreEqual.function.js';
 import {InputSourceSubPlatformAccessory} from './inputSourceSubPlatformAccessory.js';
 import {validateDeviceConfig} from './utils/validateDeviceConfig.function.js';
+import {validateHomeKitName} from './utils/validateHomeKitName.function.js';
 
 /**
  * Platform Accessory
@@ -91,7 +92,7 @@ export class HiSenseTVAccessory {
 
     // Configure the service.
     this.service
-      .setCharacteristic(this.Characteristic.ConfiguredName, this.deviceConfig.name)
+      .setCharacteristic(this.Characteristic.ConfiguredName, validateHomeKitName(this.deviceConfig.name))
       .setCharacteristic(this.Characteristic.SleepDiscoveryMode, this.Characteristic.SleepDiscoveryMode.NOT_DISCOVERABLE)
       .setCharacteristic(this.Characteristic.Active, this.Characteristic.Active.INACTIVE);
 

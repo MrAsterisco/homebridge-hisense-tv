@@ -1,6 +1,7 @@
 import {Characteristic, CharacteristicValue, PlatformAccessory, Service} from 'homebridge';
 import {InputSource} from './interfaces/input-source.interface.js';
 import {TVApp} from './interfaces/tv-app.interface.js';
+import {validateHomeKitName} from './utils/validateHomeKitName.function.js';
 
 /**
  * InputSourceSubPlatformAccessory
@@ -12,8 +13,8 @@ export class InputSourceSubPlatformAccessory {
   }
 
   public createInputService(identifier: string){
-    return this.accessory.getService(identifier)
-      || this.accessory.addService(this.service.InputSource, identifier, identifier);
+    return this.accessory.getService(validateHomeKitName(identifier))
+      || this.accessory.addService(this.service.InputSource, validateHomeKitName(identifier), validateHomeKitName(identifier));
   }
 
   /**
@@ -59,8 +60,8 @@ export class InputSourceSubPlatformAccessory {
     inputService
       .setCharacteristic(this.characteristic.Identifier, identifier)
       .setCharacteristic(this.characteristic.IsConfigured, this.characteristic.IsConfigured.CONFIGURED)
-      .setCharacteristic(this.characteristic.ConfiguredName, configuredName)
-      .setCharacteristic(this.characteristic.Name, sourceName)
+      .setCharacteristic(this.characteristic.ConfiguredName, validateHomeKitName(configuredName))
+      .setCharacteristic(this.characteristic.Name, validateHomeKitName(sourceName))
       .setCharacteristic(this.characteristic.CurrentVisibilityState, this.characteristic.CurrentVisibilityState.SHOWN)
       .setCharacteristic(this.characteristic.InputSourceType, inputType);
   }
