@@ -5,6 +5,7 @@ import path from 'path';
 import {clearTimeout} from 'node:timers';
 
 export function authorize(rl: readline.Interface, mqttHelper: HisenseMQTTClient): SubscriptExitCode {
+  const aborter = new AbortController();
   let timeout: NodeJS.Timeout|undefined;
   mqttHelper.mqttClient.on('connect', () => {
     mqttHelper.callService('ui_service', 'sourcelist');
@@ -18,7 +19,8 @@ export function authorize(rl: readline.Interface, mqttHelper: HisenseMQTTClient)
     }
     const data = JSON.parse(strMessage);
     if(topic === mqttHelper._SOURCE_LIST_TOPIC){
-      rl.write('Mac address is already authorized\n');
+      aborter.abort();
+      rl.write('\nMac address is already authorized!\n');
       process.exit(0);
     } else if(data != null && typeof data === 'object' && 'result' in data) {
       if(timeout != null) {
@@ -38,7 +40,7 @@ export function authorize(rl: readline.Interface, mqttHelper: HisenseMQTTClient)
   });
 
   (async () => {
-    const code = await rl.question('Please enter the 4-digit code shown on tv: ');
+    const code = await rl.question('Please enter the 4-digit code shown on tv: ', { signal: aborter.signal });
     mqttHelper.subscribe(path.join(mqttHelper._COMMUNICATION_TOPIC, '#'));
     timeout = setTimeout(() => {
       rl.write('Timeout\n');
