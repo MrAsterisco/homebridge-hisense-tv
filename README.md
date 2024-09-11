@@ -225,6 +225,16 @@ This plugin has been developed and tested running Homebridge on Ubuntu Linux 20.
 
 **Also check your Homebridge protocol/log if there are any errors and add them to the issue.**
 
+### Logs
+
+If you have any error in your homebridge logs, please open an issue on GitHub and provide the logs.
+
+If you have an issue but no error, you can enable debug logs in the settings of homebridge by activating Homebridge Debug Mode.
+
+### Debugging MQTT Issues
+
+If there are problems regarding the MQTT communications, you can run the `hisense-tv listen-to-mqtt` command to see all mqtt messages.
+These can be helpful to debug issues with the plugin.
 
 ### Known Issues
 - The input list might not be fetched correctly if the TV is turned off while adding the accessory or after restarting Homebridge. 
@@ -234,6 +244,7 @@ This plugin has been developed and tested running Homebridge on Ubuntu Linux 20.
 - Some TVs have inconsistent data regarding apps
   - Due to the inconsistent data, the current selected app on the tv may not be shown correctly in homekit (will be "Unknown")
 
+  
 # Contributions
 All contributions to expand the library are welcome. Fork the repo, make the changes you want, and open a Pull Request.
 
