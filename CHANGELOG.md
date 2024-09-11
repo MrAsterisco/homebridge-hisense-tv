@@ -1,3 +1,13 @@
+# 3.0.2
+
+Tested homebridge v2 and found no major issues.
+
+### Fixed
+- Fixed an issue where homekit complains about specific characters in device names
+
+### Added
+- `hisense-tv authorize` now also checks if mac address was already authorized
+
 # 3.0.1
 
 Please checkout the 3.0.0 release notes for the changes in this major version.
