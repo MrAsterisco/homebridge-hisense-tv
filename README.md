@@ -55,7 +55,7 @@ The mac address is needed in the next step and in the config.json file.
 ### Continue the Setup
 For this plugin to work correctly, you need to configure your TV to use a static ip address (or configure a static DHCP reservation on your router). 
 
-To connect to your TV, you need to pair the machine where you're running Homebridge with your TV. This is done in the command line, by manually running the bundled `hisense-tv-authorize` command. To do this, open the homebridge UI and go to Terminal.
+To connect to your TV, you need to pair the machine where you're running Homebridge with your TV. This is done in the command line, by manually running the bundled `hisense-tv authorize` command. To do this, open the homebridge UI and go to Terminal.
 
 ![terminal](images/terminal-location.png)
     
@@ -64,19 +64,19 @@ If this one fails, try the other commands.
 
 SSLMode: default (most common)
 ```bash
-hisense-tv-authorize --hostname <TV_IP_ADDRESS> --mac <HOMEBRIDGE_MAC_ADDRESS>
+hisense-tv authorize --hostname <TV_IP_ADDRESS> --mac <HOMEBRIDGE_MAC_ADDRESS>
 ```
 
 SSLMode: disabled (no SSL)
 ```bash
-hisense-tv-authorize --hostname <TV_IP_ADDRESS> --mac <HOMEBRIDGE_MAC_ADDRESS> --no-ssl
+hisense-tv authorize --hostname <TV_IP_ADDRESS> --mac <HOMEBRIDGE_MAC_ADDRESS> --no-ssl
 ```
 
 SSLMode: custom (use cert and key below)
 Replace `<CERTFILE>` and `<KEYFILE>` with the path to the certificate and key files you want to use.
 The certificate and key files most used can be found [here](https://github.com/MrAsterisco/hisensetv/tree/master/cert)
 ```bash
-hisense-tv-authorize --hostname <TV_IP_ADDRESS> --mac <HOMEBRIDGE_MAC_ADDRESS> --certfile <CERTFILE> --keyfile <KEYFILE>
+hisense-tv authorize --hostname <TV_IP_ADDRESS> --mac <HOMEBRIDGE_MAC_ADDRESS> --certfile <CERTFILE> --keyfile <KEYFILE>
 ```
 
 Your TV, if compatible, will display a PIN code: insert it in the command line and confirm. Your device is now paired with your TV and they can communicate when the TV is on. Repeat this step for all the TVs you want to use via HomeKit.
@@ -170,7 +170,7 @@ Some TVs may be shown as "On" even when you turn them off. If you have a TV that
 - pictureSettings
 
 This can be different for each TV, because the behavior is not consistent across all models. 
-To find out which one works for you, you can try running the `hisense-tv-always-on-test` command. (From the Homebridge Terminal)
+To find out which one works for you, you can try running the `hisense-tv always-on-test` command. (From the Homebridge Terminal)
 The script will guide you through the process of finding the correct `tvType` for your TV.
 If you find any issues with the script, please open an issue on GitHub, as I couldn't test that script with my TV.
 
@@ -218,10 +218,23 @@ Take a note of the Setup Code and open your Home app on your iPhone, iPad or Mac
 
 **Done**! As always, you can repeat the steps above if you have multiple TVs to add. Please note that each TV will have a different Setup Code logged in Homebridge.
 
-## Issues
+## Issues/Bugs
 This plugin has been developed and tested running Homebridge on Ubuntu Linux 20.04 and macOS Monterey with a Hisense 50AE7010F. If your configuration differs, the steps below may not be a 100% accurate: even if the general idea is the same *(pair the TV, add it to Home, use it)*, your mileage may vary.
 
 **If you find anything that is not correct, please open an issue (or even better: a PR changing this file) explaining what you're doing differently to make this plugin work with different TV models and/or on different operating systems.**
+
+**Also check your Homebridge protocol/log if there are any errors and add them to the issue.**
+
+### Logs
+
+If you have any error in your homebridge logs, please open an issue on GitHub and provide the logs.
+
+If you have an issue but no error, you can enable debug logs in the settings of homebridge by activating Homebridge Debug Mode.
+
+### Debugging MQTT Issues
+
+If there are problems regarding the MQTT communications, you can run the `hisense-tv listen-to-mqtt` command to see all mqtt messages.
+These can be helpful to debug issues with the plugin.
 
 ### Known Issues
 - The input list might not be fetched correctly if the TV is turned off while adding the accessory or after restarting Homebridge. 
@@ -231,6 +244,7 @@ This plugin has been developed and tested running Homebridge on Ubuntu Linux 20.
 - Some TVs have inconsistent data regarding apps
   - Due to the inconsistent data, the current selected app on the tv may not be shown correctly in homekit (will be "Unknown")
 
+  
 # Contributions
 All contributions to expand the library are welcome. Fork the repo, make the changes you want, and open a Pull Request.
 

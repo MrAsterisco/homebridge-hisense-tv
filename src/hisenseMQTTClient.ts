@@ -17,10 +17,13 @@ export class HisenseMQTTClient {
   public _SOURCE_LIST_TOPIC : string;
   public _APP_LIST_TOPIC : string;
   public _PICTURE_SETTINGS_TOPIC : string;
+  public _DEVICE_PICTURE_SETTINGS_TOPIC : string;
 
   public mqttClient: mqtt.MqttClient;
 
-  constructor(public deviceConfig: Pick<DeviceConfig, 'sslmode' | 'ipaddress' | 'sslcertificate' | 'sslprivatekey'>, macaddress: string) {
+  constructor(public deviceConfig: Pick<DeviceConfig, 'sslmode' | 'ipaddress' | 'sslcertificate' | 'sslprivatekey'>,
+    macaddress: string, private log: {error: (message: string) => void}, connectionTimeout?: number) {
+
     this._BASE_TOPIC = path.join('/', 'remoteapp', 'mobile');
     this._STATE_TOPIC = path.join(this._BASE_TOPIC, 'broadcast', 'ui_service', 'state');
     this._DEVICE_TOPIC = `${macaddress.toUpperCase()}$normal`;
@@ -28,13 +31,19 @@ export class HisenseMQTTClient {
     this._APP_LIST_TOPIC = path.join(this._COMMUNICATION_TOPIC, 'applist');
     this._SOURCE_LIST_TOPIC = path.join(this._COMMUNICATION_TOPIC, 'sourcelist');
     this._PICTURE_SETTINGS_TOPIC = path.join(this._BASE_TOPIC, 'broadcast', 'platform_service', 'data', 'picturesetting');
+    this._DEVICE_PICTURE_SETTINGS_TOPIC = path.join(this._BASE_TOPIC, this._DEVICE_TOPIC, 'platform_service', 'data', 'picturesetting');
 
     let key: Buffer|null = null;
     let cert: Buffer|null = null;
 
     if(this.deviceConfig.sslmode === 'custom') {
-      key = fs.readFileSync(this.deviceConfig.sslprivatekey);
-      cert = fs.readFileSync(this.deviceConfig.sslcertificate);
+      try{
+        key = fs.readFileSync(this.deviceConfig.sslprivatekey);
+        cert = fs.readFileSync(this.deviceConfig.sslcertificate);
+      }catch (e){
+        this.log.error('Could not read certificate or key file');
+        this.log.error('Continuing with SSL but no certificate or key');
+      }
     }
 
     this.mqttClient = mqtt.connect({
@@ -44,6 +53,7 @@ export class HisenseMQTTClient {
       cert: cert,
       username: 'hisenseservice',
       password: 'multimqttservice',
+      connectTimeout: connectionTimeout,
       rejectUnauthorized: false,
       queueQoSZero: false,
       protocol: this.deviceConfig.sslmode === 'disabled' ? 'mqtt' : 'mqtts',
@@ -52,7 +62,13 @@ export class HisenseMQTTClient {
 
   public callService(service: string, action: string, payload?: string) {
     const topic = path.join('/', 'remoteapp', 'tv', service, this._DEVICE_TOPIC, 'actions', action);
-    this.mqttClient.publish(topic, payload ?? '');
+    if(this.mqttClient.disconnected || this.mqttClient.disconnecting) {
+      this.log.error('Sending message to TV failed - MQTT client is disconnected');
+      this.log.error(Error().stack ?? '');
+      return;
+    }else {
+      this.mqttClient.publish(topic, payload ?? '');
+    }
   }
 
   public changeSource(sourceId: string) {

@@ -1,3 +1,5 @@
+import {SSLMode} from '../types/ssl-mode.type';
+
 export interface DeviceConfig {
   id: string;
   tvType: 'default' | 'fakeSleep' | 'pictureSettings';
@@ -11,7 +13,7 @@ export interface DeviceConfig {
   wolRetries: number;
   ipaddress: string;
   macaddress: string;
-  sslmode: 'disabled' | 'custom';
+  sslmode: SSLMode;
   sslcertificate: string;
   sslprivatekey: string;
   showApps: boolean;

@@ -1,3 +1,18 @@
+# 3.0.1
+
+Please checkout the 3.0.0 release notes for the changes in this major version.
+
+### Changes
+- **IMPORTANT** Combined `hisense-tv-authorize` and `hisense-tv-always-on-test` into one script `hisense-tv`
+  - The script is now just `hisense-tv`
+  - Authorize can be done with `hisense-tv authorize`
+  - Always on test can be done with `hisense-tv always-on-test`
+  - `hisense-tv listen-to-mqtt` is now available to listen to mqtt messages and debug the plugin
+
+### Fixed
+- Fixed an issue where the plugin crashes if malformed mqtt data is send
+- Disabled sending mqtt data if the mqtt connection is down
+
 # 3.0.0
 
 This release has **braking changes**. 

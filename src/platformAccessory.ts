@@ -127,7 +127,7 @@ export class HiSenseTVAccessory {
     // Create "Unknown" source.
     this.createHomeSource();
 
-    this.mqttHelper = new HisenseMQTTClient(this.deviceConfig, accessory.context.macaddress);
+    this.mqttHelper = new HisenseMQTTClient(this.deviceConfig, accessory.context.macaddress, this.log);
     this.setupMqtt();
 
     // set the counter threshold based on the polling interval
@@ -163,32 +163,36 @@ export class HiSenseTVAccessory {
     });
 
 
-    //
     this.mqttHelper.mqttClient.on('message', (topic, message) => {
       this.log.debug(`Received message from TV (${topic}):` + message.toString());
-      const parsedMessage = JSON.parse(message.toString());
-      switch (topic) {
-        case this.mqttHelper._STATE_TOPIC:
-          // handle tvType fakeSleep differently as it has a different state
-          if (this.deviceConfig.tvType === 'fakeSleep') {
-            // setCurrentInput will be called in setAlwaysOnFakeSleepState
-            this.setAlwaysOnFakeSleepState(parsedMessage);
-          } else {
-            this.setCurrentInput(parsedMessage);
-          }
-          break;
-        case this.mqttHelper._SOURCE_LIST_TOPIC:
-          this.createSources(parsedMessage, this.availableApps);
-          break;
-        case this.mqttHelper._PICTURE_SETTINGS_TOPIC:
-          this.setAlwaysOnPictureSettingsPowerState(parsedMessage);
-          break;
-        case this.mqttHelper._APP_LIST_TOPIC:
-          this.createSources(this.inputSources, parsedMessage);
-          break;
-        default:
-          this.log.debug('Received unknown message from TV. Topic: ' + topic + ' Message: ' + message.toString());
-          break;
+      try{
+        const parsedMessage = JSON.parse(message.toString());
+        switch (topic) {
+          case this.mqttHelper._STATE_TOPIC:
+            // handle tvType fakeSleep differently as it has a different state
+            if (this.deviceConfig.tvType === 'fakeSleep') {
+              // setCurrentInput will be called in setAlwaysOnFakeSleepState
+              this.setAlwaysOnFakeSleepState(parsedMessage);
+            } else {
+              this.setCurrentInput(parsedMessage);
+            }
+            break;
+          case this.mqttHelper._SOURCE_LIST_TOPIC:
+            this.createSources(parsedMessage, this.availableApps);
+            break;
+          case this.mqttHelper._PICTURE_SETTINGS_TOPIC:
+            this.setAlwaysOnPictureSettingsPowerState(parsedMessage);
+            break;
+          case this.mqttHelper._APP_LIST_TOPIC:
+            this.createSources(this.inputSources, parsedMessage);
+            break;
+          default:
+            this.log.debug('Received unknown message from TV. Topic: ' + topic + ' Message: ' + message.toString());
+            break;
+        }
+      }catch(e: unknown){
+        this.log.error('Error occurred while handling new message from TV: ' + message.toString());
+        this.log.error((e as Error).stack ?? (e as Error).toString());
       }
     });
 
@@ -210,6 +214,7 @@ export class HiSenseTVAccessory {
 
     this.mqttHelper.mqttClient.on('error', (err) => {
       this.log.error('An error occurred while connecting to MQTT service: ' + JSON.stringify(err));
+      this.log.error('This usually means the TV is off/the IP address is incorrect or you configured the wrong ssl options.');
       this.setTVPowerStateOff();
     });
   }
