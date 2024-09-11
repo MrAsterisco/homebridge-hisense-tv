@@ -7,6 +7,7 @@ import {clearTimeout} from 'node:timers';
 export function authorize(rl: readline.Interface, mqttHelper: HisenseMQTTClient): SubscriptExitCode {
   let timeout: NodeJS.Timeout|undefined;
   mqttHelper.mqttClient.on('connect', () => {
+    mqttHelper.callService('ui_service', 'sourcelist');
     mqttHelper.callService('ui_service', 'gettvstate');
   });
   mqttHelper.mqttClient.on('message', (topic, message) => {
@@ -16,7 +17,10 @@ export function authorize(rl: readline.Interface, mqttHelper: HisenseMQTTClient)
       return;
     }
     const data = JSON.parse(strMessage);
-    if(data != null && typeof data === 'object' && 'result' in data) {
+    if(topic === mqttHelper._SOURCE_LIST_TOPIC){
+      rl.write('Mac address is already authorized\n');
+      process.exit(0);
+    } else if(data != null && typeof data === 'object' && 'result' in data) {
       if(timeout != null) {
         clearTimeout(timeout);
       }
