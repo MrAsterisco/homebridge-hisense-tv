@@ -91,9 +91,8 @@ if(sslPrivateKey === '' && sslCertificate === '') {
   sslMode = 'default';
 }
 
-if(values['help'] || macaddress == null || hostname == null) {
+if(values['help'] || macaddress === undefined || hostname === undefined) {
   terminateWithHelpMessage(rl, script);
-  process.exit(0);
 }
 
 const logger = {
@@ -140,10 +139,8 @@ try{
 
       const get = values['get'];
 
-      if(get == null) {
+      if(get === undefined) {
         terminateWithHelpMessage(rl, script);
-        // terminate so get is typed as not null
-        process.exit(0);
       }
       sendCommand(rl, mqttHelper, get);
       break;

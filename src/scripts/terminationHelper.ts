@@ -1,6 +1,6 @@
 import readline from 'node:readline/promises';
 
-export function terminateWithHelpMessage(rl: readline.Interface, script: string) {
+export function terminateWithHelpMessage(rl: readline.Interface, script: string): never {
   rl.write(`Usage: hisense-tv ${script} --hostname <hostname> --mac <macaddress> [--no-ssl] [--certfile <certfile>] [--keyfile <keyfile>]\n`);
   rl.write('Options:\n');
   rl.write('  --hostname <hostname>  IP address of the TV\n');
