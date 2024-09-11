@@ -8,10 +8,18 @@ export function authorize(rl: readline.Interface, mqttHelper: HisenseMQTTClient)
   const aborter = new AbortController();
   let timeout: NodeJS.Timeout|undefined;
   mqttHelper.mqttClient.on('connect', () => {
+    // trigger the tv to show the pairing code
     mqttHelper.callService('ui_service', 'gettvstate');
-    mqttHelper.subscribe(path.join(mqttHelper._COMMUNICATION_TOPIC, '#'));
+
+    // also trigger the tv to send the source list
+    // to check if we are already authorized
+    // source list uses the device identifier (mac)
+    // thus it's better to use than the state
+    // as the state could also be sent by other devices
+    mqttHelper.subscribe(mqttHelper._SOURCE_LIST_TOPIC);
     mqttHelper.callService('ui_service', 'sourcelist');
   });
+
   mqttHelper.mqttClient.on('message', (topic, message) => {
     const strMessage = message.toString();
     if(strMessage.length === 0) {
@@ -24,7 +32,7 @@ export function authorize(rl: readline.Interface, mqttHelper: HisenseMQTTClient)
       rl.write('\nMac address is already authorized!\n');
       process.exit(0);
     } else if(data != null && typeof data === 'object' && 'result' in data) {
-      if(timeout != null) {
+      if(timeout !== undefined) {
         clearTimeout(timeout);
       }
       mqttHelper.mqttClient.end(true);
@@ -42,10 +50,11 @@ export function authorize(rl: readline.Interface, mqttHelper: HisenseMQTTClient)
 
   (async () => {
     const code = await rl.question('Please enter the 4-digit code shown on tv: ', { signal: aborter.signal });
+    mqttHelper.subscribe(path.join(mqttHelper._COMMUNICATION_TOPIC, '#'));
     timeout = setTimeout(() => {
       rl.write('Timeout\n');
       process.exit(1);
-    }, 5000);
+    }, 8000);
     mqttHelper.sendAuthCode(code);
   })();
 
