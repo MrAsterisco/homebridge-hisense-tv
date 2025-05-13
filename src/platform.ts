@@ -63,7 +63,7 @@ export class HiSenseTVPlatform implements IndependentPlatformPlugin {
       // generate a unique id for the accessory this should be generated from
       // something globally unique, but constant, for example, the device serial
       // number or MAC address
-      const uuid = this.api.hap.uuid.generate(device.id+device.name);
+      const uuid = this.api.hap.uuid.generate(device.id+device.macaddress);
 
       // the accessory does not yet exist, so we need to create it
       this.log.info('Adding new accessory:', device.name);
