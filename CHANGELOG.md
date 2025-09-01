@@ -1,3 +1,13 @@
+### ‼️ WARNING — Read this if upgrading from v2.0.2 or earlier…
+If you are upgrading from v2.0.2 or earlier, please read through the [3.0.0 release notes](#300) as there are breaking changes that require you to update your configuration.
+
+# 3.1.0
+### Changed
+- WoL packets are now sent to the TV’s IP and the correct subnet broadcast address instead of only `255.255.255.255`
+
+### Added
+- Add additional broadcast parameter to config to override the default broadcast address calculation
+
 # 3.0.2
 
 Tested homebridge v2 and found no major issues.
