@@ -130,7 +130,7 @@
               "description": "The number of WOL packets sent continuously to wake up the tv to account for packet loss."
             },
             "ipaddress": {
-              "title": "IP Address",
+              "title": "TV IP Address",
               "type": "string",
               "required": true,
               "format": "ipv4",
@@ -138,11 +138,19 @@
               "description": "This plugin cannot discover TVs automatically on the local network. Make sure to set your TV with a static DHCP to the IP address you input here."
             },
             "macaddress": {
-              "title": "MAC Address",
+              "title": "TV MAC Address",
               "type": "string",
               "required": true,
               "placeholder": "00:XX:00:XX:00:XX",
               "description": "In order to be able to turn on the TV when it's off, insert your TV's MAC Address. Make sure to use the MAC Address of the network interface (WiFi or Ethernet) you're using and also turn on 'Wake on LAN' and 'Wake on WiFi' in your TV settings."
+            },
+            "broadcast": {
+              "title": "TV Broadcast Address",
+              "type": "string",
+              "required": false,
+              "format": "ipv4",
+              "placeholder": "192.168.1.255",
+              "description": "The address where wake on lan packets should go to. Usually its the networks broadcast address. Only necessary in special cases. If not specified, a default will be set based on the TV IP address and all available network interfaces."
             },
             "sslmode": {
               "title": "SSL mode",
@@ -272,6 +280,9 @@
             "functionBody": "return model.devices[arrayIndices].tvType === 'default';"
           },
           "items": [
+            {
+              "key": "devices[].broadcast"
+            },
             {
               "key": "devices[].pollingInterval"
             },

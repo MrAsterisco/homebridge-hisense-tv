@@ -7,6 +7,7 @@ export interface DeviceConfig {
     menuId: number;
     menuFlag: number;
   };
+  broadcast?: string;
   name: string;
   pollingInterval: number;
   wolInterval: number;

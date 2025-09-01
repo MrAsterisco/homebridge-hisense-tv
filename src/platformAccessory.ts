@@ -79,7 +79,7 @@ export class HiSenseTVAccessory {
 
     // create useful subclasses
     this.inputSourceSubPlatformAccessory = new InputSourceSubPlatformAccessory(this.Service, accessory, this.Characteristic);
-    this.wol = new WoL(this.log, this.deviceConfig.macaddress, this.deviceConfig.wolRetries, this.deviceConfig.wolInterval);
+    this.wol = new WoL(this.log, this.deviceConfig.macaddress, this.deviceConfig.ipaddress, this.deviceConfig.wolRetries, this.deviceConfig.wolInterval, this.deviceConfig.broadcast);
 
     // Configure the TV details.
     this.accessory.getService(this.Service.AccessoryInformation)!
