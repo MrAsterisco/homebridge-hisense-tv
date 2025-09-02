@@ -1,7 +1,12 @@
-### ‼️ WARNING — Read this if upgrading from v2.0.2 or earlier…
+### ‼️ WARNING — Read this if upgrading from v3.0.X or earlier…
+If you are upgrading from v3.0.X or earlier, please read through the [3.1.0 release notes](#310) as there are breaking changes that require you to update your configuration.
 If you are upgrading from v2.0.2 or earlier, please read through the [3.0.0 release notes](#300) as there are breaking changes that require you to update your configuration.
 
 # 3.1.0
+**‼️ Breaking Changes**
+- The uuid generation is now updated to only use the id property of a device.
+  - This change means you have to readd your tv in homebridge (and delete the old version) 
+
 ### Changed
 - WoL packets are now sent to the TV’s IP and the correct subnet broadcast address instead of only `255.255.255.255`
 
