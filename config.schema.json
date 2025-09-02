@@ -27,7 +27,7 @@
               "type": "string",
               "required": true,
               "default": "HiSenseTV",
-              "description": "A unique identifier of this device. You can use the device model, the S/N or any other random string. This will be displayed as Serial Number in Home."
+              "description": "A unique identifier of this device. You can use the the S/N or any other random string. This will be displayed as Serial Number in Home. If you change this id, you would need to readd your device in the home app."
             },
             "name": {
               "title": "Name",
