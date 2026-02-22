@@ -62,7 +62,15 @@ export class HiSenseTVAccessory {
   private inputSources: InputSource[] = [];
   private availableApps: TVApp[] = [];
 
-  constructor(private readonly platform: HiSenseTVPlatform, private readonly accessory: PlatformAccessory) {
+  private isPublished = false;
+  private hasReceivedInitialSources = false;
+  private hasReceivedInitialApps = false;
+
+  constructor(
+    private readonly platform: HiSenseTVPlatform,
+    private readonly accessory: PlatformAccessory,
+    private readonly publishCallback?: () => void,
+  ) {
     this.log = platform.log;
 
     if (accessory.context.macaddress == null || accessory.context.macaddress == '') {
@@ -137,11 +145,30 @@ export class HiSenseTVAccessory {
       this.counterThreshold = 1;
     }
 
+    this.startPolling();
+  }
+
+  private startPolling() {
     if (this.deviceConfig.tvType === 'default') {
       setInterval(() => {
         this.checkTVStatus();
       }, this.deviceConfig.pollingInterval * 1000);
     }
+  }
+
+  private maybePublish() {
+    if (this.isPublished) {
+      return;
+    }
+    if (!this.hasReceivedInitialSources) {
+      return;
+    }
+    if (this.deviceConfig.showApps && !this.hasReceivedInitialApps) {
+      return;
+    }
+
+    this.isPublished = true;
+    this.publishCallback?.();
   }
 
   public setupMqtt() {
@@ -180,12 +207,16 @@ export class HiSenseTVAccessory {
             break;
           case this.mqttHelper._SOURCE_LIST_TOPIC:
             this.createSources(parsedMessage, this.availableApps);
+            this.hasReceivedInitialSources = true;
+            this.maybePublish();
             break;
           case this.mqttHelper._PICTURE_SETTINGS_TOPIC:
             this.setAlwaysOnPictureSettingsPowerState(parsedMessage);
             break;
           case this.mqttHelper._APP_LIST_TOPIC:
             this.createSources(this.inputSources, parsedMessage);
+            this.hasReceivedInitialApps = true;
+            this.maybePublish();
             break;
           default:
             this.log.debug('Received unknown message from TV. Topic: ' + topic + ' Message: ' + message.toString());
@@ -216,6 +247,9 @@ export class HiSenseTVAccessory {
     this.mqttHelper.mqttClient.on('error', (err) => {
       this.log.error('An error occurred while connecting to MQTT service: ' + JSON.stringify(err));
       this.log.error('This usually means the TV is off/the IP address is incorrect or you configured the wrong ssl options.');
+      if (!this.isPublished) {
+        this.log.warn(`TV "${this.deviceConfig.name}" is not yet available in HomeKit. Will publish once a connection is established.`);
+      }
       this.setTVPowerStateOff();
     });
   }
