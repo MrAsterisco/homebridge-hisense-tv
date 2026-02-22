@@ -1,4 +1,4 @@
-import {SSLMode} from '../types/ssl-mode.type';
+import { SSLMode } from '../types/ssl-mode.type.js';
 
 export interface DeviceConfig {
   id: string;

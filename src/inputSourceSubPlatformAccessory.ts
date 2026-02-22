@@ -1,7 +1,7 @@
-import {Characteristic, CharacteristicValue, PlatformAccessory, Service} from 'homebridge';
-import {InputSource} from './interfaces/input-source.interface.js';
-import {TVApp} from './interfaces/tv-app.interface.js';
-import {validateHomeKitName} from './utils/validateHomeKitName.function.js';
+import { Characteristic, CharacteristicValue, PlatformAccessory, Service } from 'homebridge';
+import { InputSource } from './interfaces/input-source.interface.js';
+import { TVApp } from './interfaces/tv-app.interface.js';
+import { validateHomeKitName } from './utils/validateHomeKitName.function.js';
 
 /**
  * InputSourceSubPlatformAccessory

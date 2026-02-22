@@ -10,8 +10,8 @@
       "DOM",
       "ES2022"
     ],
-    "module": "ES2022",
-    "moduleResolution":"node",
+    "module": "nodenext",
+    "moduleResolution":"nodenext",
     "sourceMap": true,
     "strict": true,
     "noImplicitAny": false,
@@ -19,7 +19,8 @@
     "target": "ES2022"
   },
   "include": [
-    "src/"
+    "eslint.config.js",
+    "src/",
   ],
   "exclude": [
     "**/*.spec.ts"

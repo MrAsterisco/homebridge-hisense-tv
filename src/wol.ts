@@ -1,4 +1,4 @@
-import {Logging} from 'homebridge';
+import { Logging } from 'homebridge';
 import wol from 'wol';
 import os from 'node:os';
 
@@ -63,7 +63,7 @@ export class WoL {
     for (const addrs of Object.values(os.networkInterfaces())) {
       for (const a of addrs || []) {
         if (a.family === 'IPv4' && !a.internal && a.netmask && sameSubnet(tvIp, a.address, a.netmask)) {
-          nics.push({localIp: a.address, netmask: a.netmask});
+          nics.push({ localIp: a.address, netmask: a.netmask });
         }
       }
     }
@@ -87,7 +87,7 @@ export class WoL {
   private async sendPackets(ipAddress: string|undefined, attempt = 0) {
     if (attempt < this.retries) {
       try {
-        await wol.wake(this.macAddress, ipAddress ? { address: ipAddress} : undefined);
+        await wol.wake(this.macAddress, ipAddress ? { address: ipAddress } : undefined);
         this.log.debug('Send Wake On Lan');
       } catch (error) {
         this.log.error('An error occurred while sending WoL: ' + error);
@@ -103,9 +103,8 @@ export class WoL {
      * Triggers sending the magic packet to wake up the TV.
      */
   public sendMagicPacket() {
-    let nic: Nic | undefined = undefined;
     // if we have a broadcast address, we don't need to pick a NIC
-    nic = this.broadcast ? undefined : this.pickNicFor(this.tvIp);
+    const nic = this.broadcast ? undefined : this.pickNicFor(this.tvIp);
 
     if(nic){
       this.log.debug('Using NIC with local IP ' + nic.localIp + ' and netmask ' + nic.netmask);

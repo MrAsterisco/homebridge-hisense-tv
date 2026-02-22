@@ -1,4 +1,4 @@
-import {Service} from 'homebridge';
+import { Service } from 'homebridge';
 
 export interface TVApp {
   url: string;

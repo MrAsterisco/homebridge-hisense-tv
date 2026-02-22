@@ -1,20 +1,20 @@
-import {Characteristic, CharacteristicValue, Logging, PlatformAccessory, Service} from 'homebridge';
+import { Characteristic, CharacteristicValue, Logging, PlatformAccessory, Service } from 'homebridge';
 
-import {HiSenseTVPlatform} from './platform.js';
+import { HiSenseTVPlatform } from './platform.js';
 import net from 'net';
 
-import {DeviceConfig} from './interfaces/device-config.interface.js';
-import {TVState} from './interfaces/tv-state.interface.js';
-import {InputSource} from './interfaces/input-source.interface.js';
-import {HisenseMQTTClient} from './hisenseMQTTClient.js';
+import { DeviceConfig } from './interfaces/device-config.interface.js';
+import { TVState } from './interfaces/tv-state.interface.js';
+import { InputSource } from './interfaces/input-source.interface.js';
+import { HisenseMQTTClient } from './hisenseMQTTClient.js';
 import equal from 'fast-deep-equal';
-import {PictureSetting} from './interfaces/picturesetting.interface.js';
-import {TVApp} from './interfaces/tv-app.interface.js';
-import {WoL} from './wol.js';
-import {sourcesAreEqual} from './utils/sourcesAreEqual.function.js';
-import {InputSourceSubPlatformAccessory} from './inputSourceSubPlatformAccessory.js';
-import {validateDeviceConfig} from './utils/validateDeviceConfig.function.js';
-import {validateHomeKitName} from './utils/validateHomeKitName.function.js';
+import { PictureSetting } from './interfaces/picturesetting.interface.js';
+import { TVApp } from './interfaces/tv-app.interface.js';
+import { WoL } from './wol.js';
+import { sourcesAreEqual } from './utils/sourcesAreEqual.function.js';
+import { InputSourceSubPlatformAccessory } from './inputSourceSubPlatformAccessory.js';
+import { validateDeviceConfig } from './utils/validateDeviceConfig.function.js';
+import { validateHomeKitName } from './utils/validateHomeKitName.function.js';
 
 /**
  * Platform Accessory
@@ -73,7 +73,7 @@ export class HiSenseTVAccessory {
   ) {
     this.log = platform.log;
 
-    if (accessory.context.macaddress == null || accessory.context.macaddress == '') {
+    if (accessory.context.macaddress == null || accessory.context.macaddress === '') {
       this.log.warn('Config not up to date, please check the README on https://github.com/MrAsterisco/homebridge-hisense-tv' +
         ' for the latest configuration options or use the homebridge UI to update the configuration.');
       this.log.error('Homebridge MAC address is required for the TV accessory.');
@@ -300,8 +300,6 @@ export class HiSenseTVAccessory {
   }
 
   async setRemoteKey(newValue: CharacteristicValue) {
-    let keyName = '';
-
     // shorter than a switch statement
     const keyDict = {
       [this.Characteristic.RemoteKey.REWIND]: 'KEY_BACK',
@@ -319,7 +317,7 @@ export class HiSenseTVAccessory {
       [this.Characteristic.RemoteKey.INFORMATION]: 'KEY_HOME',
     };
 
-    keyName = keyDict[newValue as number];
+    const keyName = keyDict[newValue as number];
 
     if (keyName) {
       this.mqttHelper.sendKey(keyName);
@@ -461,7 +459,7 @@ export class HiSenseTVAccessory {
   checkTVStatus() {
     this.log.debug('Checking state for TV at IP: ' + this.deviceConfig.ipaddress);
 
-    const socket = net.createConnection({host: this.deviceConfig.ipaddress, port: 36669, timeout: 500});
+    const socket = net.createConnection({ host: this.deviceConfig.ipaddress, port: 36669, timeout: 500 });
     socket.on('connect', () => {
       socket.destroy();
       this.log.debug('Connected to TV!');

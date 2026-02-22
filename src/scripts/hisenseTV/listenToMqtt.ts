@@ -1,5 +1,5 @@
-import {HisenseMQTTClient} from '../../hisenseMQTTClient.js';
-import {SubscriptExitCode} from './subscriptShutdownHandler.type.js';
+import { HisenseMQTTClient } from '../../hisenseMQTTClient.js';
+import { SubscriptExitCode } from './subscriptShutdownHandler.type.js';
 import readline from 'node:readline/promises';
 
 export function listenToMqtt(rl: readline.Interface, mqttClient: HisenseMQTTClient, path: string): SubscriptExitCode {

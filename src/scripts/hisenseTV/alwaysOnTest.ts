@@ -1,7 +1,7 @@
-import {SubscriptExitCode} from './subscriptShutdownHandler.type.js';
+import { SubscriptExitCode } from './subscriptShutdownHandler.type.js';
 import readline from 'node:readline/promises';
-import {HisenseMQTTClient} from '../../hisenseMQTTClient.js';
-import {PictureSetting} from '../../interfaces/picturesetting.interface.js';
+import { HisenseMQTTClient } from '../../hisenseMQTTClient.js';
+import { PictureSetting } from '../../interfaces/picturesetting.interface.js';
 
 /**
  * function has to be called only when tv is on
@@ -34,8 +34,8 @@ export function alwaysOnTest(rl: readline.Interface, mqttHelper: HisenseMQTTClie
     const data = JSON.parse(message.toString());
     if(topic === mqttHelper._STATE_TOPIC) {
       mqttHelper.mqttClient.unsubscribe(mqttHelper._STATE_TOPIC);
-      if('statetype' in data && data['statetype'].startsWith('fake_sleep')) {
-        rl.write('\nPossible Always On TV with Fake Sleep Detected: ' + data['statetype'] + '\n');
+      if('statetype' in data && data.statetype.startsWith('fake_sleep')) {
+        rl.write('\nPossible Always On TV with Fake Sleep Detected: ' + data.statetype + '\n');
       }else{
         rl.write('First test didn\'t detect always on mode.\n');
         rl.write('Continuing with Picture Settings Test\n');

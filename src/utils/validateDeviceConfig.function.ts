@@ -1,4 +1,4 @@
-import {DeviceConfig} from '../interfaces/device-config.interface.js';
+import { DeviceConfig } from '../interfaces/device-config.interface.js';
 
 export function validateDeviceConfig(deviceConfig: DeviceConfig){
   deviceConfig.showApps = deviceConfig.showApps ?? false;

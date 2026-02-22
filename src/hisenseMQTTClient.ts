@@ -1,6 +1,6 @@
 import * as mqtt from 'mqtt';
 import path from 'path';
-import {DeviceConfig} from './interfaces/device-config.interface.js';
+import { DeviceConfig } from './interfaces/device-config.interface.js';
 import fs from 'node:fs';
 
 /**
@@ -72,7 +72,7 @@ export class HisenseMQTTClient {
   }
 
   public changeSource(sourceId: string) {
-    this.callService('ui_service', 'changesource', JSON.stringify({'sourceid': sourceId}));
+    this.callService('ui_service', 'changesource', JSON.stringify({ 'sourceid': sourceId }));
   }
 
   /**
@@ -80,7 +80,7 @@ export class HisenseMQTTClient {
    * Different TVs need different parameters (appId is mandatory for some for others it is not)
    */
   public changeApp(name: string, appId: string, url: string, urlType: number|string, storeType: number) {
-    this.callService('ui_service', 'launchapp', JSON.stringify({'name': name, 'appId': appId, 'url': url, 'urlType': urlType, 'storeType': storeType}));
+    this.callService('ui_service', 'launchapp', JSON.stringify({ 'name': name, 'appId': appId, 'url': url, 'urlType': urlType, 'storeType': storeType }));
   }
 
   public sendKey(key) {
@@ -92,6 +92,6 @@ export class HisenseMQTTClient {
   }
 
   public sendAuthCode(code: string) {
-    this.callService('ui_service', 'authenticationcode', JSON.stringify({'authNum': code}));
+    this.callService('ui_service', 'authenticationcode', JSON.stringify({ 'authNum': code }));
   }
 }

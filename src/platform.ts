@@ -10,8 +10,8 @@ import {
 
 import { PLUGIN_NAME } from './settings.js';
 import { HiSenseTVAccessory } from './platformAccessory.js';
-import {DeviceConfig} from './interfaces/device-config.interface.js';
-import {validateHomeKitName} from './utils/validateHomeKitName.function.js';
+import { DeviceConfig } from './interfaces/device-config.interface.js';
+import { validateHomeKitName } from './utils/validateHomeKitName.function.js';
 
 /**
  * HomebridgePlatform
@@ -63,7 +63,7 @@ export class HiSenseTVPlatform implements IndependentPlatformPlugin {
       // generate a unique id for the accessory this should be generated from
       // something globally unique, but constant, for example, the device serial
       // number or MAC address
-      const uuid = this.api.hap.uuid.generate(`homebridge-hisense-tv:${device.id}`);
+      const uuid = this.api.hap.uuid.generate(`homebridge-hisense-tv:${device.id}:${device.macaddress}`);
 
       // the accessory does not yet exist, so we need to create it
       this.log.info('Adding new accessory:', device.name);
