@@ -15,8 +15,8 @@ This is a plugin for Homebridge that allows you to control your RemoteNow-enable
 
 ## Requirements
 
-- NodeJS 20 or later.
-- Homebridge 1.11 or later.
+- NodeJS 22 or later.
+- Homebridge 1.8.0 or later.
 - A Hisense TV that supports the RemoteNow app ([App Store](https://apps.apple.com/us/app/remotenow/id1301866548) or [Play Store](https://play.google.com/store/apps/details?id=com.universal.remote.ms&hl=en&gl=US)).
   - WakeOnLan (WOL) must be enabled on the TV to turn it on with this plugin.
   - The TV must be configured with a static IP Address or a static DHCP reservation
