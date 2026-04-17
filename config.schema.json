@@ -118,7 +118,7 @@
               "required": false,
               "default": 0,
               "minimum": 0,
-              "maximum": 120,
+              "maximum": 30,
               "condition": {
                 "functionBody": "return model.devices[arrayIndices].tvType === 'default' && model.devices[arrayIndices].configureOnStart === true;"
               },
