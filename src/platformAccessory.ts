@@ -95,7 +95,9 @@ export class HiSenseTVAccessory {
     this.accessory.getService(this.Service.AccessoryInformation)!
       .setCharacteristic(this.Characteristic.Manufacturer, 'HiSense')
       .setCharacteristic(this.Characteristic.Model, 'TV')
-      .setCharacteristic(this.Characteristic.SerialNumber, this.deviceConfig.id);
+      .setCharacteristic(this.Characteristic.SerialNumber, this.deviceConfig.id)
+      .setCharacteristic(this.Characteristic.ConfiguredName, validateHomeKitName(this.deviceConfig.name))
+      .setCharacteristic(this.Characteristic.Name, validateHomeKitName(this.deviceConfig.name));
 
     // Create the service.
     this.service = this.accessory.getService(this.Service.Television) || this.accessory.addService(this.Service.Television);
