@@ -263,8 +263,10 @@ export class HiSenseTVAccessory {
       }
 
       this.mqttHelper.subscribe(this.mqttHelper._SOURCE_LIST_TOPIC);
-      this.mqttHelper.subscribe(this.mqttHelper._APP_LIST_TOPIC);
       this.mqttHelper.subscribe(this.mqttHelper._STATE_TOPIC);
+      if (this.deviceConfig.showApps) {
+        this.mqttHelper.subscribe(this.mqttHelper._APP_LIST_TOPIC);
+      }
       if (this.deviceConfig.tvType === 'pictureSettings') {
         this.mqttHelper.subscribe(this.mqttHelper._PICTURE_SETTINGS_TOPIC);
       }
@@ -272,7 +274,9 @@ export class HiSenseTVAccessory {
       // always fetch data when connection is established
       this.mqttHelper.callService('ui_service', 'sourcelist');
       this.mqttHelper.callService('ui_service', 'gettvstate');
-      this.mqttHelper.callService('ui_service', 'applist');
+      if (this.deviceConfig.showApps) {
+        this.mqttHelper.callService('ui_service', 'applist');
+      }
     });
 
 
@@ -299,9 +303,11 @@ export class HiSenseTVAccessory {
             this.setAlwaysOnPictureSettingsPowerState(parsedMessage);
             break;
           case this.mqttHelper._APP_LIST_TOPIC:
-            this.createSources(this.inputSources, parsedMessage);
-            this.hasReceivedInitialApps = true;
-            this.maybePublish();
+            if (this.deviceConfig.showApps) {
+              this.createSources(this.inputSources, parsedMessage);
+              this.hasReceivedInitialApps = true;
+              this.maybePublish();
+            }
             break;
           default:
             this.log.debug('Received unknown message from TV. Topic: ' + topic + ' Message: ' + message.toString());
