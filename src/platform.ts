@@ -79,10 +79,14 @@ export class HiSenseTVPlatform implements IndependentPlatformPlugin {
       // create the accessory handler for the newly create accessory
       // this is imported from `platformAccessory.ts`
       this.log.info(`Waiting for TV data before publishing: ${device.name}`);
-      new HiSenseTVAccessory(this, accessory, () => {
-        this.log.info(`TV data ready, publishing to HomeKit: ${device.name}`);
-        this.api.publishExternalAccessories(PLUGIN_NAME, [accessory]);
-      });
+      try {
+        new HiSenseTVAccessory(this, accessory, () => {
+          this.log.info(`TV data ready, publishing to HomeKit: ${device.name}`);
+          this.api.publishExternalAccessories(PLUGIN_NAME, [accessory]);
+        });
+      } catch (e: unknown) {
+        this.log.error(`Failed to initialize TV "${device.name}": ${(e as Error).message}`);
+      }
     }
   }
 }

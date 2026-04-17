@@ -76,10 +76,7 @@ export class HiSenseTVAccessory {
     this.log = platform.log;
 
     if (accessory.context.macaddress == null || accessory.context.macaddress === '') {
-      this.log.warn('Config not up to date, please check the README on https://github.com/MrAsterisco/homebridge-hisense-tv' +
-        ' for the latest configuration options or use the homebridge UI to update the configuration.');
-      this.log.error('Homebridge MAC address is required for the TV accessory.');
-      process.exit(1);
+      throw new Error('Homebridge MAC address is required. Set it in the plugin config.');
     }
 
     this.Characteristic = platform.Characteristic;
