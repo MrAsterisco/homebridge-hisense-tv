@@ -246,6 +246,7 @@ These can be helpful to debug issues with the plugin.
 - Some TVs have inconsistent data regarding apps
   - Due to the inconsistent data, the current selected app on the tv may not be shown correctly in homekit (will be "Unknown")
 - After first pairing, input source names may show as default localized names (e.g. "Input Source") instead of the correct names (TV, HDMI1, etc.). This is a known Apple HomeKit bug where `ConfiguredName` is not picked up during the initial pairing flow.
+  - FIX: in the setup process, when you see the default names, click on the "X" and "Setup Later"
   - FIX: restart Homebridge once after pairing. On the next connection, HomeKit will read the correct names.
 
   
