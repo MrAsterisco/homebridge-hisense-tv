@@ -10,7 +10,7 @@
 
 ### Added
 - `broadcast` config option to override the default broadcast address for WoL
-- 
+
 ### Fixed
 - Input sources and apps are now cached to disk. The TV accessory appears immediately on Homebridge restart without needing the TV to be on
 - Stale input sources and apps are now properly removed when the TV reports changes
