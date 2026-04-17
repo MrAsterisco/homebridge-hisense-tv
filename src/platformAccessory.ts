@@ -162,8 +162,8 @@ export class HiSenseTVAccessory {
 
     if (!this.isPublished) {
       this.log.warn(`TV "${this.deviceConfig.name}" requires being turned on manually to appear in HomeKit.`);
-      this.log.warn('If input sources show default names (e.g. "Input Source"), tap "X" and "Setup Later" during pairing.');
-      this.log.warn('If input sources show default names after pairing then restart Homebridge.');
+      this.log.warn('If during pairing input sources show default names (e.g. "Input Source 1" instead of HDMI1), tap "X" and "Setup Later".');
+      this.log.warn('If input sources show default names after pairing then turn your tv on and then restart Homebridge.');
     }
   }
 
