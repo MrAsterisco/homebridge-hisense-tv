@@ -2,6 +2,7 @@
 
 **‼️ Breaking Changes**
 - **You must re-add your TV accessory in the Home app after updating.** UUID generation has changed to be safe across different plugins, which means HomeKit will treat it as a new accessory.
+- **Turn on your TV at least once after upgrading** so the plugin can fetch and cache input sources. After that, the TV will appear immediately on future restarts.
 - **Node.js 22 or later is now required.**
 
 ### Changed
