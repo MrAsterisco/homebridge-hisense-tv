@@ -1,7 +1,3 @@
-### ‼️ WARNING — Read this if upgrading from v3.x or earlier…
-If you are upgrading from v3.x or earlier, please read through the [4.0.0 release notes](#400) as there are breaking changes that require you to re-add your TV accessory.
-If you are upgrading from v2.0.2 or earlier, please also read through the [3.0.0 release notes](#300).
-
 # 4.0.0
 
 **‼️ Breaking Changes**
@@ -19,6 +15,12 @@ If you are upgrading from v2.0.2 or earlier, please also read through the [3.0.0
 
 ### Fixed
 - Fixed potential double-callback when both `timeout` and `error` events fire on the same TCP socket during TV status polling
+
+# 3.0.3
+
+### Changed
+- Added Node.js 22 and 24 support
+- Updated GitHub Actions to v6 and merged beta release workflow into release workflow
 
 # 3.0.2
 
