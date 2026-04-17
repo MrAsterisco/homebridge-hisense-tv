@@ -42,6 +42,8 @@ interface Nic {
  * Wake on Lan
  */
 export class WoL {
+  private readonly broadcastAddress: string|undefined;
+
   /**
    * @param log Homebridge logger
    * @param macAddress MAC address of the device to wake up
@@ -51,6 +53,15 @@ export class WoL {
    * @param broadcast (Optional) Broadcast address to use. If not provided, the broadcast address will be calculated based on the NIC in the same subnet as the TV IP address.
    */
   constructor(private log: Logging, private macAddress: string, private tvIp: string, private retries: number, private interval: number, private broadcast: string|undefined) {
+    if (this.broadcast) {
+      this.broadcastAddress = this.broadcast;
+    } else {
+      const nic = this.pickNicFor(this.tvIp);
+      if (nic) {
+        this.log.debug('Using NIC with local IP ' + nic.localIp + ' and netmask ' + nic.netmask);
+        this.broadcastAddress = directedBroadcast(nic.localIp, nic.netmask);
+      }
+    }
   }
 
 
@@ -58,7 +69,7 @@ export class WoL {
    * Picks a network interface card (NIC) that is in the same subnet as the TV IP address.
    * @param tvIp
    */
-  public pickNicFor(tvIp: string): Nic|undefined {
+  private pickNicFor(tvIp: string): Nic|undefined {
     const nics = [] as Nic[];
     for (const addrs of Object.values(os.networkInterfaces())) {
       for (const a of addrs || []) {
@@ -103,16 +114,8 @@ export class WoL {
    * Triggers sending the magic packet to wake up the TV.
    */
   public sendMagicPacket() {
-    // if we have a broadcast address, ignore nic picking
-    if(this.broadcast){
-      void this.sendPackets(this.broadcast);
-    }else{
-      const nic = this.pickNicFor(this.tvIp);
-      if(nic){
-        this.log.debug('Using NIC with local IP ' + nic.localIp + ' and netmask ' + nic.netmask);
-        // send additional packets to the directed broadcast address of the NIC
-        void this.sendPackets(directedBroadcast(nic.localIp, nic.netmask));
-      }
+    if (this.broadcastAddress) {
+      void this.sendPackets(this.broadcastAddress);
     }
 
     // always send additional packets to the tvIp directly
