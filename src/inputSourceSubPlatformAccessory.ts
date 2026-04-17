@@ -29,7 +29,7 @@ export class InputSourceSubPlatformAccessory {
 
   public addTVInputSource(inputSource: InputSource, identifier: number) {
     const name = inputSource.displayname || inputSource.sourcename;
-    const inputService = this.createInputService(validateHomeKitName(name), 'input' + inputSource.sourceid);
+    const inputService = this.createInputService(validateHomeKitName(name), 'input_' + inputSource.sourceid);
 
     const inputSourceType = this.getInputSourceTypeFromSourceName(inputSource.sourcename);
 
@@ -39,7 +39,7 @@ export class InputSourceSubPlatformAccessory {
   }
 
   public addAppInputSource(app: TVApp, identifier: number) {
-    const inputService = this.createInputService(validateHomeKitName(app.name), 'app' + app.name);
+    const inputService = this.createInputService(validateHomeKitName(app.name), 'app_' + app.name);
 
     this.setCharacteristics(inputService, identifier, app.name, app.name, this.characteristic.InputSourceType.APPLICATION);
     return inputService;
@@ -59,11 +59,11 @@ export class InputSourceSubPlatformAccessory {
 
   public setCharacteristics(inputService: Service, identifier: number, configuredName: string, sourceName: string, inputType: CharacteristicValue){
     inputService
-      .setCharacteristic(this.characteristic.Identifier, identifier)
-      .setCharacteristic(this.characteristic.IsConfigured, this.characteristic.IsConfigured.CONFIGURED)
-      .setCharacteristic(this.characteristic.ConfiguredName, validateHomeKitName(configuredName))
-      .setCharacteristic(this.characteristic.Name, validateHomeKitName(sourceName))
-      .setCharacteristic(this.characteristic.CurrentVisibilityState, this.characteristic.CurrentVisibilityState.SHOWN)
-      .setCharacteristic(this.characteristic.InputSourceType, inputType);
+      .updateCharacteristic(this.characteristic.Identifier, identifier)
+      .updateCharacteristic(this.characteristic.IsConfigured, this.characteristic.IsConfigured.CONFIGURED)
+      .updateCharacteristic(this.characteristic.ConfiguredName, validateHomeKitName(configuredName))
+      .updateCharacteristic(this.characteristic.Name, validateHomeKitName(sourceName))
+      .updateCharacteristic(this.characteristic.CurrentVisibilityState, this.characteristic.CurrentVisibilityState.SHOWN)
+      .updateCharacteristic(this.characteristic.InputSourceType, inputType);
   }
 }
