@@ -77,7 +77,7 @@ Open the plugin settings in the Homebridge UI and enter your details. Here is wh
 
 | Field | Description |
 |---|---|
-| `id` | A unique identifier (e.g. your TV's serial number). Shown as "Serial Number" in Apple Home. |
+| `id` | A unique identifier (e.g. your TV's serial number or any unique string you like). |
 | `name` | Display name suggested when adding the TV to Apple Home. |
 | `ipaddress` | Your TV's static IP address. |
 | `macaddress` | Your TV's MAC address (use the interface — WiFi or Ethernet — that the TV is connected with). |
