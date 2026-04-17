@@ -116,7 +116,7 @@
               "title": "Configure on Start Shutdown Delay",
               "type": "integer",
               "required": false,
-              "default": 0,
+              "default": 4,
               "minimum": 0,
               "maximum": 30,
               "condition": {
