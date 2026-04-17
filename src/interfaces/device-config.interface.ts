@@ -19,4 +19,5 @@ export interface DeviceConfig {
   sslprivatekey: string;
   showApps: boolean;
   apps?: Array<string>;
+  configureOnStart?: boolean;
 }

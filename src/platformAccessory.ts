@@ -65,6 +65,8 @@ export class HiSenseTVAccessory {
   private isPublished = false;
   private hasReceivedInitialSources = false;
   private hasReceivedInitialApps = false;
+  private wakedToFetch = false;
+  private wakeToFetchTimeout?: ReturnType<typeof setTimeout>;
 
   constructor(
     private readonly platform: HiSenseTVPlatform,
@@ -146,14 +148,75 @@ export class HiSenseTVAccessory {
     }
 
     this.startPolling();
+
+    if (this.deviceConfig.configureOnStart && this.deviceConfig.tvType === 'default') {
+      this.initiateWakeToFetch();
+    } else if (!this.deviceConfig.configureOnStart) {
+      this.log.warn(`TV "${this.deviceConfig.name}" requires being turned on manually to appear in HomeKit.`);
+    }
+  }
+
+  private initiateWakeToFetch() {
+    const socket = net.createConnection({ host: this.deviceConfig.ipaddress, port: 36669, timeout: 3000 });
+    let handled = false;
+
+    socket.on('connect', () => {
+      if (handled) {
+        return;
+      }
+      handled = true;
+      socket.destroy();
+      this.log.info(`TV "${this.deviceConfig.name}" is already on, skipping wake-to-fetch.`);
+    });
+
+    const wakeCallback = () => {
+      if (handled) {
+        return;
+      }
+      handled = true;
+      socket.destroy();
+      this.log.info(`Waking TV "${this.deviceConfig.name}" to fetch input sources...`);
+      this.wakedToFetch = true;
+      this.wol.sendMagicPacket();
+
+      this.wakeToFetchTimeout = setTimeout(() => {
+        if (this.wakedToFetch) {
+          this.log.warn(`Wake-to-fetch for "${this.deviceConfig.name}" timed out after 1 minutes.`);
+          this.cleanupWakeToFetch();
+        }
+      }, 60000);
+    };
+
+    socket.on('timeout', wakeCallback);
+    socket.on('error', wakeCallback);
+  }
+
+  private cleanupWakeToFetch() {
+    this.wakedToFetch = false;
+    if (this.wakeToFetchTimeout) {
+      clearTimeout(this.wakeToFetchTimeout);
+      this.wakeToFetchTimeout = undefined;
+    }
+    if (this.mqttHelper.mqttClient.connected) {
+      this.mqttHelper.sendKey('KEY_MUTE');
+      setTimeout(() => {
+        this.mqttHelper.sendKey('KEY_POWER');
+      }, 500);
+    }
   }
 
   private startPolling() {
     if (this.deviceConfig.tvType === 'default') {
-      setInterval(() => {
-        this.checkTVStatus();
-      }, this.deviceConfig.pollingInterval * 1000);
+      this.schedulePoll();
     }
+  }
+
+  private schedulePoll() {
+    setTimeout(() => {
+      this.checkTVStatus(() => {
+        this.schedulePoll();
+      });
+    }, this.deviceConfig.pollingInterval * 1000);
   }
 
   private maybePublish() {
@@ -169,6 +232,11 @@ export class HiSenseTVAccessory {
 
     this.isPublished = true;
     this.publishCallback?.();
+
+    if (this.wakedToFetch) {
+      this.log.info(`Finished fetching sources for "${this.deviceConfig.name}", shutting TV back down.`);
+      this.cleanupWakeToFetch();
+    }
   }
 
   public setupMqtt() {
@@ -176,6 +244,10 @@ export class HiSenseTVAccessory {
       this.log.debug('Connected to MQTT service on TV.');
 
       this.setTVPowerStateOn();
+
+      if (this.wakedToFetch) {
+        this.mqttHelper.sendKey('KEY_MUTE');
+      }
 
       this.mqttHelper.subscribe(this.mqttHelper._SOURCE_LIST_TOPIC);
       this.mqttHelper.subscribe(this.mqttHelper._APP_LIST_TOPIC);
@@ -456,11 +528,18 @@ export class HiSenseTVAccessory {
    * There is also a counter to prevent false positives/negatives when checking the TV state.
    * Check the documentation of the counter for more information.
    */
-  checkTVStatus() {
+  checkTVStatus(done: () => void) {
     this.log.debug('Checking state for TV at IP: ' + this.deviceConfig.ipaddress);
 
     const socket = net.createConnection({ host: this.deviceConfig.ipaddress, port: 36669, timeout: 500 });
+    socket.unref();
+    let handled = false;
+
     socket.on('connect', () => {
+      if (handled) {
+        return;
+      }
+      handled = true;
       socket.destroy();
       this.log.debug('Connected to TV!');
 
@@ -479,9 +558,17 @@ export class HiSenseTVAccessory {
       if (!this.mqttHelper.mqttClient.connected) {
         this.mqttHelper.mqttClient.reconnect();
       }
+
+      done();
     });
 
     const tvOffCallback = () => {
+      if (handled) {
+        return;
+      }
+      handled = true;
+      socket.destroy();
+
       if (this.onCounter === -1) {
         this.offCounter++;
       } else {
@@ -497,19 +584,17 @@ export class HiSenseTVAccessory {
       if (!this.mqttHelper.mqttClient.disconnected) {
         this.mqttHelper.mqttClient.end(true);
       }
+
+      done();
     };
 
     socket.on('timeout', () => {
-      socket.destroy();
       this.log.debug('Connection to TV timed out.');
-
       tvOffCallback();
     });
 
     socket.on('error', (err) => {
-      socket.destroy();
       this.log.debug('An error occurred while connecting to TV: ' + JSON.stringify(err));
-
       tvOffCallback();
     });
   }

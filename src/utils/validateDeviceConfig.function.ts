@@ -8,6 +8,7 @@ export function validateDeviceConfig(deviceConfig: DeviceConfig){
   deviceConfig.pollingInterval = deviceConfig.pollingInterval ?? 4;
   deviceConfig.wolInterval = deviceConfig.wolInterval ?? 400;
   deviceConfig.wolRetries = deviceConfig.wolRetries ?? 3;
+  deviceConfig.configureOnStart = deviceConfig.configureOnStart ?? false;
 
   return deviceConfig;
 }
