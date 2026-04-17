@@ -23,10 +23,17 @@ export function authorize(rl: readline.Interface, mqttHelper: HisenseMQTTClient)
   mqttHelper.mqttClient.on('message', (topic, message) => {
     const strMessage = message.toString();
     if(strMessage.length === 0) {
-      rl.write(`Received empty message on ${topic}`);
+      rl.write(`Received empty message on ${topic}\n`);
       return;
     }
-    const data = JSON.parse(strMessage);
+
+    let data: unknown;
+    try {
+      data = JSON.parse(strMessage);
+    } catch {
+      rl.write(`Received non-JSON message on ${topic}: ${strMessage}\n`);
+      return;
+    }
     if(topic === mqttHelper._SOURCE_LIST_TOPIC){
       aborter.abort();
       rl.write('\nMac address is already authorized!\n');
