@@ -200,11 +200,9 @@ export class HiSenseTVAccessory {
     if (this.mqttHelper.mqttClient.connected) {
       const delay = Math.max(500, (this.deviceConfig.configureOnStartDelay ?? 0) * 1000);
       this.log.info(`Waiting ${delay}ms before shutting down TV "${this.deviceConfig.name}"...`);
+      this.mqttHelper.sendKey('KEY_MUTE');
       setTimeout(() => {
-        this.mqttHelper.sendKey('KEY_MUTE');
-        setTimeout(() => {
           this.mqttHelper.sendKey('KEY_POWER');
-        }, 500);
       }, delay);
     }
   }

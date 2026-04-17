@@ -13,7 +13,7 @@ export class InputSourceSubPlatformAccessory {
   }
 
   public createInputService(displayName: string, subtype: string){
-    return this.accessory.getService(displayName)
+    return this.accessory.getServiceById(this.service.InputSource, subtype)
       || this.accessory.addService(this.service.InputSource, displayName, subtype);
   }
 
