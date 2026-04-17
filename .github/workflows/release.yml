@@ -2,6 +2,7 @@ name: release.yml
 on:
   release:
     types: [created]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -12,15 +13,15 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      packages: write
+      id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 18
+          node-version: 24
           registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
@@ -29,4 +30,9 @@ jobs:
       - name: Publish to registry
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-        run: npm publish --access public
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            npm publish --tag beta --access public --provenance
+          else
+            npm publish --access public --provenance
+          fi
