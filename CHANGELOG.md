@@ -1,3 +1,9 @@
+# 3.0.3
+
+### Changed
+- Added Node.js 22 and 24 support
+- Updated GitHub Actions to v6 and merged beta release workflow into release workflow
+
 # 3.0.2
 
 Tested homebridge v2 and found no major issues.
