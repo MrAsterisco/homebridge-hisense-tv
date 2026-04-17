@@ -2,6 +2,7 @@ name: release.yml
 on:
   release:
     types: [created]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -12,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      packages: write
+      id-token: write
       contents: read
     steps:
       - uses: actions/checkout@v6
@@ -27,6 +28,9 @@ jobs:
         run: npm ci
 
       - name: Publish to registry
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-        run: npm publish --access public
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            npm publish --tag beta --access public --provenance
+          else
+            npm publish --access public --provenance
+          fi
