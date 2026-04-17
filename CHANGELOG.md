@@ -1,17 +1,24 @@
-### ‼️ WARNING — Read this if upgrading from v3.0.X or earlier…
-If you are upgrading from v3.0.X or earlier, please read through the [4.0.0 release notes](#400) as there are breaking changes that require you to update your configuration.
-If you are upgrading from v2.0.2 or earlier, please read through the [3.0.0 release notes](#300) as there are breaking changes that require you to update your configuration.
+### ‼️ WARNING — Read this if upgrading from v3.x or earlier…
+If you are upgrading from v3.x or earlier, please read through the [4.0.0 release notes](#400) as there are breaking changes that require you to re-add your TV accessory.
+If you are upgrading from v2.0.2 or earlier, please also read through the [3.0.0 release notes](#300).
 
 # 4.0.0
+
 **‼️ Breaking Changes**
-- After updating you have to re-add your tv accessory to your home app.
+- **You must re-add your TV accessory in the Home app after updating.** UUID generation has changed to be safe across different plugins, which means HomeKit will treat it as a new accessory.
+- **Node.js 22 or later is now required.**
 
 ### Changed
-- UUID Generation is now save across different plugins
 - WoL packets are now sent to the TV’s IP and the correct subnet broadcast address instead of only `255.255.255.255`
+- TV polling now uses a serialized timeout chain instead of `setInterval`, preventing socket exhaustion on resource-constrained systems (e.g. Raspberry Pi)
 
 ### Added
-- Add additional broadcast parameter to config to override the default broadcast address calculation
+- `broadcast` config option to override the default broadcast address calculation for WoL
+- `configureOnStart` config option: when enabled, the plugin wakes the TV via WoL on Homebridge startup to fetch input sources, then powers it back off. This ensures inputs are available in HomeKit immediately without manually turning on the TV
+- Warning log when `configureOnStart` is disabled, informing the user that the TV must be turned on manually for it to appear in HomeKit
+
+### Fixed
+- Fixed potential double-callback when both `timeout` and `error` events fire on the same TCP socket during TV status polling
 
 # 3.0.2
 
