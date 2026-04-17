@@ -58,12 +58,17 @@ export class InputSourceSubPlatformAccessory {
   }
 
   public setCharacteristics(inputService: Service, identifier: number, configuredName: string, sourceName: string, inputType: CharacteristicValue){
+    const validatedName = validateHomeKitName(configuredName);
+
     inputService
-      .updateCharacteristic(this.characteristic.Identifier, identifier)
-      .updateCharacteristic(this.characteristic.IsConfigured, this.characteristic.IsConfigured.CONFIGURED)
-      .updateCharacteristic(this.characteristic.ConfiguredName, validateHomeKitName(configuredName))
-      .updateCharacteristic(this.characteristic.Name, validateHomeKitName(sourceName))
-      .updateCharacteristic(this.characteristic.CurrentVisibilityState, this.characteristic.CurrentVisibilityState.SHOWN)
-      .updateCharacteristic(this.characteristic.InputSourceType, inputType);
+      .setCharacteristic(this.characteristic.Identifier, identifier)
+      .setCharacteristic(this.characteristic.IsConfigured, this.characteristic.IsConfigured.CONFIGURED)
+      .setCharacteristic(this.characteristic.ConfiguredName, validatedName)
+      .setCharacteristic(this.characteristic.Name, validateHomeKitName(sourceName))
+      .setCharacteristic(this.characteristic.CurrentVisibilityState, this.characteristic.CurrentVisibilityState.SHOWN)
+      .setCharacteristic(this.characteristic.InputSourceType, inputType);
+
+    inputService.getCharacteristic(this.characteristic.ConfiguredName)
+      .onGet(() => validatedName);
   }
 }
