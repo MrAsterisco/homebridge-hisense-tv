@@ -6,15 +6,14 @@
 
 ### Changed
 - WoL packets are now sent to the TV’s IP and the correct subnet broadcast address instead of only `255.255.255.255`
-- TV polling now uses a serialized timeout chain instead of `setInterval`, preventing socket exhaustion on resource-constrained systems (e.g. Raspberry Pi)
+- TV polling now uses a serialized timeout chain instead of `setInterval`, preventing socket exhaustion on resource-constrained systems
 
 ### Added
-- `broadcast` config option to override the default broadcast address calculation for WoL
-- `configureOnStart` config option: when enabled, the plugin wakes the TV via WoL on Homebridge startup to fetch input sources, then powers it back off. This ensures inputs are available in HomeKit immediately without manually turning on the TV
-- Warning log when `configureOnStart` is disabled, informing the user that the TV must be turned on manually for it to appear in HomeKit
-
+- `broadcast` config option to override the default broadcast address for WoL
+- 
 ### Fixed
-- Fixed potential double-callback when both `timeout` and `error` events fire on the same TCP socket during TV status polling
+- Input sources and apps are now cached to disk. The TV accessory appears immediately on Homebridge restart without needing the TV to be on
+- Stale input sources and apps are now properly removed when the TV reports changes
 
 # 3.0.3
 

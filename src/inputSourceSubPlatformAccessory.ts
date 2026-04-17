@@ -57,6 +57,29 @@ export class InputSourceSubPlatformAccessory {
     return inputType;
   }
 
+  public removeStaleSources(currentSources: InputSource[], tvService: Service): void {
+    const validSubtypes = new Set(currentSources.map(s => 'input_' + s.sourceid));
+    this.removeStaleByPrefix('input_', validSubtypes, tvService);
+  }
+
+  public removeStaleApps(currentApps: TVApp[], tvService: Service): void {
+    const validSubtypes = new Set(currentApps.map(a => 'app_' + a.name));
+    this.removeStaleByPrefix('app_', validSubtypes, tvService);
+  }
+
+  private removeStaleByPrefix(prefix: string, validSubtypes: Set<string>, tvService: Service): void {
+    const staleServices = this.accessory.services.filter(
+      s => s.UUID === this.service.InputSource.UUID
+        && s.subtype !== undefined
+        && s.subtype.startsWith(prefix)
+        && !validSubtypes.has(s.subtype),
+    );
+    for (const stale of staleServices) {
+      tvService.removeLinkedService(stale);
+      this.accessory.removeService(stale);
+    }
+  }
+
   public setCharacteristics(inputService: Service, identifier: number, configuredName: string, sourceName: string, inputType: CharacteristicValue){
     inputService
       .setCharacteristic(this.characteristic.Identifier, identifier)

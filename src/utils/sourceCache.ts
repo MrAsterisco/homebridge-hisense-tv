@@ -9,7 +9,7 @@ interface SourceCache {
   version: number;
   deviceId: string;
   inputSources: InputSource[];
-  availableApps: Omit<TVApp, 'service'>[];
+  availableApps: TVApp[];
 }
 
 export function writeSourceCache(
@@ -23,8 +23,7 @@ export function writeSourceCache(
     version: CACHE_VERSION,
     deviceId,
     inputSources,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    availableApps: availableApps.map(({ service, ...rest }) => rest),
+    availableApps,
   };
   fs.writeFileSync(cachePath, JSON.stringify(data, null, 2), 'utf-8');
 }
@@ -32,7 +31,7 @@ export function writeSourceCache(
 export function readSourceCache(
   storagePath: string,
   deviceId: string,
-): { inputSources: InputSource[]; availableApps: Omit<TVApp, 'service'>[] } | null {
+): { inputSources: InputSource[]; availableApps: TVApp[] } | null {
   const cachePath = path.join(storagePath, `hisense-tv-cache-${deviceId}.json`);
   try {
     const raw = fs.readFileSync(cachePath, 'utf-8');

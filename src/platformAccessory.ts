@@ -143,7 +143,7 @@ export class HiSenseTVAccessory {
     this.storagePath = this.platform.api.user.storagePath();
     const cached = readSourceCache(this.storagePath, accessory.UUID);
     if (cached && cached.inputSources.length > 0) {
-      this.createSources(cached.inputSources, cached.availableApps as TVApp[]);
+      this.createSources(cached.inputSources, cached.availableApps);
       this.hasReceivedInitialSources = true;
       if (!this.deviceConfig.showApps || this.availableApps.length > 0) {
         this.hasReceivedInitialApps = true;
@@ -165,7 +165,8 @@ export class HiSenseTVAccessory {
 
     if (!this.isPublished) {
       this.log.warn(`TV "${this.deviceConfig.name}" requires being turned on manually to appear in HomeKit.`);
-      this.log.warn('If input sources show default names (e.g. "Input Source"), tap "X" and "Setup Later" during pairing, then restart Homebridge.');
+      this.log.warn('If input sources show default names (e.g. "Input Source"), tap "X" and "Setup Later" during pairing.');
+      this.log.warn('If input sources show default names after pairing then restart Homebridge.');
     }
   }
 
@@ -440,6 +441,8 @@ export class HiSenseTVAccessory {
       `existingSources=${this.inputSources.length}, existingApps=${this.availableApps.length}`);
 
     if (sourcesChanged) {
+      this.inputSourceSubPlatformAccessory.removeStaleSources(sources, this.service);
+
       this.inputSources = sources;
 
       this.inputSources.forEach((inputSource, index) => {
@@ -457,6 +460,7 @@ export class HiSenseTVAccessory {
     if (sourcesChanged || appsChanged) {
       // we always need to run both these snippets if source changed
       // as the app identifier is based on the input source length
+      this.inputSourceSubPlatformAccessory.removeStaleApps(apps, this.service);
       this.availableApps = apps;
       const startIndex = this.inputSources.length;
       this.availableApps.forEach((app, index) => {
