@@ -12,33 +12,34 @@ export class InputSourceSubPlatformAccessory {
   constructor(public service: typeof Service, public accessory: PlatformAccessory, public characteristic: typeof Characteristic ) {
   }
 
-  public createInputService(identifier: string){
-    return this.accessory.getService(validateHomeKitName(identifier))
-      || this.accessory.addService(this.service.InputSource, validateHomeKitName(identifier), validateHomeKitName(identifier));
+  public createInputService(displayName: string, subtype: string){
+    return this.accessory.getService(displayName)
+      || this.accessory.addService(this.service.InputSource, displayName, subtype);
   }
 
   /**
    * Is for creating a single input source that is unknown.
    */
   public createUnknownSource(){
-    const inputService = this.createInputService('inputhome');
+    const inputService = this.createInputService('Unknown', 'inputhome');
 
     this.setCharacteristics(inputService, 0, 'Unknown', 'Unknown', this.characteristic.InputSourceType.OTHER);
     return inputService;
   }
 
   public addTVInputSource(inputSource: InputSource, identifier: number) {
-    const inputService = this.createInputService('input' + inputSource.sourceid);
+    const name = inputSource.displayname || inputSource.sourcename;
+    const inputService = this.createInputService(validateHomeKitName(name), 'input' + inputSource.sourceid);
 
     const inputSourceType = this.getInputSourceTypeFromSourceName(inputSource.sourcename);
 
-    this.setCharacteristics(inputService, identifier, inputSource.displayname, inputSource.sourcename, inputSourceType);
+    this.setCharacteristics(inputService, identifier, name, inputSource.sourcename, inputSourceType);
 
     return inputService;
   }
 
   public addAppInputSource(app: TVApp, identifier: number) {
-    const inputService = this.createInputService('app' + app.name);
+    const inputService = this.createInputService(validateHomeKitName(app.name), 'app' + app.name);
 
     this.setCharacteristics(inputService, identifier, app.name, app.name, this.characteristic.InputSourceType.APPLICATION);
     return inputService;

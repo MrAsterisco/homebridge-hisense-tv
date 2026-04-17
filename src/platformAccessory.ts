@@ -198,10 +198,14 @@ export class HiSenseTVAccessory {
       this.wakeToFetchTimeout = undefined;
     }
     if (this.mqttHelper.mqttClient.connected) {
-      this.mqttHelper.sendKey('KEY_MUTE');
+      const delay = Math.max(500, (this.deviceConfig.configureOnStartDelay ?? 0) * 1000);
+      this.log.info(`Waiting ${delay}ms before shutting down TV "${this.deviceConfig.name}"...`);
       setTimeout(() => {
-        this.mqttHelper.sendKey('KEY_POWER');
-      }, 500);
+        this.mqttHelper.sendKey('KEY_MUTE');
+        setTimeout(() => {
+          this.mqttHelper.sendKey('KEY_POWER');
+        }, 500);
+      }, delay);
     }
   }
 
@@ -220,6 +224,11 @@ export class HiSenseTVAccessory {
   }
 
   private maybePublish() {
+    this.log.debug(`maybePublish — isPublished=${this.isPublished}, ` +
+      `hasReceivedInitialSources=${this.hasReceivedInitialSources}, ` +
+      `hasReceivedInitialApps=${this.hasReceivedInitialApps}, ` +
+      `sources=${this.inputSources.length}, apps=${this.availableApps.length}`);
+
     if (this.isPublished) {
       return;
     }
@@ -229,6 +238,9 @@ export class HiSenseTVAccessory {
     if (this.deviceConfig.showApps && !this.hasReceivedInitialApps) {
       return;
     }
+
+    this.log.debug(`Publishing with ${this.inputSources.length} sources: ` +
+      this.inputSources.map((s, i) => `[${i + 1}] ${s.sourcename}/${s.displayname}`).join(', '));
 
     this.isPublished = true;
     this.publishCallback?.();
@@ -466,11 +478,16 @@ export class HiSenseTVAccessory {
     const sourcesChanged = !sourcesAreEqual(sources, this.inputSources);
     const appsChanged = !equal(this.availableApps, apps);
 
+    this.log.debug(`createSources called — sourcesChanged=${sourcesChanged}, appsChanged=${appsChanged}, ` +
+      `sources=${sources.length}, apps=${apps.length}, ` +
+      `existingSources=${this.inputSources.length}, existingApps=${this.availableApps.length}`);
+
     if (sourcesChanged) {
       this.inputSources = sources;
 
       this.inputSources.forEach((inputSource, index) => {
-        this.log.debug('Adding input: ' + JSON.stringify(inputSource));
+        this.log.debug(`Adding input [${index + 1}]: sourceid=${inputSource.sourceid}, ` +
+          `sourcename=${inputSource.sourcename}, displayname=${inputSource.displayname}`);
 
         const inputService = this.inputSourceSubPlatformAccessory.addTVInputSource(inputSource, index + 1);
 

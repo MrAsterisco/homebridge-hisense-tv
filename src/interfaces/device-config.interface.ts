@@ -20,4 +20,5 @@ export interface DeviceConfig {
   showApps: boolean;
   apps?: Array<string>;
   configureOnStart?: boolean;
+  configureOnStartDelay?: number;
 }
