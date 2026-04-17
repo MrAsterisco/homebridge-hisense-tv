@@ -100,19 +100,19 @@ export class WoL {
   }
 
   /**
-     * Triggers sending the magic packet to wake up the TV.
-     */
+   * Triggers sending the magic packet to wake up the TV.
+   */
   public sendMagicPacket() {
-    // if we have a broadcast address, we don't need to pick a NIC
-    const nic = this.broadcast ? undefined : this.pickNicFor(this.tvIp);
-
-    if(nic){
-      this.log.debug('Using NIC with local IP ' + nic.localIp + ' and netmask ' + nic.netmask);
-      // send additional packets to the directed broadcast address of the NIC
-      void this.sendPackets(directedBroadcast(nic.localIp, nic.netmask));
-    }
+    // if we have a broadcast address, ignore nic picking
     if(this.broadcast){
       void this.sendPackets(this.broadcast);
+    }else{
+      const nic = this.pickNicFor(this.tvIp);
+      if(nic){
+        this.log.debug('Using NIC with local IP ' + nic.localIp + ' and netmask ' + nic.netmask);
+        // send additional packets to the directed broadcast address of the NIC
+        void this.sendPackets(directedBroadcast(nic.localIp, nic.netmask));
+      }
     }
 
     // always send additional packets to the tvIp directly
