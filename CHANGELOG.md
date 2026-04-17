@@ -1,3 +1,14 @@
+# 4.0.1
+
+**‼️ Breaking Changes if upgrading from v3**
+- **You must re-add your TV accessory in the Home app after updating.** UUID generation has changed to be safe across different plugins, which means HomeKit will treat it as a new accessory.
+- **Turn on your TV at least once after upgrading** so the plugin can fetch and cache input sources. After that, the TV will appear immediately on future restarts.
+- **Node.js 22 or later is now required.**
+
+### Fixed
+- Fixed `authorize` script crashing on non-JSON MQTT messages
+- Fixed MQTT topic construction using `path.join` which produces backslashes on Windows
+
 # 4.0.0
 
 **‼️ Breaking Changes**
