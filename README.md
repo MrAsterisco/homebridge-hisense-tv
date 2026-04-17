@@ -240,10 +240,13 @@ These can be helpful to debug issues with the plugin.
 ### Known Issues
 - The input list might not be fetched correctly if the TV is turned off while adding the accessory or after restarting Homebridge. 
   - FIX: force close your Home app and open it again a few times.
+  - FIX: set `configureOnStart` in the device config. The plugin will briefly wake the TV on startup to fetch the input list, then turn it off again after a configured delay.
 - Your TV gets shown as "ON" even when it's off.
   - FIX: read Section [Always On TVs (TVs that aren't fully turning off)](#always-on-tvs-tvs-that-arent-fully-turning-off)
 - Some TVs have inconsistent data regarding apps
   - Due to the inconsistent data, the current selected app on the tv may not be shown correctly in homekit (will be "Unknown")
+- After first pairing, input source names may show as default localized names (e.g. "Input Source") instead of the correct names (TV, HDMI1, etc.). This is a known Apple HomeKit bug where `ConfiguredName` is not picked up during the initial pairing flow.
+  - FIX: restart Homebridge once after pairing. On the next connection, HomeKit will read the correct names.
 
   
 # Contributions
