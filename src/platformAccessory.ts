@@ -142,11 +142,13 @@ export class HiSenseTVAccessory {
     if (cached && cached.inputSources.length > 0) {
       this.createSources(cached.inputSources, cached.availableApps);
       this.hasReceivedInitialSources = true;
-      if (!this.deviceConfig.showApps || this.availableApps.length > 0) {
+      if (this.availableApps.length > 0) {
         this.hasReceivedInitialApps = true;
       }
       this.maybePublish();
-      this.log.info(`Published "${this.deviceConfig.name}" from cache with ${this.inputSources.length} sources and ${this.availableApps.length} apps.`);
+      if(this.isPublished){
+        this.log.info(`Published "${this.deviceConfig.name}" from cache with ${this.inputSources.length} sources and ${this.availableApps.length} apps.`);
+      }
     }
 
     this.mqttHelper = new HisenseMQTTClient(this.deviceConfig, accessory.context.macaddress, this.log);
