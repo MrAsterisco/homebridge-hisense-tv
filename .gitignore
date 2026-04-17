@@ -1,5 +1,6 @@
 # Ignore compiled code
 dist
+homebridge-ui/server.js
 .homebridge/accessories
 .homebridge/persist
 .homebridge/.*.tokens.json
