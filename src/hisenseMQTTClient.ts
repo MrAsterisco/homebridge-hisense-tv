@@ -1,5 +1,4 @@
 import * as mqtt from 'mqtt';
-import path from 'path';
 import { DeviceConfig } from './interfaces/device-config.interface.js';
 import fs from 'node:fs';
 
@@ -24,14 +23,14 @@ export class HisenseMQTTClient {
   constructor(public deviceConfig: Pick<DeviceConfig, 'sslmode' | 'ipaddress' | 'sslcertificate' | 'sslprivatekey'>,
     macaddress: string, private log: {error: (message: string) => void}, connectionTimeout?: number) {
 
-    this._BASE_TOPIC = path.join('/', 'remoteapp', 'mobile');
-    this._STATE_TOPIC = path.join(this._BASE_TOPIC, 'broadcast', 'ui_service', 'state');
+    this._BASE_TOPIC = '/remoteapp/mobile';
     this._DEVICE_TOPIC = `${macaddress.toUpperCase()}$normal`;
-    this._COMMUNICATION_TOPIC = path.join(this._BASE_TOPIC, this._DEVICE_TOPIC, 'ui_service', 'data');
-    this._APP_LIST_TOPIC = path.join(this._COMMUNICATION_TOPIC, 'applist');
-    this._SOURCE_LIST_TOPIC = path.join(this._COMMUNICATION_TOPIC, 'sourcelist');
-    this._PICTURE_SETTINGS_TOPIC = path.join(this._BASE_TOPIC, 'broadcast', 'platform_service', 'data', 'picturesetting');
-    this._DEVICE_PICTURE_SETTINGS_TOPIC = path.join(this._BASE_TOPIC, this._DEVICE_TOPIC, 'platform_service', 'data', 'picturesetting');
+    this._STATE_TOPIC = `${this._BASE_TOPIC}/broadcast/ui_service/state`;
+    this._COMMUNICATION_TOPIC = `${this._BASE_TOPIC}/${this._DEVICE_TOPIC}/ui_service/data`;
+    this._APP_LIST_TOPIC = `${this._COMMUNICATION_TOPIC}/applist`;
+    this._SOURCE_LIST_TOPIC = `${this._COMMUNICATION_TOPIC}/sourcelist`;
+    this._PICTURE_SETTINGS_TOPIC = `${this._BASE_TOPIC}/broadcast/platform_service/data/picturesetting`;
+    this._DEVICE_PICTURE_SETTINGS_TOPIC = `${this._BASE_TOPIC}/${this._DEVICE_TOPIC}/platform_service/data/picturesetting`;
 
     let key: Buffer|null = null;
     let cert: Buffer|null = null;
@@ -61,7 +60,7 @@ export class HisenseMQTTClient {
   }
 
   public callService(service: string, action: string, payload?: string) {
-    const topic = path.join('/', 'remoteapp', 'tv', service, this._DEVICE_TOPIC, 'actions', action);
+    const topic = `/remoteapp/tv/${service}/${this._DEVICE_TOPIC}/actions/${action}`;
     if(this.mqttClient.disconnected || this.mqttClient.disconnecting) {
       this.log.error('Sending message to TV failed - MQTT client is disconnected');
       this.log.error(Error().stack ?? '');

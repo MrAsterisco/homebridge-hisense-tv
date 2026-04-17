@@ -1,6 +1,5 @@
 import { SSLMode } from '../types/ssl-mode.type.js';
 import { HisenseMQTTClient } from '../hisenseMQTTClient.js';
-import path from 'path';
 import readline from 'node:readline/promises';
 import { ReadlineLogger } from './readlineLogger.interface.js';
 import { terminateWithError } from './terminationHelper.js';
@@ -32,13 +31,13 @@ export function registerExitHandler(rl: readline.Interface, mqttHelper: HisenseM
  */
 export function enableAuthorizationWatcher(mqttHelper: HisenseMQTTClient, rl: readline.Interface){
   mqttHelper.mqttClient.on('connect', () => {
-    const authTopic = path.join(mqttHelper._COMMUNICATION_TOPIC, 'authentication');
+    const authTopic = `${mqttHelper._COMMUNICATION_TOPIC}/authentication`;
     mqttHelper.mqttClient.on('message', (topic) => {
       if(topic === authTopic) {
         rl.write('\n\nIt seems this mac address is not authorized yet. Please run the authorize command first.\n\n');
         process.exit(1);
       }
     });
-    mqttHelper.mqttClient.subscribe(path.join(mqttHelper._COMMUNICATION_TOPIC, 'authentication'));
+    mqttHelper.mqttClient.subscribe(authTopic);
   });
 }

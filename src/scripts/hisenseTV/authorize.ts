@@ -1,7 +1,6 @@
 import { HisenseMQTTClient } from '../../hisenseMQTTClient.js';
 import { SubscriptExitCode } from './subscriptShutdownHandler.type.js';
 import readline from 'node:readline/promises';
-import path from 'path';
 import { clearTimeout } from 'node:timers';
 
 export function authorize(rl: readline.Interface, mqttHelper: HisenseMQTTClient): SubscriptExitCode {
@@ -57,7 +56,7 @@ export function authorize(rl: readline.Interface, mqttHelper: HisenseMQTTClient)
 
   (async () => {
     const code = await rl.question('Please enter the 4-digit code shown on tv: ', { signal: aborter.signal });
-    mqttHelper.subscribe(path.join(mqttHelper._COMMUNICATION_TOPIC, '#'));
+    mqttHelper.subscribe(`${mqttHelper._COMMUNICATION_TOPIC}/#`);
     timeout = setTimeout(() => {
       rl.write('Timeout\n');
       process.exit(1);
