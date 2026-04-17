@@ -611,7 +611,7 @@ export class HiSenseTVAccessory {
       this.log.debug('Current input is unsupported.');
     }
 
-    if (!this.deviceState.hasFetchedInputs) {
+    if (this.deviceState.hasFetchedInputs) {
       this.service.updateCharacteristic(this.Characteristic.ActiveIdentifier, this.getCurrentInputIndex());
     }
   }
