@@ -1,7 +1,7 @@
 {
   "displayName": "HiSense TV",
   "name": "homebridge-hisense-tv-remotenow",
-  "version": "3.0.3",
+  "version": "4.0.0",
   "description": "Control RemoteNow-enabled HiSense TVs.",
   "main": "dist/index.js",
   "license": "MIT",
@@ -37,25 +37,27 @@
   },
   "engines": {
     "homebridge": "^1.8.0 || ^2.0.0-beta.0",
-    "node": "^18.20.4 || ^20.15.1 || ^22.10.0 || ^24.0.0"
+    "node": "^20.18.0 || ^22.10.0 || ^24.0.0"
   },
   "dependencies": {
     "fast-deep-equal": "^3.1.3",
-    "mqtt": "^5.8.1",
+    "mqtt": "^5.15.1",
     "wol": "^1.0.7"
   },
   "devDependencies": {
-    "@types/node": "^20.14.10",
+    "@types/node": "^24.10.13",
     "@types/wol": "^1.0.0",
-    "@typescript-eslint/eslint-plugin": "^7.17.0",
-    "@typescript-eslint/parser": "^7.17.0",
-    "eslint": "^8.57.0",
-    "homebridge": "^1.8.4",
+    "@typescript-eslint/eslint-plugin": "^8.56.0",
+    "@typescript-eslint/parser": "^8.56.0",
+    "eslint": "^10.0.1",
+    "@eslint/js": "^10.0.1",
+    "homebridge": "^2.0.0-beta.55",
     "husky": "^9.0.11",
-    "lint-staged": "^15.2.5",
-    "nodemon": "^3.1.4",
-    "rimraf": "^6.0.1",
+    "lint-staged": "^16.2.7",
+    "nodemon": "^3.1.11",
+    "rimraf": "^6.1.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.0"
   }
 }

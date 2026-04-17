@@ -1,4 +1,4 @@
-import {InputSource} from '../interfaces/input-source.interface.js';
+import { InputSource } from '../interfaces/input-source.interface.js';
 import equal from 'fast-deep-equal';
 
 /**

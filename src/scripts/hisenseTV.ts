@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
 import readline from 'node:readline/promises';
-import {parseArgs} from 'node:util';
-import {SSLMode} from '../types/ssl-mode.type.js';
-import {listenToMqtt} from './hisenseTV/listenToMqtt.js';
-import {authorize} from './hisenseTV/authorize.js';
-import {alwaysOnTest} from './hisenseTV/alwaysOnTest.js';
-import {createMQTTClient, enableAuthorizationWatcher, registerExitHandler, registerMQTTErrorHandler} from './mqttClientHelper.js';
-import {terminateWithError, terminateWithHelpMessage} from './terminationHelper.js';
-import {sendCommand} from './hisenseTV/sendCommand.js';
+import { parseArgs, ParseArgsConfig } from 'node:util';
+import { SSLMode } from '../types/ssl-mode.type.js';
+import { listenToMqtt } from './hisenseTV/listenToMqtt.js';
+import { authorize } from './hisenseTV/authorize.js';
+import { alwaysOnTest } from './hisenseTV/alwaysOnTest.js';
+import { createMQTTClient, enableAuthorizationWatcher, registerExitHandler, registerMQTTErrorHandler } from './mqttClientHelper.js';
+import { terminateWithError, terminateWithHelpMessage } from './terminationHelper.js';
+import { sendCommand } from './hisenseTV/sendCommand.js';
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -21,7 +21,7 @@ const subscript = args.slice(0, 1);
 const subscriptArgs = args.slice(1);
 
 const subscripts = ['authorize', 'always-on-test', 'send-mqtt-command', 'listen-to-mqtt'];
-const positionals = parseArgs({args: subscript, allowPositionals: true, strict: false}).positionals;
+const positionals = parseArgs({ args: subscript, allowPositionals: true, strict: false }).positionals;
 
 if(positionals.length === 0 || !subscripts.includes(positionals[0])) {
   rl.write(`Usage: hisense-tv {${subscripts.join(',')}}\n`);
@@ -39,45 +39,29 @@ if(positionals.length === 0 || !subscripts.includes(positionals[0])) {
 
 const script = positionals[0];
 
+const baseOptions = {
+  'no-ssl': { type: 'boolean', default: false },
+  hostname: { type: 'string' },
+  certfile: { type: 'string' },
+  keyfile: { type: 'string' },
+  mac: { type: 'string' },
+  help: { type: 'boolean', default: false },
+} satisfies ParseArgsConfig['options'];
+
 const options = {
-  'no-ssl': {
-    type: 'boolean',
-    default: false,
-  },
-  hostname: {
-    type: 'string',
-  },
-  certfile: {
-    type: 'string',
-  },
-  keyfile: {
-    type: 'string',
-  },
-  mac: {
-    type: 'string',
-  },
-  help: {
-    type: 'boolean',
-    default: false,
-  },
-} as const;
+  ...baseOptions,
+  ...(script === 'send-mqtt-command' ? { get: { type: 'string' } } : {}),
+  ...(script === 'listen-to-mqtt' ? { path: { type: 'string', default: '#' } } : {}),
+} satisfies ParseArgsConfig['options'];
 
-switch (script) {
-  case 'send-mqtt-command':
-    options['get'] = {type: 'string'};
-    break;
-  case 'listen-to-mqtt':
-    options['path'] = {type: 'string', default: '#'};
-    break;
-}
 
-const values = parseArgs({args: subscriptArgs, options}).values;
+const values = parseArgs({ args: subscriptArgs, options }).values;
 
 let sslMode: SSLMode = values['no-ssl'] ? 'disabled' : 'custom';
-const sslCertificate = (values['certfile'] ?? '') as string;
-const sslPrivateKey = (values['keyfile'] ?? '') as string;
-const macaddress = values['mac'];
-const hostname = values['hostname'];
+const sslCertificate = (values.certfile ?? '') as string;
+const sslPrivateKey = (values.keyfile ?? '') as string;
+const macaddress = values.mac;
+const hostname = values.hostname;
 
 if(sslCertificate !== '' && sslPrivateKey === '') {
   rl.write('Please provide a private key file with --keyfile\n');
@@ -91,7 +75,7 @@ if(sslPrivateKey === '' && sslCertificate === '') {
   sslMode = 'default';
 }
 
-if(values['help'] || macaddress === undefined || hostname === undefined) {
+if(values.help || macaddress === undefined || hostname === undefined) {
   terminateWithHelpMessage(rl, script);
 }
 
@@ -137,12 +121,12 @@ try{
       registerExitHandler(rl, mqttHelper);
       registerMQTTErrorHandler(mqttHelper, rl);
 
-      const get = values['get'];
+      const get = values.get;
 
       if(get === undefined) {
         terminateWithHelpMessage(rl, script);
       }
-      sendCommand(rl, mqttHelper, get);
+      sendCommand(rl, mqttHelper, get as string);
       break;
     }
     case 'listen-to-mqtt': {
@@ -151,7 +135,7 @@ try{
       registerExitHandler(rl, mqttHelper);
       registerMQTTErrorHandler(mqttHelper, rl);
 
-      const path = values['path'];
+      const path = values.path as string | undefined;
       listenToMqtt(rl, mqttHelper, (path ?? '#'));
       break;
     }

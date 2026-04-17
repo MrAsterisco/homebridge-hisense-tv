@@ -1,8 +1,8 @@
-import {HisenseMQTTClient} from '../../hisenseMQTTClient.js';
-import {SubscriptExitCode} from './subscriptShutdownHandler.type.js';
+import { HisenseMQTTClient } from '../../hisenseMQTTClient.js';
+import { SubscriptExitCode } from './subscriptShutdownHandler.type.js';
 import readline from 'node:readline/promises';
 import path from 'path';
-import {clearTimeout} from 'node:timers';
+import { clearTimeout } from 'node:timers';
 
 export function authorize(rl: readline.Interface, mqttHelper: HisenseMQTTClient): SubscriptExitCode {
   const aborter = new AbortController();

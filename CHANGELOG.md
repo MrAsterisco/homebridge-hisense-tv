@@ -1,3 +1,21 @@
+# 4.0.0
+
+**‼️ Breaking Changes**
+- **You must re-add your TV accessory in the Home app after updating.** UUID generation has changed to be safe across different plugins, which means HomeKit will treat it as a new accessory.
+- **Turn on your TV at least once after upgrading** so the plugin can fetch and cache input sources. After that, the TV will appear immediately on future restarts.
+- **Node.js 22 or later is now required.**
+
+### Fixed
+- **Input sources and apps are now cached to disk.** The TV accessory appears immediately on Homebridge restart without needing the TV to be on
+- Stale input sources and apps are now properly removed when the TV reports changes
+
+### Changed
+- WoL packets are now sent to the TV’s IP and the correct subnet broadcast address instead of only `255.255.255.255`
+- TV polling now uses a serialized timeout chain instead of `setInterval`, preventing socket exhaustion on resource-constrained systems
+
+### Added
+- `broadcast` config option to override the default broadcast address for WoL (only needed in very specific network setups)
+
 # 3.0.3
 
 ### Changed

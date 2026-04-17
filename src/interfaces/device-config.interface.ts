@@ -1,4 +1,4 @@
-import {SSLMode} from '../types/ssl-mode.type';
+import { SSLMode } from '../types/ssl-mode.type.js';
 
 export interface DeviceConfig {
   id: string;
@@ -7,6 +7,7 @@ export interface DeviceConfig {
     menuId: number;
     menuFlag: number;
   };
+  broadcast?: string;
   name: string;
   pollingInterval: number;
   wolInterval: number;

@@ -1,20 +1,21 @@
-import {Characteristic, CharacteristicValue, Logging, PlatformAccessory, Service} from 'homebridge';
+import { Characteristic, CharacteristicValue, Logging, PlatformAccessory, Service } from 'homebridge';
 
-import {HiSenseTVPlatform} from './platform.js';
+import { HiSenseTVPlatform } from './platform.js';
 import net from 'net';
 
-import {DeviceConfig} from './interfaces/device-config.interface.js';
-import {TVState} from './interfaces/tv-state.interface.js';
-import {InputSource} from './interfaces/input-source.interface.js';
-import {HisenseMQTTClient} from './hisenseMQTTClient.js';
+import { DeviceConfig } from './interfaces/device-config.interface.js';
+import { TVState } from './interfaces/tv-state.interface.js';
+import { InputSource } from './interfaces/input-source.interface.js';
+import { HisenseMQTTClient } from './hisenseMQTTClient.js';
 import equal from 'fast-deep-equal';
-import {PictureSetting} from './interfaces/picturesetting.interface.js';
-import {TVApp} from './interfaces/tv-app.interface.js';
-import {WoL} from './wol.js';
-import {sourcesAreEqual} from './utils/sourcesAreEqual.function.js';
-import {InputSourceSubPlatformAccessory} from './inputSourceSubPlatformAccessory.js';
-import {validateDeviceConfig} from './utils/validateDeviceConfig.function.js';
-import {validateHomeKitName} from './utils/validateHomeKitName.function.js';
+import { PictureSetting } from './interfaces/picturesetting.interface.js';
+import { TVApp } from './interfaces/tv-app.interface.js';
+import { WoL } from './wol.js';
+import { sourcesAreEqual } from './utils/sourcesAreEqual.function.js';
+import { InputSourceSubPlatformAccessory } from './inputSourceSubPlatformAccessory.js';
+import { validateDeviceConfig } from './utils/validateDeviceConfig.function.js';
+import { validateHomeKitName } from './utils/validateHomeKitName.function.js';
+import { readSourceCache, writeSourceCache } from './utils/sourceCache.js';
 
 /**
  * Platform Accessory
@@ -62,14 +63,20 @@ export class HiSenseTVAccessory {
   private inputSources: InputSource[] = [];
   private availableApps: TVApp[] = [];
 
-  constructor(private readonly platform: HiSenseTVPlatform, private readonly accessory: PlatformAccessory) {
+  private isPublished = false;
+  private hasReceivedInitialSources = false;
+  private hasReceivedInitialApps = false;
+  private readonly storagePath: string;
+
+  constructor(
+    private readonly platform: HiSenseTVPlatform,
+    private readonly accessory: PlatformAccessory,
+    private readonly publishCallback?: () => void,
+  ) {
     this.log = platform.log;
 
-    if (accessory.context.macaddress == null || accessory.context.macaddress == '') {
-      this.log.warn('Config not up to date, please check the README on https://github.com/MrAsterisco/homebridge-hisense-tv' +
-        ' for the latest configuration options or use the homebridge UI to update the configuration.');
-      this.log.error('Homebridge MAC address is required for the TV accessory.');
-      process.exit(1);
+    if (accessory.context.macaddress == null || accessory.context.macaddress === '') {
+      throw new Error('Homebridge MAC address is required. Set it in the plugin config.');
     }
 
     this.Characteristic = platform.Characteristic;
@@ -79,13 +86,15 @@ export class HiSenseTVAccessory {
 
     // create useful subclasses
     this.inputSourceSubPlatformAccessory = new InputSourceSubPlatformAccessory(this.Service, accessory, this.Characteristic);
-    this.wol = new WoL(this.log, this.deviceConfig.macaddress, this.deviceConfig.wolRetries, this.deviceConfig.wolInterval);
+    this.wol = new WoL(this.log, this.deviceConfig.macaddress, this.deviceConfig.ipaddress, this.deviceConfig.wolRetries, this.deviceConfig.wolInterval, this.deviceConfig.broadcast);
 
     // Configure the TV details.
     this.accessory.getService(this.Service.AccessoryInformation)!
       .setCharacteristic(this.Characteristic.Manufacturer, 'HiSense')
       .setCharacteristic(this.Characteristic.Model, 'TV')
-      .setCharacteristic(this.Characteristic.SerialNumber, this.deviceConfig.id);
+      .setCharacteristic(this.Characteristic.SerialNumber, this.deviceConfig.id)
+      .setCharacteristic(this.Characteristic.ConfiguredName, validateHomeKitName(this.deviceConfig.name))
+      .setCharacteristic(this.Characteristic.Name, validateHomeKitName(this.deviceConfig.name));
 
     // Create the service.
     this.service = this.accessory.getService(this.Service.Television) || this.accessory.addService(this.Service.Television);
@@ -128,6 +137,20 @@ export class HiSenseTVAccessory {
     // Create "Unknown" source.
     this.createHomeSource();
 
+    this.storagePath = this.platform.api.user.storagePath();
+    const cached = readSourceCache(this.storagePath, accessory.UUID);
+    if (cached && cached.inputSources.length > 0) {
+      this.createSources(cached.inputSources, cached.availableApps);
+      this.hasReceivedInitialSources = true;
+      if (this.availableApps.length > 0) {
+        this.hasReceivedInitialApps = true;
+      }
+      this.maybePublish();
+      if(this.isPublished){
+        this.log.info(`Published "${this.deviceConfig.name}" from cache with ${this.inputSources.length} sources and ${this.availableApps.length} apps.`);
+      }
+    }
+
     this.mqttHelper = new HisenseMQTTClient(this.deviceConfig, accessory.context.macaddress, this.log);
     this.setupMqtt();
 
@@ -138,10 +161,45 @@ export class HiSenseTVAccessory {
     }
 
     if (this.deviceConfig.tvType === 'default') {
-      setInterval(() => {
-        this.checkTVStatus();
-      }, this.deviceConfig.pollingInterval * 1000);
+      this.schedulePoll();
     }
+
+    if (!this.isPublished) {
+      this.log.warn(`TV "${this.deviceConfig.name}" requires being turned on manually to appear in HomeKit.`);
+      this.log.warn('If during pairing input sources show default names (e.g. "Input Source 1" instead of HDMI1), tap "X" and "Setup Later".');
+      this.log.warn('If input sources show default names after pairing then turn your tv on and then restart Homebridge.');
+    }
+  }
+
+  private schedulePoll() {
+    setTimeout(() => {
+      this.checkTVStatus(() => {
+        this.schedulePoll();
+      });
+    }, this.deviceConfig.pollingInterval * 1000);
+  }
+
+  private maybePublish() {
+    this.log.debug(`maybePublish — isPublished=${this.isPublished}, ` +
+      `hasReceivedInitialSources=${this.hasReceivedInitialSources}, ` +
+      `hasReceivedInitialApps=${this.hasReceivedInitialApps}, ` +
+      `sources=${this.inputSources.length}, apps=${this.availableApps.length}`);
+
+    if (this.isPublished) {
+      return;
+    }
+    if (!this.hasReceivedInitialSources) {
+      return;
+    }
+    if (this.deviceConfig.showApps && !this.hasReceivedInitialApps) {
+      return;
+    }
+
+    this.log.debug(`Publishing with ${this.inputSources.length} sources: ` +
+      this.inputSources.map((s, i) => `[${i + 1}] ${s.sourcename}/${s.displayname}`).join(', '));
+
+    this.isPublished = true;
+    this.publishCallback?.();
   }
 
   public setupMqtt() {
@@ -151,8 +209,10 @@ export class HiSenseTVAccessory {
       this.setTVPowerStateOn();
 
       this.mqttHelper.subscribe(this.mqttHelper._SOURCE_LIST_TOPIC);
-      this.mqttHelper.subscribe(this.mqttHelper._APP_LIST_TOPIC);
       this.mqttHelper.subscribe(this.mqttHelper._STATE_TOPIC);
+      if (this.deviceConfig.showApps) {
+        this.mqttHelper.subscribe(this.mqttHelper._APP_LIST_TOPIC);
+      }
       if (this.deviceConfig.tvType === 'pictureSettings') {
         this.mqttHelper.subscribe(this.mqttHelper._PICTURE_SETTINGS_TOPIC);
       }
@@ -160,7 +220,9 @@ export class HiSenseTVAccessory {
       // always fetch data when connection is established
       this.mqttHelper.callService('ui_service', 'sourcelist');
       this.mqttHelper.callService('ui_service', 'gettvstate');
-      this.mqttHelper.callService('ui_service', 'applist');
+      if (this.deviceConfig.showApps) {
+        this.mqttHelper.callService('ui_service', 'applist');
+      }
     });
 
 
@@ -180,12 +242,18 @@ export class HiSenseTVAccessory {
             break;
           case this.mqttHelper._SOURCE_LIST_TOPIC:
             this.createSources(parsedMessage, this.availableApps);
+            this.hasReceivedInitialSources = true;
+            this.maybePublish();
             break;
           case this.mqttHelper._PICTURE_SETTINGS_TOPIC:
             this.setAlwaysOnPictureSettingsPowerState(parsedMessage);
             break;
           case this.mqttHelper._APP_LIST_TOPIC:
-            this.createSources(this.inputSources, parsedMessage);
+            if (this.deviceConfig.showApps) {
+              this.createSources(this.inputSources, parsedMessage);
+              this.hasReceivedInitialApps = true;
+              this.maybePublish();
+            }
             break;
           default:
             this.log.debug('Received unknown message from TV. Topic: ' + topic + ' Message: ' + message.toString());
@@ -216,6 +284,9 @@ export class HiSenseTVAccessory {
     this.mqttHelper.mqttClient.on('error', (err) => {
       this.log.error('An error occurred while connecting to MQTT service: ' + JSON.stringify(err));
       this.log.error('This usually means the TV is off/the IP address is incorrect or you configured the wrong ssl options.');
+      if (!this.isPublished) {
+        this.log.warn(`TV "${this.deviceConfig.name}" is not yet available in HomeKit. Will publish once a connection is established.`);
+      }
       this.setTVPowerStateOff();
     });
   }
@@ -266,8 +337,6 @@ export class HiSenseTVAccessory {
   }
 
   async setRemoteKey(newValue: CharacteristicValue) {
-    let keyName = '';
-
     // shorter than a switch statement
     const keyDict = {
       [this.Characteristic.RemoteKey.REWIND]: 'KEY_BACK',
@@ -285,7 +354,7 @@ export class HiSenseTVAccessory {
       [this.Characteristic.RemoteKey.INFORMATION]: 'KEY_HOME',
     };
 
-    keyName = keyDict[newValue as number];
+    const keyName = keyDict[newValue as number];
 
     if (keyName) {
       this.mqttHelper.sendKey(keyName);
@@ -362,11 +431,18 @@ export class HiSenseTVAccessory {
     const sourcesChanged = !sourcesAreEqual(sources, this.inputSources);
     const appsChanged = !equal(this.availableApps, apps);
 
+    this.log.debug(`createSources called — sourcesChanged=${sourcesChanged}, appsChanged=${appsChanged}, ` +
+      `sources=${sources.length}, apps=${apps.length}, ` +
+      `existingSources=${this.inputSources.length}, existingApps=${this.availableApps.length}`);
+
     if (sourcesChanged) {
+      this.inputSourceSubPlatformAccessory.removeStaleSources(sources, this.service);
+
       this.inputSources = sources;
 
       this.inputSources.forEach((inputSource, index) => {
-        this.log.debug('Adding input: ' + JSON.stringify(inputSource));
+        this.log.debug(`Adding input [${index + 1}]: sourceid=${inputSource.sourceid}, ` +
+          `sourcename=${inputSource.sourcename}, displayname=${inputSource.displayname}`);
 
         const inputService = this.inputSourceSubPlatformAccessory.addTVInputSource(inputSource, index + 1);
 
@@ -379,6 +455,7 @@ export class HiSenseTVAccessory {
     if (sourcesChanged || appsChanged) {
       // we always need to run both these snippets if source changed
       // as the app identifier is based on the input source length
+      this.inputSourceSubPlatformAccessory.removeStaleApps(apps, this.service);
       this.availableApps = apps;
       const startIndex = this.inputSources.length;
       this.availableApps.forEach((app, index) => {
@@ -396,6 +473,13 @@ export class HiSenseTVAccessory {
 
       // run in case the current input is not set after fetching the sources
       this.service.setCharacteristic(this.Characteristic.ActiveIdentifier, this.getCurrentInputIndex());
+
+      try {
+        writeSourceCache(this.storagePath, this.accessory.UUID, this.inputSources, this.availableApps);
+        this.log.debug(`Cached ${this.inputSources.length} sources and ${this.availableApps.length} apps for "${this.deviceConfig.name}".`);
+      } catch (e: unknown) {
+        this.log.warn('Failed to write source cache: ' + (e as Error).message);
+      }
     }
   }
 
@@ -424,11 +508,18 @@ export class HiSenseTVAccessory {
    * There is also a counter to prevent false positives/negatives when checking the TV state.
    * Check the documentation of the counter for more information.
    */
-  checkTVStatus() {
+  checkTVStatus(done: () => void) {
     this.log.debug('Checking state for TV at IP: ' + this.deviceConfig.ipaddress);
 
-    const socket = net.createConnection({host: this.deviceConfig.ipaddress, port: 36669, timeout: 500});
+    const socket = net.createConnection({ host: this.deviceConfig.ipaddress, port: 36669, timeout: 500 });
+    socket.unref();
+    let handled = false;
+
     socket.on('connect', () => {
+      if (handled) {
+        return;
+      }
+      handled = true;
       socket.destroy();
       this.log.debug('Connected to TV!');
 
@@ -447,9 +538,17 @@ export class HiSenseTVAccessory {
       if (!this.mqttHelper.mqttClient.connected) {
         this.mqttHelper.mqttClient.reconnect();
       }
+
+      done();
     });
 
     const tvOffCallback = () => {
+      if (handled) {
+        return;
+      }
+      handled = true;
+      socket.destroy();
+
       if (this.onCounter === -1) {
         this.offCounter++;
       } else {
@@ -465,19 +564,17 @@ export class HiSenseTVAccessory {
       if (!this.mqttHelper.mqttClient.disconnected) {
         this.mqttHelper.mqttClient.end(true);
       }
+
+      done();
     };
 
     socket.on('timeout', () => {
-      socket.destroy();
       this.log.debug('Connection to TV timed out.');
-
       tvOffCallback();
     });
 
     socket.on('error', (err) => {
-      socket.destroy();
       this.log.debug('An error occurred while connecting to TV: ' + JSON.stringify(err));
-
       tvOffCallback();
     });
   }
@@ -509,7 +606,9 @@ export class HiSenseTVAccessory {
       this.log.debug('Current input is unsupported.');
     }
 
-    this.service.updateCharacteristic(this.Characteristic.ActiveIdentifier, this.getCurrentInputIndex());
+    if (this.deviceState.hasFetchedInputs) {
+      this.service.updateCharacteristic(this.Characteristic.ActiveIdentifier, this.getCurrentInputIndex());
+    }
   }
 
   /**

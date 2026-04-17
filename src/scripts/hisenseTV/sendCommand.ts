@@ -1,5 +1,5 @@
 import readline from 'node:readline/promises';
-import {HisenseMQTTClient} from '../../hisenseMQTTClient.js';
+import { HisenseMQTTClient } from '../../hisenseMQTTClient.js';
 
 const getCommands = {
   state: 'gettvstate',
