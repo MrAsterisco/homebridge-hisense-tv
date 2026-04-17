@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "node",
+    "outDir": "homebridge-ui",
+    "rootDir": "homebridge-ui/src",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitAny": false,
+    "declaration": false,
+    "sourceMap": false,
+    "skipLibCheck": true
+  },
+  "files": [
+    "homebridge-ui/src/server.ts"
+  ]
+}

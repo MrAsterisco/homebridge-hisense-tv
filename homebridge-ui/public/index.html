@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HiSense TV Setup</title>
+  <style>
+    body { font-family: inherit; }
+
+    .wizard-steps {
+      display: flex;
+      gap: 0;
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+      border-bottom: 2px solid var(--bs-border-color, #dee2e6);
+      padding-bottom: 0;
+    }
+    .wizard-step {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px 10px;
+      font-size: 0.8rem;
+      color: var(--bs-secondary, #6c757d);
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      cursor: default;
+    }
+    .wizard-step.active {
+      color: var(--bs-primary, #0d6efd);
+      border-bottom-color: var(--bs-primary, #0d6efd);
+      font-weight: 600;
+    }
+    .wizard-step.done {
+      color: var(--bs-success, #198754);
+    }
+    .wizard-step .step-num {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: var(--bs-secondary-bg, #e9ecef);
+      color: var(--bs-secondary, #6c757d);
+    }
+    .wizard-step.active .step-num {
+      background: var(--bs-primary, #0d6efd);
+      color: #fff;
+    }
+    .wizard-step.done .step-num {
+      background: var(--bs-success, #198754);
+      color: #fff;
+    }
+
+    .tv-card {
+      border: 1px solid var(--bs-border-color, #dee2e6);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .tv-card-info { flex: 1; min-width: 0; }
+    .tv-card-name { font-weight: 600; margin: 0; }
+    .tv-card-meta { font-size: 0.82rem; color: var(--bs-secondary, #6c757d); margin: 2px 0 0; }
+
+    .status-spinner {
+      display: inline-block;
+      width: 1.2rem;
+      height: 1.2rem;
+      border: 2px solid var(--bs-border-color, #dee2e6);
+      border-top-color: var(--bs-primary, #0d6efd);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .app-list-container {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid var(--bs-border-color, #dee2e6);
+      border-radius: 6px;
+      padding: 0.5rem;
+    }
+    .app-list-container label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .app-list-container label:hover {
+      background: var(--bs-secondary-bg, #e9ecef);
+    }
+
+    .step-icon {
+      font-size: 2.5rem;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+
+    #root { max-width: 700px; margin: 0 auto; padding: 1rem 0.5rem 2rem; }
+  </style>
+</head>
+<body>
+<div id="root">
+  <div id="app">Loading...</div>
+</div>
+
+<script src="js/state.js"></script>
+<script src="js/home.js"></script>
+<script src="js/step1.js"></script>
+<script src="js/step2.js"></script>
+<script src="js/step3.js"></script>
+<script src="js/step4.js"></script>
+<script src="js/step5.js"></script>
+<script src="js/step6.js"></script>
+<script src="js/step7.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

@@ -26,7 +26,7 @@
   "scripts": {
     "lint": "eslint src/**.ts --max-warnings=5 --fix",
     "watch": "npm run build && npm link && nodemon",
-    "build": "rimraf ./dist && tsc && chmod +x dist/scripts/hisenseTV.js",
+    "build": "rimraf ./dist homebridge-ui/server.js && tsc && tsc -p tsconfig.ui.json && chmod +x dist/scripts/hisenseTV.js",
     "prepublishOnly": "npm run lint && npm run build",
     "prepare": "husky"
   },
@@ -40,6 +40,7 @@
     "node": "^18.20.4 || ^20.15.1 || ^22.10.0 || ^24.0.0"
   },
   "dependencies": {
+    "@homebridge/plugin-ui-utils": "^2.2.0",
     "fast-deep-equal": "^3.1.3",
     "mqtt": "^5.8.1",
     "wol": "^1.0.7"
