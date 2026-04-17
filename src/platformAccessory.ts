@@ -201,10 +201,15 @@ export class HiSenseTVAccessory {
       const delay = Math.max(500, (this.deviceConfig.configureOnStartDelay ?? 0) * 1000);
       this.log.info(`Waiting ${delay}ms before shutting down TV "${this.deviceConfig.name}"...`);
       setTimeout(() => {
+        if (!this.mqttHelper.mqttClient.connected) {
+          return;
+        }
         this.mqttHelper.sendKey('KEY_MUTE');
-        // wait a short time after unmuting
         setTimeout(() => {
-            this.mqttHelper.sendKey('KEY_POWER');
+          if (!this.mqttHelper.mqttClient.connected) {
+            return;
+          }
+          this.mqttHelper.sendKey('KEY_POWER');
         }, 500);
       }, delay);
     }
@@ -650,7 +655,9 @@ export class HiSenseTVAccessory {
       this.log.debug('Current input is unsupported.');
     }
 
-    this.service.updateCharacteristic(this.Characteristic.ActiveIdentifier, this.getCurrentInputIndex());
+    if (!this.deviceState.hasFetchedInputs) {
+      this.service.updateCharacteristic(this.Characteristic.ActiveIdentifier, this.getCurrentInputIndex());
+    }
   }
 
   /**
