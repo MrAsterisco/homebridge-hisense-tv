@@ -90,14 +90,12 @@ Open the plugin settings in the Homebridge UI and enter your details. Here is wh
 | `pollingInterval` | *(default: 4)* Seconds between power-state polling checks (only used when `tvType` is `default`). |
 | `wolInterval` | *(default: 400)* Milliseconds between WoL packets. |
 | `wolRetries` | *(default: 3)* Number of WoL packets sent (to account for packet loss). |
-| `configureOnStart` | If `true`, briefly wakes the TV on Homebridge startup to fetch the input list, then turns it off after a short delay. Useful if inputs are missing after a restart. **Note:** If Homebridge restarts automatically (e.g. updates), the TV will briefly turn on — keep this in mind for bedroom TVs. |
-| `configureOnStartDelay` | *(default: 4)* Seconds to wait before shutting down the TV after fetching inputs. Increase if HDMI-CEC devices (e.g. Apple TV) need time to detect the TV. Set to `0` for immediate shutdown. Only used when `configureOnStart` is `true`. |
 
 Save your configuration and restart Homebridge.
 
 ## Step 5: Add to Apple Home
 
-**Your TV must be turned on for this step!**
+**Your TV must be turned on for this step at least once after setting up the plugin.** The plugin waits for TV data before publishing the accessory, so the setup code won't appear in the logs until the TV is reachable.
 
 1. Check your Homebridge logs for a line like:
    ```
@@ -160,7 +158,6 @@ hisense-tv always-on-test
 ## Known Issues
 
 - **Default input names after pairing** (e.g. "Input Source" instead of "HDMI 1"): This is an Apple HomeKit bug. During pairing, tap "X" → "Setup Later". After pairing: Restart Homebridge, and the correct names will load.
-- **Inputs missing:** Force close the Home app and reopen it. Alternatively, enable `configureOnStart` in your config so inputs are fetched on each Homebridge restart.
 - **Current app shows as "Unknown":** Some TVs report inconsistent app data — this is a TV firmware limitation.
 
 ### Known Incompatibilities

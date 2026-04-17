@@ -102,28 +102,6 @@
                 }
               }
             },
-            "configureOnStart": {
-              "title": "Configure on Start",
-              "type": "boolean",
-              "required": false,
-              "default": false,
-              "condition": {
-                "functionBody": "return model.devices[arrayIndices].tvType === 'default';"
-              },
-              "description": "When enabled, the plugin will wake the TV via WoL on Homebridge startup to fetch input sources, then mute and power it back off. This ensures inputs are available in HomeKit immediately. Only applies to TVs with tvType 'default'."
-            },
-            "configureOnStartDelay": {
-              "title": "Configure on Start Shutdown Delay",
-              "type": "integer",
-              "required": false,
-              "default": 4,
-              "minimum": 0,
-              "maximum": 30,
-              "condition": {
-                "functionBody": "return model.devices[arrayIndices].tvType === 'default' && model.devices[arrayIndices].configureOnStart === true;"
-              },
-              "description": "Seconds to wait before shutting down the TV after fetching input sources. Useful when HDMI-CEC devices (e.g. Apple TV) need time to detect the TV is on before it powers off again. 0 means shutdown immediately."
-            },
             "pollingInterval": {
               "title": "Polling Interval",
               "type": "integer",
@@ -302,12 +280,6 @@
             "functionBody": "return model.devices[arrayIndices].tvType === 'default';"
           },
           "items": [
-            {
-              "key": "devices[].configureOnStart"
-            },
-            {
-              "key": "devices[].configureOnStartDelay"
-            },
             {
               "key": "devices[].broadcast"
             },

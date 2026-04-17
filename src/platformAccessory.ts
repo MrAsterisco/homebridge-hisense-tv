@@ -15,6 +15,7 @@ import { sourcesAreEqual } from './utils/sourcesAreEqual.function.js';
 import { InputSourceSubPlatformAccessory } from './inputSourceSubPlatformAccessory.js';
 import { validateDeviceConfig } from './utils/validateDeviceConfig.function.js';
 import { validateHomeKitName } from './utils/validateHomeKitName.function.js';
+import { readSourceCache, writeSourceCache } from './utils/sourceCache.js';
 
 /**
  * Platform Accessory
@@ -65,8 +66,7 @@ export class HiSenseTVAccessory {
   private isPublished = false;
   private hasReceivedInitialSources = false;
   private hasReceivedInitialApps = false;
-  private wakedToFetch = false;
-  private wakeToFetchTimeout?: ReturnType<typeof setTimeout>;
+  private readonly storagePath: string;
 
   constructor(
     private readonly platform: HiSenseTVPlatform,
@@ -140,6 +140,18 @@ export class HiSenseTVAccessory {
     // Create "Unknown" source.
     this.createHomeSource();
 
+    this.storagePath = this.platform.api.user.storagePath();
+    const cached = readSourceCache(this.storagePath, accessory.UUID);
+    if (cached && cached.inputSources.length > 0) {
+      this.createSources(cached.inputSources, cached.availableApps as TVApp[]);
+      this.hasReceivedInitialSources = true;
+      if (!this.deviceConfig.showApps || this.availableApps.length > 0) {
+        this.hasReceivedInitialApps = true;
+      }
+      this.maybePublish();
+      this.log.info(`Published "${this.deviceConfig.name}" from cache with ${this.inputSources.length} sources and ${this.availableApps.length} apps.`);
+    }
+
     this.mqttHelper = new HisenseMQTTClient(this.deviceConfig, accessory.context.macaddress, this.log);
     this.setupMqtt();
 
@@ -151,69 +163,9 @@ export class HiSenseTVAccessory {
 
     this.startPolling();
 
-    if (this.deviceConfig.configureOnStart && this.deviceConfig.tvType === 'default') {
-      this.initiateWakeToFetch();
-    } else if (!this.deviceConfig.configureOnStart) {
+    if (!this.isPublished) {
       this.log.warn(`TV "${this.deviceConfig.name}" requires being turned on manually to appear in HomeKit.`);
-    }
-  }
-
-  private initiateWakeToFetch() {
-    const socket = net.createConnection({ host: this.deviceConfig.ipaddress, port: 36669, timeout: 3000 });
-    let handled = false;
-
-    socket.on('connect', () => {
-      if (handled) {
-        return;
-      }
-      handled = true;
-      socket.destroy();
-      this.log.info(`TV "${this.deviceConfig.name}" is already on, skipping wake-to-fetch.`);
-    });
-
-    const wakeCallback = () => {
-      if (handled) {
-        return;
-      }
-      handled = true;
-      socket.destroy();
-      this.log.info(`Waking TV "${this.deviceConfig.name}" to fetch input sources...`);
-      this.wakedToFetch = true;
-      this.wol.sendMagicPacket();
-
-      this.wakeToFetchTimeout = setTimeout(() => {
-        if (this.wakedToFetch) {
-          this.log.warn(`Wake-to-fetch for "${this.deviceConfig.name}" timed out after 1 minutes.`);
-          this.cleanupWakeToFetch();
-        }
-      }, 60000);
-    };
-
-    socket.on('timeout', wakeCallback);
-    socket.on('error', wakeCallback);
-  }
-
-  private cleanupWakeToFetch() {
-    this.wakedToFetch = false;
-    if (this.wakeToFetchTimeout) {
-      clearTimeout(this.wakeToFetchTimeout);
-      this.wakeToFetchTimeout = undefined;
-    }
-    if (this.mqttHelper.mqttClient.connected) {
-      const delay = Math.max(500, (this.deviceConfig.configureOnStartDelay ?? 0) * 1000);
-      this.log.info(`Waiting ${delay}ms before shutting down TV "${this.deviceConfig.name}"...`);
-      setTimeout(() => {
-        if (!this.mqttHelper.mqttClient.connected) {
-          return;
-        }
-        this.mqttHelper.sendKey('KEY_MUTE');
-        setTimeout(() => {
-          if (!this.mqttHelper.mqttClient.connected) {
-            return;
-          }
-          this.mqttHelper.sendKey('KEY_POWER');
-        }, 500);
-      }, delay);
+      this.log.warn('If input sources show default names (e.g. "Input Source"), tap "X" and "Setup Later" during pairing, then restart Homebridge.');
     }
   }
 
@@ -252,11 +204,6 @@ export class HiSenseTVAccessory {
 
     this.isPublished = true;
     this.publishCallback?.();
-
-    if (this.wakedToFetch) {
-      this.log.info(`Finished fetching sources for "${this.deviceConfig.name}", shutting TV back down.`);
-      this.cleanupWakeToFetch();
-    }
   }
 
   public setupMqtt() {
@@ -264,10 +211,6 @@ export class HiSenseTVAccessory {
       this.log.debug('Connected to MQTT service on TV.');
 
       this.setTVPowerStateOn();
-
-      if (this.wakedToFetch) {
-        this.mqttHelper.sendKey('KEY_MUTE');
-      }
 
       this.mqttHelper.subscribe(this.mqttHelper._SOURCE_LIST_TOPIC);
       this.mqttHelper.subscribe(this.mqttHelper._STATE_TOPIC);
@@ -531,6 +474,13 @@ export class HiSenseTVAccessory {
 
       // run in case the current input is not set after fetching the sources
       this.service.setCharacteristic(this.Characteristic.ActiveIdentifier, this.getCurrentInputIndex());
+
+      try {
+        writeSourceCache(this.storagePath, this.accessory.UUID, this.inputSources, this.availableApps);
+        this.log.debug(`Cached ${this.inputSources.length} sources and ${this.availableApps.length} apps for "${this.deviceConfig.name}".`);
+      } catch (e: unknown) {
+        this.log.warn('Failed to write source cache: ' + (e as Error).message);
+      }
     }
   }
 
