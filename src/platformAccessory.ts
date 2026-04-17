@@ -158,18 +158,14 @@ export class HiSenseTVAccessory {
       this.counterThreshold = 1;
     }
 
-    this.startPolling();
+    if (this.deviceConfig.tvType === 'default') {
+      this.schedulePoll();
+    }
 
     if (!this.isPublished) {
       this.log.warn(`TV "${this.deviceConfig.name}" requires being turned on manually to appear in HomeKit.`);
       this.log.warn('If during pairing input sources show default names (e.g. "Input Source 1" instead of HDMI1), tap "X" and "Setup Later".');
       this.log.warn('If input sources show default names after pairing then turn your tv on and then restart Homebridge.');
-    }
-  }
-
-  private startPolling() {
-    if (this.deviceConfig.tvType === 'default') {
-      this.schedulePoll();
     }
   }
 
